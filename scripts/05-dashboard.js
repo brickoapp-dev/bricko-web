@@ -1,8 +1,7 @@
 /* 05-dashboard.js — Dashboard dinámico conectado a Supabase */
 
-const RUBROS_LABELS = { plomeria:'Plomería', gas:'Gas', electricidad:'Electricidad', albanileria:'Albañilería', pintura:'Pintura' };
-const TIPOS_LABELS  = { refaccion:'Refacción', 'obra-nueva':'Obra Nueva' };
-
+var RUBROS_LABELS = RUBROS_LABELS || { plomeria:'Plomería', gas:'Gas', electricidad:'Electricidad', albanileria:'Albañilería', pintura:'Pintura' };
+var TIPOS_LABELS  = TIPOS_LABELS  || { refaccion:'Refacción', 'obra-nueva':'Obra Nueva' };
 const Dashboard = window.Dashboard = {
   overlay: null,
   sideEl: null,
