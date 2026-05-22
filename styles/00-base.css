@@ -1,0 +1,390 @@
+/* ==========================================================
+   00-base.css
+   ----------------------------------------------------------
+   Base del sistema: variables CSS (tema claro/oscuro), reset,
+   tipografía, grid AutoCAD de fondo, layout general, SVG tokens y
+   animaciones reveal/entrance. SI EDITÁS COLORES, ESTÁ ACÁ.
+   ========================================================== */
+
+/* ==========================================================
+   BRICKØ — Design System
+   ========================================================== */
+:root, [data-theme="dark"]{
+  /* Color */
+  --bg:#0A0A0A;
+  --bg-1:#101010;
+  --bg-2:#161616;
+  --bg-3:#1C1C1C;
+  --bg-4:#242424;
+  --line:rgba(255,255,255,.07);
+  --line-strong:rgba(255,255,255,.14);
+  --grid:rgba(255,255,255,.028);
+  --grid-strong:rgba(255,255,255,.055);
+  --ink:#FAFAFA;
+  --ink-2:#E5E5E5;
+  --muted:#A0A0A0;
+  --muted-2:#6B6B6B;
+  --muted-3:#454545;
+  --orange:#F25C18;
+  --orange-bright:#FF6B2C;
+  --orange-dim:rgba(242,92,24,.12);
+  --orange-line:rgba(242,92,24,.32);
+
+  /* Tokens visuales que cambian con el tema */
+  --cube-1:#1C1C1C;
+  --cube-2:#2A2A2A;
+  --cube-stroke:#3A3A3A;
+  --plan-ink:#FAFAFA;
+  --plan-grid:#1f1f1f;
+  --plan-dim:#3a3a3a;
+  --plan-faint:#2a2a2a;
+  --plan-muted:#A0A0A0;
+  --plan-muted-2:#6B6B6B;
+  --nav-bg:rgba(10,10,10,.72);
+  --selection-fg:#000;
+  --store-icon:#FAFAFA;
+  --shadow-soft:0 30px 60px -30px rgba(0,0,0,.8);
+
+  /* Type scale */
+  --display:'Archivo',sans-serif;
+  --body:'Manrope',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+
+  --max:1360px;
+  --gutter:32px;
+  --radius:4px;
+}
+
+[data-theme="light"]{
+  /* Color — papel técnico cálido */
+  --bg:#F2EEE4;
+  --bg-1:#FAF7EE;
+  --bg-2:#FFFFFF;
+  --bg-3:#EBE5D5;
+  --bg-4:#DDD5C0;
+  --line:rgba(10,10,10,.10);
+  --line-strong:rgba(10,10,10,.22);
+  --grid:rgba(10,10,10,.045);
+  --grid-strong:rgba(10,10,10,.10);
+  --ink:#0A0A0A;
+  --ink-2:#1C1C1C;
+  --muted:#5A5A5A;
+  --muted-2:#8A8A8A;
+  --muted-3:#B8B8B8;
+  --orange:#D9430A;
+  --orange-bright:#E54E10;
+  --orange-dim:rgba(217,67,10,.10);
+  --orange-line:rgba(217,67,10,.36);
+
+  --cube-1:#1A1A1A;
+  --cube-2:#2E2E2E;
+  --cube-stroke:#000;
+  --plan-ink:#0A0A0A;
+  --plan-grid:#D5CFBE;
+  --plan-dim:#B8B8B8;
+  --plan-faint:#D5CFBE;
+  --plan-muted:#5A5A5A;
+  --plan-muted-2:#8A8A8A;
+  --nav-bg:rgba(250,247,238,.78);
+  --selection-fg:#FFFFFF;
+  --store-icon:#0A0A0A;
+  --shadow-soft:0 30px 60px -30px rgba(0,0,0,.18);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{
+  scroll-behavior:smooth;
+  -webkit-text-size-adjust:100%;
+  overflow-x:hidden;
+}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--body);
+  font-weight:400;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+  position:relative;
+  transition: background-color .4s ease, color .4s ease;
+}
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after{
+  transition: background-color .35s ease, border-color .35s ease, color .35s ease, fill .35s ease, stroke .35s ease, box-shadow .35s ease !important;
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+img,svg{display:block;max-width:100%}
+::selection{background:var(--orange);color:var(--selection-fg)}
+
+/* ==========================================================
+   GRID DE FONDO AUTOCAD
+   ========================================================== */
+.blueprint-grid{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background-image:
+    /* gruesos cada 320px */
+    linear-gradient(to right, var(--grid-strong) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-strong) 1px, transparent 1px),
+    /* finos cada 40px */
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size:
+    320px 320px,
+    320px 320px,
+    40px 40px,
+    40px 40px;
+  background-position: -1px -1px;
+  mask-image: radial-gradient(ellipse 100% 70% at 50% 30%, #000 40%, rgba(0,0,0,.5) 80%, rgba(0,0,0,.25) 100%);
+  -webkit-mask-image: radial-gradient(ellipse 100% 70% at 50% 30%, #000 40%, rgba(0,0,0,.5) 80%, rgba(0,0,0,.25) 100%);
+}
+.blueprint-grid::after{
+  /* puntos en las intersecciones gruesas */
+  content:"";
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle, rgba(242,92,24,.35) 1px, transparent 1.5px);
+  background-size:320px 320px;
+  background-position:-1px -1px;
+  opacity:.6;
+}
+
+/* Crosshair decorativos en esquinas de página */
+.corner{
+  position:fixed;
+  width:24px;height:24px;
+  z-index:2;
+  pointer-events:none;
+}
+.corner svg{width:100%;height:100%;stroke:var(--orange);stroke-width:1;fill:none}
+.corner.tl{top:84px;left:16px}
+.corner.tr{top:84px;right:16px}
+.corner.bl{bottom:16px;left:16px}
+.corner.br{bottom:16px;right:16px}
+
+/* ==========================================================
+   TYPOGRAPHY
+   ========================================================== */
+.display{
+  font-family:var(--display);
+  font-weight:800;
+  letter-spacing:-0.035em;
+  line-height:.94;
+  text-transform:uppercase;
+}
+.display em{
+  font-style:normal;
+  color:var(--orange);
+}
+.display .slash{color:var(--orange);font-weight:400;font-style:italic}
+.mono{font-family:var(--mono);letter-spacing:.02em}
+.eyebrow{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--muted);
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+}
+.eyebrow::before{
+  content:"";
+  width:24px;height:1px;
+  background:var(--orange);
+}
+.tag{
+  display:inline-block;
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  padding:5px 9px 4px;
+  border:1px solid var(--line-strong);
+  color:var(--muted);
+  border-radius:2px;
+}
+.tag.orange{color:var(--orange);border-color:var(--orange-line);background:var(--orange-dim)}
+
+/* ==========================================================
+   SVG THEME TOKENS — el logo, planos y store icons
+   responden al tema usando estas reglas (no atributos)
+   ========================================================== */
+.brand .cube .c-top{fill:var(--orange)}
+.brand .cube .c-left{fill:var(--cube-1);stroke:var(--cube-2);stroke-width:.5}
+.brand .cube .c-right{fill:var(--cube-2);stroke:var(--cube-stroke);stroke-width:.5}
+
+/* Planos técnicos en hero y mode-visual */
+.themed-plan .pl-grid path,
+.themed-plan .pl-grid rect{stroke:var(--plan-grid)}
+.themed-plan .pl-grid circle{fill:var(--plan-grid)}
+.themed-plan .pl-ink{stroke:var(--plan-ink);fill:none}
+.themed-plan .pl-text-ink{fill:var(--plan-ink)}
+.themed-plan .pl-cube-left{fill:var(--cube-1);stroke:var(--cube-2)}
+.themed-plan .pl-cube-right{fill:var(--cube-2);stroke:var(--cube-stroke)}
+.themed-plan .pl-axis{stroke:var(--plan-dim)}
+.themed-plan .pl-tick{fill:var(--plan-muted-2)}
+.themed-plan .pl-label{fill:var(--plan-muted)}
+
+/* Store buttons icons */
+.store-btn .store-ico{fill:var(--store-icon)}
+
+/* Avatares de reseñas */
+.avatar{background:var(--bg-3)}
+
+/* ==========================================================
+   THEME TOGGLE
+   ========================================================== */
+.theme-toggle{
+  width:38px;height:38px;
+  border:1px solid var(--line-strong);
+  border-radius:2px;
+  display:inline-flex;align-items:center;justify-content:center;
+  position:relative;
+  transition:all .25s ease;
+  flex-shrink:0;
+  background:transparent;
+}
+.theme-toggle:hover{border-color:var(--orange);background:var(--orange-dim)}
+.theme-toggle svg{
+  width:16px;height:16px;
+  stroke:var(--ink);
+  fill:none;
+  stroke-width:1.5;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  transition:opacity .3s ease, transform .4s cubic-bezier(.2,.7,.2,1);
+  position:absolute;
+}
+.theme-toggle .icon-sun{opacity:0;transform:rotate(-90deg) scale(.5)}
+.theme-toggle .icon-moon{opacity:1;transform:rotate(0) scale(1)}
+[data-theme="light"] .theme-toggle .icon-sun{opacity:1;transform:rotate(0) scale(1)}
+[data-theme="light"] .theme-toggle .icon-moon{opacity:0;transform:rotate(90deg) scale(.5)}
+.theme-toggle:hover svg{stroke:var(--orange)}
+
+/* ====== SVG techos / planos: clases con variables ====== */
+/* Cubo isométrico del hero panel */
+.iso-top{fill:var(--orange)}
+.iso-left{fill:var(--cube-1);stroke:var(--cube-2);stroke-width:.6}
+.iso-right{fill:var(--cube-2);stroke:var(--cube-stroke);stroke-width:.6}
+.iso-outline{fill:none;stroke:rgba(242,92,24,.4);stroke-width:.4}
+.pl-grid-dot{fill:var(--plan-faint)}
+/* Planos técnicos (baño + gantt) */
+.pl-grid{stroke:var(--plan-grid);fill:none;stroke-width:.5}
+.pl-line{stroke:var(--plan-ink);fill:none;stroke-width:1.2}
+.pl-today{stroke:var(--plan-ink);stroke-width:.7;stroke-dasharray:2 2}
+.pl-today-text{fill:var(--plan-ink);font-family:'JetBrains Mono',monospace}
+.pl-axis{stroke:var(--plan-dim);stroke-width:.5;fill:none}
+.pl-gantt-label{fill:var(--plan-muted);font-family:'JetBrains Mono',monospace}
+.pl-axis-label{fill:var(--plan-muted-2);font-family:'JetBrains Mono',monospace}
+/* Iconos store */
+.store-btn svg path{fill:var(--store-icon)}
+
+/* ==========================================================
+   LAYOUT
+   ========================================================== */
+.wrap{
+  max-width:var(--max);
+  margin:0 auto;
+  padding:0 var(--gutter);
+  position:relative;
+  z-index:1;
+}
+section{position:relative;z-index:1}
+
+/* Section header común */
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:40px;
+  margin-bottom:64px;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--line);
+  position:relative;
+}
+.section-head::after{
+  content:"";position:absolute;
+  left:0;bottom:-1px;
+  width:80px;height:1px;
+  background:var(--orange);
+}
+.section-head .left{flex:1;max-width:780px}
+.section-head .right{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--muted-2);
+  letter-spacing:.08em;
+  text-align:right;
+  padding-bottom:8px;
+}
+.section-head h2{
+  font-family:var(--display);
+  font-weight:700;
+  font-size:clamp(36px,5vw,64px);
+  letter-spacing:-.03em;
+  line-height:1;
+  text-transform:uppercase;
+  margin-top:18px;
+}
+.section-head h2 em{font-style:normal;color:var(--orange)}
+.section-head .lead{
+  margin-top:18px;
+  color:var(--muted);
+  font-size:16px;
+  max-width:60ch;
+}
+
+/* ==========================================================
+   ANIMACIONES DE ENTRADA
+   ========================================================== */
+.reveal{
+  opacity:0;
+  transform:translateY(20px);
+  transition:opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1);
+}
+.reveal.in{opacity:1;transform:none}
+.reveal-d1{transition-delay:.08s}
+.reveal-d2{transition-delay:.16s}
+.reveal-d3{transition-delay:.24s}
+.reveal-d4{transition-delay:.32s}
+
+/* Hero entrance */
+.hero h1 .line{
+  opacity:0;
+  transform:translateY(40px);
+  animation:lineIn .9s cubic-bezier(.2,.7,.2,1) forwards;
+}
+.hero h1 .line-1{animation-delay:.15s}
+.hero h1 .line-2{animation-delay:.32s}
+.hero h1 .line-3{animation-delay:.49s}
+.hero-sub,.hero-ctas{
+  opacity:0;animation:fadeUp .9s cubic-bezier(.2,.7,.2,1) forwards;
+}
+.hero-sub{animation-delay:.65s}
+.hero-ctas{animation-delay:.78s}
+.hero-panel{
+  opacity:0;animation:fadeUp 1s cubic-bezier(.2,.7,.2,1) forwards;
+  animation-delay:.5s;
+}
+.hero-meta-top{opacity:0;animation:fadeUp .6s ease forwards;animation-delay:.05s}
+@keyframes lineIn{
+  to{opacity:1;transform:none}
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:none}
+}
+
+/* Mobile tweaks */
+@media (max-width:680px){
+  .wrap{padding:0 20px}
+  .section-head{flex-direction:column;align-items:flex-start;gap:12px}
+  .section-head .right{text-align:left}
+  .hero{padding:140px 0 80px}
+  .cta-inner{padding:60px 28px}
+}
