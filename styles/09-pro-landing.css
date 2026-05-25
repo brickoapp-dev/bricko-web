@@ -676,6 +676,8 @@
   margin-bottom:24px;
   line-height:1.1;
 }
+@media (max-width:780px){.compare-grid{grid-template-columns:1fr}}
+
 .compare-list{
   list-style:none;
   display:flex;flex-direction:column;gap:14px;
@@ -683,10 +685,11 @@
 .compare-list li{
   display:flex;
   align-items:flex-start;
-  gap:14px;
+  gap:12px;
   font-size:14px;
   color:var(--muted);
   line-height:1.5;
+  position:relative;
 }
 .compare-list li::before{
   content:"";
@@ -695,39 +698,17 @@
   border-radius:2px;
   flex-shrink:0;
   margin-top:1px;
-  position:relative;
 }
 .compare-card.bad .compare-list li::before{
   background:var(--bg-3);
 }
-.compare-card.bad .compare-list li::after{
-  content:"✕";
-  position:absolute;
-  width:18px;height:18px;
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);
-  color:var(--muted);
-  font-size:13px;
-  margin-left:-29px;
-  margin-top:0;
+.compare-card.good .compare-list li{
+  color:var(--ink-2);
 }
-.compare-card.good .compare-list li{color:var(--ink-2)}
 .compare-card.good .compare-list li::before{
   background:var(--orange);
   border-color:var(--orange);
 }
-.compare-card.good .compare-list li::after{
-  content:"";
-  position:absolute;
-  width:5px;height:9px;
-  border-right:1.5px solid #000;
-  border-bottom:1.5px solid #000;
-  transform:rotate(45deg);
-  margin-left:-23px;
-  margin-top:3px;
-}
-@media (max-width:780px){.compare-grid{grid-template-columns:1fr}}
-
 /* TESTIMONIOS PRO */
 .pro-quotes{
   display:grid;
