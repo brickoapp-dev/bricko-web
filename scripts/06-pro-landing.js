@@ -91,15 +91,6 @@ const ProLanding = window.ProLanding = {
       this._renderCalc();
     });
 
-    // Plan tabs
-    this.overlay.querySelectorAll('#calcPlan .calc-select-opt').forEach(b => {
-      b.addEventListener('click', () => {
-        this.overlay.querySelectorAll('#calcPlan .calc-select-opt').forEach(x => x.classList.toggle('active', x === b));
-        this._calc.commission = parseFloat(b.dataset.commission);
-        this._renderCalc();
-      });
-    });
-
     this._renderCalc();
   },
 
