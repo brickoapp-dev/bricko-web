@@ -54,7 +54,6 @@ const ProLanding = window.ProLanding = {
     oficio:'plomeria',
     jobsPerWeek:5,
     ticket:18000,
-    commission:0.15,
     // ticket promedio por oficio
     ticketDefaults:{
       plomeria:18000, gas:22000, electricidad:20000,
@@ -95,10 +94,10 @@ const ProLanding = window.ProLanding = {
   },
 
   _renderCalc(){
-    const { jobsPerWeek, ticket, commission } = this._calc;
+    const { jobsPerWeek, ticket } = this._calc;
     const jobsMonth = jobsPerWeek * 4;
     const gross = jobsMonth * ticket;
-    const fee = gross * commission;
+    const fee = gross * 0.15;
     const net = gross - fee;
     const year = net * 12;
 
