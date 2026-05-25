@@ -1025,21 +1025,13 @@
 }
 .pro-foot .back:hover{color:var(--orange)}
 .pro-foot .back::before{
-  content:"";
-  display:inline-block;
-  width:14px;height:1.5px;
-  background:currentColor;
-  position:relative;
+  content:"←";
+  font-size:14px;
+  margin-right:8px;
+  line-height:1;
 }
 .pro-foot .back::after{
-  content:"";
-  display:inline-block;
-  width:7px;height:7px;
-  border-left:1.5px solid currentColor;
-  border-top:1.5px solid currentColor;
-  transform:rotate(-45deg);
-  margin-left:-14px;
-  margin-right:6px;
+  display:none;
 }
 .pro-foot .copy{
   font-family:var(--mono);
