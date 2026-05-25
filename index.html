@@ -4437,97 +4437,6 @@
     </div>
   </div>
 
-  <!-- ====== WHATSAPP FLOATING ====== -->
-  <div class="wa-float">
-    <button class="wa-trigger" id="waTrigger" aria-label="Abrir contacto por WhatsApp" aria-expanded="false">
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path
-          d="M16 0C7.2 0 0 7.2 0 16c0 2.8.7 5.5 2.1 7.9L0 32l8.3-2.2c2.3 1.3 5 1.9 7.7 1.9 8.8 0 16-7.2 16-16S24.8 0 16 0zm0 29.3c-2.5 0-4.9-.7-7-1.9l-.5-.3-5.2 1.4 1.4-5-.3-.5c-1.4-2.2-2.1-4.7-2.1-7.2C2.3 8.5 8.5 2.3 16 2.3S29.7 8.5 29.7 16 23.5 29.3 16 29.3zm7.5-9.9c-.4-.2-2.4-1.2-2.8-1.3-.4-.1-.6-.2-.9.2-.3.4-1 1.3-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.3-2-1.2-1.1-2-2.4-2.3-2.8-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.6.2-.2.2-.3.4-.6.1-.2.1-.4 0-.6-.1-.2-.8-2-1.2-2.7-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-1 .5s-1.3 1.3-1.3 3.2 1.4 3.7 1.6 4c.2.2 2.7 4.2 6.7 5.9.9.4 1.7.6 2.3.8 1 .3 1.8.3 2.5.2.8-.1 2.4-1 2.7-1.9.3-.9.3-1.8.2-1.9 0-.1-.3-.2-.7-.4z" />
-      </svg>
-      <span class="wa-badge">!</span>
-    </button>
-
-    <div class="wa-menu" id="waMenu" role="dialog" aria-label="Contactos por WhatsApp">
-      <div class="wa-menu-head">
-        <div class="lbl">EN LÍNEA · LUN-SAB 9-21H</div>
-        <div class="ttl">¿En qué te podemos ayudar?</div>
-        <div class="sub">Escribinos por WhatsApp y te responde un humano del equipo en menos de 10 minutos.</div>
-      </div>
-      <div class="wa-menu-list">
-        <button class="wa-opt" data-wa="general">
-          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-              stroke-linecap="square">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M9.5 9a2.5 2.5 0 0 1 4.9.5c0 1.7-2.4 2.5-2.4 2.5M12 17v.5" />
-            </svg></span>
-          <div class="info">
-            <div class="name">Consulta general</div>
-            <div class="desc">DUDAS · PRECIOS · ZONA</div>
-          </div>
-          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </button>
-        <button class="wa-opt" data-wa="urgencia">
-          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-              stroke-linecap="square">
-              <path d="M13 2L3 14h7v8l10-12h-7z" />
-            </svg></span>
-          <div class="info">
-            <div class="name">Tengo una urgencia</div>
-            <div class="desc">PÉRDIDA · CORTE · EMERGENCIA</div>
-          </div>
-          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </button>
-        <button class="wa-opt" data-wa="obra-nueva">
-          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-              stroke-linecap="square">
-              <path d="M2 21h20M4 21V11l8-6 8 6v10M8 21v-5h8v5" />
-            </svg></span>
-          <div class="info">
-            <div class="name">Obra nueva o reforma grande</div>
-            <div class="desc">PROYECTO · COTIZACIÓN COMPLETA</div>
-          </div>
-          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </button>
-        <button class="wa-opt" data-wa="profesional">
-          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-              stroke-linecap="square">
-              <path d="M2 10l3-5h14l3 5M2 10v9h20v-9M2 10h20M8 14h2M14 14h2" />
-            </svg></span>
-          <div class="info">
-            <div class="name">Soy del oficio</div>
-            <div class="desc">QUIERO SUMARME COMO PROFESIONAL</div>
-          </div>
-          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </button>
-        <button class="wa-opt" data-wa="reclamo">
-          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-              stroke-linecap="square">
-              <path d="M12 2 L22 20 H2 Z" />
-              <path d="M12 9v5M12 17v.5" />
-            </svg></span>
-          <div class="info">
-            <div class="name">Reclamo o garantía</div>
-            <div class="desc">PROBLEMA CON UN TRABAJO</div>
-          </div>
-          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </button>
-      </div>
-      <div class="wa-menu-foot">
-        RESPUESTA EN &lt; 10 MIN · HORARIO HÁBIL
-      </div>
-    </div>
-  </div>
-
   <!-- Toast stack -->
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
@@ -4545,7 +4454,6 @@
 <script src="scripts/06-pro-landing.js" defer></script>
 <script src="scripts/07-pages-nav.js" defer></script>
 <script src="scripts/08-cookie-consent.js" defer></script>
-<script src="scripts/09-whatsapp.js" defer></script>
 <script src="scripts/10-coverage.js" defer></script>
 <script src="scripts/11-misc.js" defer></script>
 </body>
