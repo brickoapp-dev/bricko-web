@@ -677,7 +677,6 @@
   line-height:1.1;
 }
 @media (max-width:780px){.compare-grid{grid-template-columns:1fr}}
-
 .compare-list{
   list-style:none;
   display:flex;flex-direction:column;gap:14px;
@@ -687,27 +686,37 @@
   align-items:flex-start;
   gap:12px;
   font-size:14px;
-  color:var(--muted);
   line-height:1.5;
-  position:relative;
 }
-.compare-list li::before{
-  content:"";
+.compare-list li .icon{
   width:18px;height:18px;
-  border:1px solid var(--line-strong);
   border-radius:2px;
   flex-shrink:0;
   margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
 }
-.compare-card.bad .compare-list li::before{
+.compare-card.bad .compare-list li{color:var(--muted)}
+.compare-card.bad .compare-list li .icon{
   background:var(--bg-3);
+  border:1px solid var(--line-strong);
 }
-.compare-card.good .compare-list li{
-  color:var(--ink-2);
+.compare-card.bad .compare-list li .icon svg{
+  stroke:var(--muted);
 }
-.compare-card.good .compare-list li::before{
+.compare-card.good .compare-list li{color:var(--ink-2)}
+.compare-card.good .compare-list li .icon{
   background:var(--orange);
-  border-color:var(--orange);
+  border:1px solid var(--orange);
+}
+.compare-card.good .compare-list li .icon svg{
+  stroke:#000;
+}
+.compare-list li .icon svg{
+  width:12px;height:12px;
+  fill:none;
+  stroke-width:2;
+  stroke-linecap:square;
+  stroke-linejoin:miter;
 }
 /* TESTIMONIOS PRO */
 .pro-quotes{
