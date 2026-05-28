@@ -276,6 +276,26 @@
   .mode-visual{position:static}
 }
 
+<<<<<<< HEAD
+@media (max-width:680px){
+  .tabs{
+    width:100%;overflow-x:auto;flex-wrap:nowrap;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:10px 18px;white-space:nowrap}
+  .mode-panel h3{font-size:clamp(28px,8vw,52px)}
+  .pros h2{font-size:clamp(32px,9vw,80px)}
+  .cta-stores{flex-direction:column;align-items:center}
+  .store-btn{width:100%;max-width:280px}
+  .faq-q{font-size:16px}
+  .faq-a{padding:0 0 0 36px}
+  .faq-item.open .faq-a{padding:0 0 20px 36px}
+}
+
+=======
+>>>>>>> f5ebf8d4c595702205091a4a6d77c9198b733da2
 /* ==========================================================
    PARA PROFESIONALES
    ========================================================== */
