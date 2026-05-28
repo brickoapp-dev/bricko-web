@@ -5,7 +5,14 @@ const RUBROS_LABELS = window.RUBROS_LABELS = {
   gas: 'Gas',
   electricidad: 'Electricidad',
   albanileria: 'Albañilería',
+<<<<<<< HEAD
+  pintura: 'Pintura',
+  carpinteria: 'Carpintería',
+  herreria: 'Herrería',
+  jardineria: 'Jardinería'
+=======
   pintura: 'Pintura'
+>>>>>>> f5ebf8d4c595702205091a4a6d77c9198b733da2
 };
 const TIPOS_LABELS = window.TIPOS_LABELS = {
   'refaccion': 'Refacción',
@@ -268,7 +275,14 @@ const Wizard = window.Wizard = {
       gas: [160, 50],
       electricidad: [180, 130],
       albanileria: [100, 175],
+<<<<<<< HEAD
+      pintura: [20, 130],
+      carpinteria: [70, 170],
+      herreria: [130, 170],
+      jardineria: [185, 80]
+=======
       pintura: [20, 130]
+>>>>>>> f5ebf8d4c595702205091a4a6d77c9198b733da2
     };
     this.state.rubros.forEach(r => {
       const [x, y] = positions[r];
