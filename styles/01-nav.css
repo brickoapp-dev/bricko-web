@@ -145,6 +145,16 @@
   .theme-toggle{margin-right:4px}
 }
 
+<<<<<<< HEAD
+@media (max-width:480px){
+  .brand{font-size:16px}
+  .brand .cube{width:20px;height:20px}
+  .mobile-menu{padding:20px var(--gutter)}
+  .mobile-menu a{font-size:15px}
+}
+
+=======
+>>>>>>> f5ebf8d4c595702205091a4a6d77c9198b733da2
 /* Mobile menu */
 .mobile-menu{
   position:fixed;
