@@ -1,7 +1,12 @@
 /* 05-dashboard.js — Dashboard dinámico conectado a Supabase */
 
+<<<<<<< HEAD
+window.RUBROS_LABELS = window.RUBROS_LABELS || { plomeria:'Plomería', gas:'Gas', electricidad:'Electricidad', albanileria:'Albañilería', pintura:'Pintura', carpinteria:'Carpintería', herreria:'Herrería', jardineria:'Jardinería' };
+window.TIPOS_LABELS  = window.TIPOS_LABELS  || { refaccion:'Refacción', 'obra-nueva':'Obra Nueva' };
+=======
 var RUBROS_LABELS = RUBROS_LABELS || { plomeria:'Plomería', gas:'Gas', electricidad:'Electricidad', albanileria:'Albañilería', pintura:'Pintura' };
 var TIPOS_LABELS  = TIPOS_LABELS  || { refaccion:'Refacción', 'obra-nueva':'Obra Nueva' };
+>>>>>>> f5ebf8d4c595702205091a4a6d77c9198b733da2
 const Dashboard = window.Dashboard = {
   overlay: null,
   sideEl: null,
