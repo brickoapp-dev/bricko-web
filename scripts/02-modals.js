@@ -119,16 +119,31 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
   const email = form.email.value.trim();
   const password = form.password.value;
   const remember = document.getElementById('loginRemember').checked;
+<<<<<<< HEAD
+  const role = document.getElementById('loginRole').value;
+=======
+>>>>>>> f5ebf8d4c595702205091a4a6d77c9198b733da2
 
   let ok = true;
   if (!EMAIL_RE.test(email)){ setFieldError(form.email, 'Email inválido'); ok = false; }
   if (password.length < 6){ setFieldError(form.password, 'Mínimo 6 caracteres'); ok = false; }
+<<<<<<< HEAD
+  if (!role){
+    toast('error', 'Elegí tu tipo de cuenta', 'Seleccioná si vas a ingresar como cliente o como profesional.');
+    ok = false;
+  }
+=======
+>>>>>>> f5ebf8d4c595702205091a4a6d77c9198b733da2
   if (!ok) return;
 
   const submit = form.querySelector('.auth-submit');
   submit.classList.add('loading');
   try {
+<<<<<<< HEAD
+    const user = await Auth.login({email, password, remember, role});
+=======
     const user = await Auth.login({email, password, remember});
+>>>>>>> f5ebf8d4c595702205091a4a6d77c9198b733da2
     toast('success', 'Sesión iniciada', `Hola de nuevo, ${user.firstName}.`);
     closeModals();
     form.reset();
