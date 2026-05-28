@@ -57,7 +57,12 @@ const ProLanding = window.ProLanding = {
     // ticket promedio por oficio
     ticketDefaults:{
       plomeria:18000, gas:22000, electricidad:20000,
+<<<<<<< HEAD
+      albanileria:16000, pintura:14000, varios:19000,
+      carpinteria:15000, herreria:17000, jardineria:12000
+=======
       albanileria:16000, pintura:14000, varios:19000
+>>>>>>> f5ebf8d4c595702205091a4a6d77c9198b733da2
     }
   },
 
