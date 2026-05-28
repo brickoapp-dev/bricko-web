@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brickø — Mi espacio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/client-dashboard.css" />
+</head>
+<body>
+
+  <div class="blueprint-grid"></div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand">
+        <svg class="cube" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18"/>
+          <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C"/>
+          <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A"/>
+        </svg>
+        <span>BRICK<span class="o-slash">Ø</span></span>
+                <span class="pro-tag">CLIENTE</span>
+      </a>
+
+      <div class="nav-center">
+        <span class="nav-greeting">Hola, <strong id="navUserName">Usuario</strong></span>
+      </div>
+
+      <div class="nav-right">
+        <div class="user-chip" id="userChip">
+          <div class="av" id="userAv">U</div>
+          <span id="userNm">Usuario</span>
+        </div>
+        <button class="btn-logout" id="btnLogout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+            <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- HERO: QUÉ NECESITÁS -->
+    <section class="hero-action">
+      <div class="wrap">
+        <div class="hero-action-head">
+          <span class="eyebrow">¿QUÉ NECESITÁS RESOLVER?</span>
+          <h1>Elegí el tipo<br>de <em>trabajo</em>.</h1>
+        </div>
+
+        <div class="action-cards">
+
+          <!-- REFACCIÓN -->
+          <button class="action-card" id="cardRefaccion" data-type="refaccion">
+            <div class="ac-corner"></div>
+            <div class="ac-num">01</div>
+            <div class="ac-icon">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square">
+                <path d="M8 40V20M8 20L24 8L40 20V40"/>
+                <rect x="18" y="28" width="12" height="12"/>
+                <path d="M16 20h16M16 20V14h16v6"/>
+              </svg>
+            </div>
+            <div class="ac-body">
+              <h2>Refacción</h2>
+              <p>Reparaciones, arreglos puntuales y mejoras sobre algo que ya está construido.</p>
+              <ul class="ac-tags">
+                <li>Plomería</li>
+                <li>Electricidad</li>
+                <li>Gas</li>
+                <li>Pintura</li>
+                <li>Albañilería</li>
+                <li>Carpintería</li>
+                <li>Herrería</li>
+                <li>Jardinería</li>
+              </ul>
+            </div>
+            <div class="ac-cta">
+              Solicitar <span class="arrow"></span>
+            </div>
+          </button>
+
+          <!-- OBRA NUEVA -->
+          <button class="action-card" id="cardObra" data-type="obra">
+            <div class="ac-corner"></div>
+            <div class="ac-num">02</div>
+            <div class="ac-icon">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square">
+                <rect x="4" y="34" width="40" height="6"/>
+                <path d="M8 34V20M40 34V20"/>
+                <path d="M4 20L24 6L44 20"/>
+                <path d="M18 34V24h12v10"/>
+                <path d="M14 20h20"/>
+              </svg>
+            </div>
+            <div class="ac-body">
+              <h2>Obra Nueva</h2>
+              <p>Construcción desde cero o ampliación. Coordinamos todos los gremios por vos.</p>
+              <ul class="ac-tags">
+                <li>Coordinación multi-gremio</li>
+                <li>Project Manager</li>
+                <li>Cronograma</li>
+                <li>Reportes</li>
+              </ul>
+            </div>
+            <div class="ac-cta">
+              Planificar <span class="arrow"></span>
+            </div>
+          </button>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- MIS SOLICITUDES ACTIVAS -->
+    <section class="my-requests" id="myRequests">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">MIS SOLICITUDES</span>
+            <h3>En curso <em>ahora</em>.</h3>
+          </div>
+          <span class="req-count" id="reqCount">— activas</span>
+        </div>
+
+        <!-- TOOLBAR -->
+        <div class="req-toolbar">
+          <div class="req-filters" id="reqFilters">
+            <button class="rfil active" data-filter="all">Todas</button>
+            <button class="rfil" data-filter="pendiente">
+              <span class="rfil-dot s-pendiente"></span>Pendiente
+            </button>
+            <button class="rfil" data-filter="cotizando">
+              <span class="rfil-dot s-cotizando"></span>Cotizando
+            </button>
+            <button class="rfil" data-filter="activo">
+              <span class="rfil-dot s-activo"></span>En ejecución
+            </button>
+          </div>
+          <div class="req-sort-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 6h18M7 12h10M11 18h2"/>
+            </svg>
+            <select id="reqSort">
+              <option value="fecha">Más reciente</option>
+              <option value="urgencia">Más urgente</option>
+              <option value="status">Por estado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="requests-grid" id="requestsGrid">
+          <!-- Llenado por JS -->
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyRequests" style="display:none">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2"/>
+            </svg>
+          </div>
+          <p>No tenés solicitudes activas.</p>
+          <span>Empezá eligiendo un tipo de trabajo arriba.</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- DETAIL DRAWER -->
+  <div class="detail-overlay" id="detailOverlay">
+    <div class="detail-panel" id="detailPanel">
+      <div class="dp-nav">
+        <span class="dp-id" id="dpId">REQ / BX-2026-0000</span>
+        <button class="dp-close" id="dpClose"></button>
+      </div>
+      <div class="dp-scroll">
+        <div id="dpContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="scripts/supabase.min.js"></script>
+  <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/01-auth.js" defer></script>
+  <script src="scripts/client-dashboard.js"></script>
+</body>
+</html>

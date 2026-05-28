@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brickø — Obra Nueva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/request-form.css" />
+</head>
+<body data-form-type="obra">
+
+  <div class="blueprint-grid"></div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand">
+        <svg class="cube" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18"/>
+          <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C"/>
+          <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A"/>
+        </svg>
+        BRICK<span class="o">Ø</span>
+      </a>
+      <div class="nav-center">
+        <span class="nav-crumb">Mi espacio <span class="crumb-sep">/</span> Nueva solicitud <span class="crumb-sep">/</span> <strong>Obra Nueva</strong></span>
+      </div>
+      <div class="nav-right">
+        <div class="user-chip">
+          <div class="av" id="userAv">U</div>
+          <span id="userNm">Usuario</span>
+        </div>
+        <button class="btn-logout" id="btnLogout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+            <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="req-page">
+      <div class="wrap">
+
+        <!-- PAGE HEAD -->
+        <div class="req-page-head">
+          <a href="client.html" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+              <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
+            </svg>
+            Volver al inicio
+          </a>
+          <div><span class="eyebrow">NUEVA SOLICITUD</span></div>
+          <h1>Obra <em>Nueva</em>.</h1>
+          <p class="req-page-sub">Describí tu proyecto. Un Project Manager de Brickø coordinará todos los gremios, el cronograma y el seguimiento por vos.</p>
+        </div>
+
+        <!-- LAYOUT: FORM + SIDEBAR -->
+        <div class="req-layout">
+
+          <!-- FORM -->
+          <div class="req-form-panel">
+            <div class="form-card">
+              <div class="form-card-head">
+                <span class="form-card-id">REQ / OBRA NUEVA</span>
+                <span class="form-card-dot"></span>
+              </div>
+
+              <form id="requestForm" novalidate>
+
+                <!-- /01 DESCRIPCIÓN -->
+                <div class="form-section">
+                  <label class="form-label" for="reqDesc"><span class="lx">/01</span> Describí el proyecto</label>
+                  <textarea id="reqDesc" class="form-input" placeholder="Contanos qué querés construir o ampliar: tipo de obra, materiales que tenés en mente, si ya tenés planos, el estado actual del terreno o espacio, etc." rows="6"></textarea>
+                </div>
+
+                <!-- /02 TIPO DE CONSTRUCCIÓN -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/02</span> Tipo de construcción</label>
+                  <div class="chip-grid" data-field="tipo_construccion">
+                    <button type="button" class="chip" data-value="vivienda">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                      Vivienda
+                    </button>
+                    <button type="button" class="chip" data-value="ampliacion">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                      Ampliación
+                    </button>
+                    <button type="button" class="chip" data-value="local">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9zM3 9l2-6h14l2 6"/><path d="M12 9v12"/></svg>
+                      Local comercial
+                    </button>
+                    <button type="button" class="chip" data-value="oficina">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                      Oficina
+                    </button>
+                    <button type="button" class="chip" data-value="otro">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                      Otro
+                    </button>
+                  </div>
+                </div>
+
+                <!-- /03 ETAPA -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/03</span> Etapa del proyecto</label>
+                  <div class="chip-grid" data-field="etapa">
+                    <button type="button" class="chip" data-value="ideas">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.5-1 4.5-3 6l-1 1H9l-1-1C6 13.5 5 11.5 5 9a7 7 0 0 1 7-7z"/></svg>
+                      Solo tengo ideas
+                    </button>
+                    <button type="button" class="chip" data-value="planos">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                      Tengo planos
+                    </button>
+                    <button type="button" class="chip" data-value="listo">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      Listo para construir
+                    </button>
+                  </div>
+                </div>
+
+                <!-- /04 FOTOS / PLANOS -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/04</span> Fotos o planos <span class="label-opt">· opcional</span></label>
+                  <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="imgInput" accept="image/*,.pdf" multiple />
+                    <div class="upload-empty" id="uploadEmpty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                      <p>Arrastrá fotos o planos acá o <span class="upload-link">seleccioná archivos</span></p>
+                      <span>JPG, PNG o PDF · Hasta 5 archivos · 10 MB c/u</span>
+                    </div>
+                    <div class="img-previews-grid" id="imgPreviews"></div>
+                    <div class="upload-add-more" id="uploadAddMore">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                      Agregar más archivos
+                    </div>
+                  </div>
+                </div>
+
+                <!-- /05 SUPERFICIE -->
+                <div class="form-section">
+                  <label class="form-label" for="reqSuperficie"><span class="lx">/05</span> Superficie estimada <span class="label-opt">· opcional</span></label>
+                  <div class="input-suffix">
+                    <input type="number" id="reqSuperficie" class="form-input" placeholder="0" min="1" />
+                    <span class="suffix-label">m²</span>
+                  </div>
+                </div>
+
+                <!-- /06 URGENCIA -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/06</span> Urgencia</label>
+                  <div class="urgency-grid" data-field="urgencia">
+                    <button type="button" class="urg-btn selected" data-value="baja">
+                      <div class="urg-bars"><span></span><span></span><span></span></div>
+                      <span>Sin apuro</span>
+                    </button>
+                    <button type="button" class="urg-btn" data-value="media">
+                      <div class="urg-bars"><span></span><span></span><span></span></div>
+                      <span>Este mes</span>
+                    </button>
+                    <button type="button" class="urg-btn" data-value="alta">
+                      <div class="urg-bars"><span></span><span></span><span></span></div>
+                      <span>Urgente</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- /07 UBICACIÓN -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/07</span> Ubicación del proyecto</label>
+                  <div class="address-grid">
+                    <div class="addr-field">
+                      <span class="addr-sublabel">Provincia</span>
+                      <select id="reqProvincia" class="form-input">
+                        <option value="">Seleccioná...</option>
+                        <option>Buenos Aires</option>
+                        <option>CABA</option>
+                        <option>Catamarca</option>
+                        <option>Chaco</option>
+                        <option>Chubut</option>
+                        <option>Córdoba</option>
+                        <option>Corrientes</option>
+                        <option>Entre Ríos</option>
+                        <option>Formosa</option>
+                        <option>Jujuy</option>
+                        <option>La Pampa</option>
+                        <option>La Rioja</option>
+                        <option>Mendoza</option>
+                        <option>Misiones</option>
+                        <option>Neuquén</option>
+                        <option>Río Negro</option>
+                        <option>Salta</option>
+                        <option>San Juan</option>
+                        <option>San Luis</option>
+                        <option>Santa Cruz</option>
+                        <option>Santa Fe</option>
+                        <option>Santiago del Estero</option>
+                        <option>Tierra del Fuego</option>
+                        <option>Tucumán</option>
+                      </select>
+                    </div>
+                    <div class="addr-field">
+                      <span class="addr-sublabel">Código postal</span>
+                      <input type="text" id="reqCP" class="form-input" placeholder="Ej: 1414" maxlength="8" />
+                    </div>
+                    <div class="addr-field addr-field--ciudad">
+                      <span class="addr-sublabel">Ciudad / Localidad</span>
+                      <input type="text" id="reqCiudad" class="form-input" placeholder="Ej: Palermo" />
+                    </div>
+                    <div class="addr-field addr-field--direccion">
+                      <span class="addr-sublabel">Calle y número</span>
+                      <input type="text" id="reqDireccion" class="form-input" placeholder="Ej: Av. Corrientes 1234" />
+                    </div>
+                  </div>
+                  <div class="map-preview" id="mapPreview">
+                    <div class="map-empty" id="mapEmpty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      <p>Completá la dirección para ver la ubicación en el mapa</p>
+                    </div>
+                    <iframe id="mapIframe" src="" title="Mapa de ubicación" allowfullscreen loading="lazy"></iframe>
+                  </div>
+                </div>
+
+                <div class="form-submit-row">
+                  <button type="submit" class="btn-submit">
+                    Planificar proyecto <span class="arrow"></span>
+                  </button>
+                </div>
+
+              </form>
+            </div>
+          </div>
+
+          <!-- SIDEBAR -->
+          <aside class="req-sidebar">
+
+            <div class="sidebar-card">
+              <div class="sidebar-card-head">CÓMO FUNCIONA</div>
+              <ol class="sidebar-steps">
+                <li class="step">
+                  <span class="step-num">01</span>
+                  <div>
+                    <strong>PM asignado</strong>
+                    <p>Te asignamos un Project Manager en menos de 24 hs.</p>
+                  </div>
+                </li>
+                <div class="step-connector"></div>
+                <li class="step">
+                  <span class="step-num">02</span>
+                  <div>
+                    <strong>Reunión de relevamiento</strong>
+                    <p>Tu PM visita el lugar y entiende el proyecto en detalle.</p>
+                  </div>
+                </li>
+                <div class="step-connector"></div>
+                <li class="step">
+                  <span class="step-num">03</span>
+                  <div>
+                    <strong>Plan y cronograma</strong>
+                    <p>Recibís un cronograma completo con etapas y costos.</p>
+                  </div>
+                </li>
+                <div class="step-connector"></div>
+                <li class="step">
+                  <span class="step-num">04</span>
+                  <div>
+                    <strong>Ejecución coordinada</strong>
+                    <p>Tu PM gestiona todos los gremios. Vos solo aprobás.</p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <div class="sidebar-card sidebar-trust">
+              <div class="sidebar-card-head">INCLUYE</div>
+              <div class="trust-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <div>
+                  <strong>Project Manager dedicado</strong>
+                  <p>Un punto de contacto que coordina todos los gremios.</p>
+                </div>
+              </div>
+              <div class="trust-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <div>
+                  <strong>Reportes semanales</strong>
+                  <p>Seguimiento del avance, fotos y actualizaciones cada semana.</p>
+                </div>
+              </div>
+              <div class="trust-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <div>
+                  <strong>Profesionales verificados</strong>
+                  <p>Todos los gremios pasan por verificación de identidad y calidad.</p>
+                </div>
+              </div>
+            </div>
+
+          </aside>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- SUCCESS -->
+  <div class="success-overlay" id="successOverlay" style="display:none">
+    <div class="success-box">
+      <div class="success-seal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#F25C18" stroke-width="2" stroke-linecap="round">
+          <path d="M5 12l5 5L20 7"/>
+        </svg>
+      </div>
+      <div class="success-ticket" id="successTicket">TICKET #BX-2026-0000</div>
+      <h2>Proyecto<br><em>registrado.</em></h2>
+      <p>Recibimos tu solicitud. Un Project Manager de Brickø se va a poner en contacto con vos dentro de las próximas 24 horas.</p>
+      <button class="btn-submit" id="successClose">Volver al inicio</button>
+    </div>
+  </div>
+
+  <script src="scripts/supabase.min.js"></script>
+  <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/01-auth.js" defer></script>
+  <script src="scripts/request-form.js"></script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brickø — Nueva Refacción</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/request-form.css" />
+</head>
+<body data-form-type="refaccion">
+
+  <div class="blueprint-grid"></div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand">
+        <svg class="cube" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18"/>
+          <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C"/>
+          <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A"/>
+        </svg>
+        BRICK<span class="o">Ø</span>
+      </a>
+      <div class="nav-center">
+        <span class="nav-crumb">Mi espacio <span class="crumb-sep">/</span> Nueva solicitud <span class="crumb-sep">/</span> <strong>Refacción</strong></span>
+      </div>
+      <div class="nav-right">
+        <div class="user-chip">
+          <div class="av" id="userAv">U</div>
+          <span id="userNm">Usuario</span>
+        </div>
+        <button class="btn-logout" id="btnLogout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+            <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="req-page">
+      <div class="wrap">
+
+        <!-- PAGE HEAD -->
+        <div class="req-page-head">
+          <a href="client.html" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+              <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
+            </svg>
+            Volver al inicio
+          </a>
+          <div><span class="eyebrow">NUEVA SOLICITUD</span></div>
+          <h1>Refacción.</h1>
+          <p class="req-page-sub">Elegí el rubro y describí el trabajo. Recibís hasta 3 presupuestos de profesionales verificados en menos de 48 hs.</p>
+        </div>
+
+        <!-- LAYOUT: FORM + SIDEBAR -->
+        <div class="req-layout">
+
+          <!-- FORM -->
+          <div class="req-form-panel">
+            <div class="form-card">
+              <div class="form-card-head">
+                <span class="form-card-id">REQ / REFACCIÓN</span>
+                <span class="form-card-dot"></span>
+              </div>
+
+              <form id="requestForm" novalidate>
+
+                <!-- /01 RUBRO -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/01</span> ¿Qué rubro necesitás?</label>
+                  <div class="chip-grid" data-field="rubro">
+                    <button type="button" class="chip" data-value="plomeria">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3v8M6 11h10M16 11v8M16 19h5M6 3H3M6 3h4"/></svg>
+                      Plomería
+                    </button>
+                    <button type="button" class="chip" data-value="gas">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v3M9 6h6v5H9ZM10 11v6M14 11v6M9 17h6M12 17v4"/></svg>
+                      Gas
+                    </button>
+                    <button type="button" class="chip" data-value="electricidad">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 3L5 14h6l-2 7 10-11h-6l2-7z"/></svg>
+                      Electricidad
+                    </button>
+                    <button type="button" class="chip" data-value="albanileria">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21V6h5V3h8v3h5v15zM3 12h18M8 6v15M16 6v15"/></svg>
+                      Albañilería
+                    </button>
+                    <button type="button" class="chip" data-value="pintura">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 5h10v7H5ZM15 8h5l1.5 5v4l-3 2-3-2v-4L15 8M17.5 19v3"/></svg>
+                      Pintura
+                    </button>
+                    <button type="button" class="chip" data-value="carpinteria">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h18M3 17h18M7 3v18M17 3v18"/></svg>
+                      Carpintería
+                    </button>
+                    <button type="button" class="chip" data-value="herreria">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3v8M6 11c0 4.5 4.5 6 6 8 1.5-2 6-3.5 6-8V3M4 3h16M4 6h16M9 20h6M12 19v3"/></svg>
+                      Herrería
+                    </button>
+                    <button type="button" class="chip" data-value="jardineria">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3c0 0-6 4.5-6 10.5C6 17 9 20 12 20s6-3 6-6.5C18 7.5 12 3 12 3z"/><path d="M12 20v3M8 23h8M9 13c.75-1.5 2-2.25 3-3"/></svg>
+                      Jardinería
+                    </button>
+                  </div>
+                </div>
+
+                <!-- /02 DESCRIPCIÓN -->
+                <div class="form-section">
+                  <label class="form-label" for="reqDesc"><span class="lx">/02</span> Describí el trabajo</label>
+                  <textarea id="reqDesc" class="form-input" placeholder="Contanos qué necesitás con el mayor detalle posible. Podés mencionar materiales, medidas o el problema que querés resolver." rows="5"></textarea>
+                </div>
+
+                <!-- /03 FOTOS -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/03</span> Fotos del problema <span class="label-opt">· opcional</span></label>
+                  <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="imgInput" accept="image/*" multiple />
+                    <div class="upload-empty" id="uploadEmpty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                      </svg>
+                      <p>Arrastrá fotos acá o <span class="upload-link">seleccioná archivos</span></p>
+                      <span>JPG o PNG · Hasta 5 imágenes · 10 MB c/u</span>
+                    </div>
+                    <div class="img-previews-grid" id="imgPreviews"></div>
+                    <div class="upload-add-more" id="uploadAddMore">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                      Agregar más fotos
+                    </div>
+                  </div>
+                </div>
+
+                <!-- /04 URGENCIA -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/04</span> Urgencia</label>
+                  <div class="urgency-grid" data-field="urgencia">
+                    <button type="button" class="urg-btn" data-value="baja">
+                      <div class="urg-bars"><span></span><span></span><span></span></div>
+                      <span>Sin apuro</span>
+                    </button>
+                    <button type="button" class="urg-btn" data-value="media">
+                      <div class="urg-bars"><span></span><span></span><span></span></div>
+                      <span>Esta semana</span>
+                    </button>
+                    <button type="button" class="urg-btn selected" data-value="alta">
+                      <div class="urg-bars"><span></span><span></span><span></span></div>
+                      <span>Urgente</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- /05 UBICACIÓN -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/05</span> Ubicación del trabajo</label>
+                  <div class="address-grid">
+                    <div class="addr-field">
+                      <span class="addr-sublabel">Provincia</span>
+                      <select id="reqProvincia" class="form-input">
+                        <option value="">Seleccioná...</option>
+                        <option>Buenos Aires</option>
+                        <option>CABA</option>
+                        <option>Catamarca</option>
+                        <option>Chaco</option>
+                        <option>Chubut</option>
+                        <option>Córdoba</option>
+                        <option>Corrientes</option>
+                        <option>Entre Ríos</option>
+                        <option>Formosa</option>
+                        <option>Jujuy</option>
+                        <option>La Pampa</option>
+                        <option>La Rioja</option>
+                        <option>Mendoza</option>
+                        <option>Misiones</option>
+                        <option>Neuquén</option>
+                        <option>Río Negro</option>
+                        <option>Salta</option>
+                        <option>San Juan</option>
+                        <option>San Luis</option>
+                        <option>Santa Cruz</option>
+                        <option>Santa Fe</option>
+                        <option>Santiago del Estero</option>
+                        <option>Tierra del Fuego</option>
+                        <option>Tucumán</option>
+                      </select>
+                    </div>
+                    <div class="addr-field">
+                      <span class="addr-sublabel">Código postal</span>
+                      <input type="text" id="reqCP" class="form-input" placeholder="Ej: 1414" maxlength="8" />
+                    </div>
+                    <div class="addr-field addr-field--ciudad">
+                      <span class="addr-sublabel">Ciudad / Localidad</span>
+                      <input type="text" id="reqCiudad" class="form-input" placeholder="Ej: Palermo" />
+                    </div>
+                    <div class="addr-field addr-field--direccion">
+                      <span class="addr-sublabel">Calle y número</span>
+                      <input type="text" id="reqDireccion" class="form-input" placeholder="Ej: Av. Corrientes 1234" />
+                    </div>
+                  </div>
+                  <div class="map-preview" id="mapPreview">
+                    <div class="map-empty" id="mapEmpty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      <p>Completá la dirección para ver la ubicación en el mapa</p>
+                    </div>
+                    <iframe id="mapIframe" src="" title="Mapa de ubicación" allowfullscreen loading="lazy"></iframe>
+                  </div>
+                </div>
+
+                <div class="form-submit-row">
+                  <button type="submit" class="btn-submit">
+                    Enviar solicitud <span class="arrow"></span>
+                  </button>
+                </div>
+
+              </form>
+            </div>
+          </div>
+
+          <!-- SIDEBAR -->
+          <aside class="req-sidebar">
+
+            <div class="sidebar-card">
+              <div class="sidebar-card-head">QUÉ PASA DESPUÉS</div>
+              <ol class="sidebar-steps">
+                <li class="step">
+                  <span class="step-num">01</span>
+                  <div>
+                    <strong>Tu solicitud se publica</strong>
+                    <p>Los profesionales verificados de tu zona la reciben al instante.</p>
+                  </div>
+                </li>
+                <div class="step-connector"></div>
+                <li class="step">
+                  <span class="step-num">02</span>
+                  <div>
+                    <strong>Recibís presupuestos</strong>
+                    <p>En menos de 48 hs tenés hasta 3 propuestas comparables.</p>
+                  </div>
+                </li>
+                <div class="step-connector"></div>
+                <li class="step">
+                  <span class="step-num">03</span>
+                  <div>
+                    <strong>Elegís y coordinás</strong>
+                    <p>Seleccionás al profesional y coordinan el trabajo por Brickø.</p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <div class="sidebar-card sidebar-trust">
+              <div class="sidebar-card-head">POR QUÉ BRICKØ</div>
+              <div class="trust-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <div>
+                  <strong>Profesionales verificados</strong>
+                  <p>Verificación de identidad y antecedentes en todos los casos.</p>
+                </div>
+              </div>
+              <div class="trust-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                </svg>
+                <div>
+                  <strong>Respuesta en 48 hs</strong>
+                  <p>Garantizamos al menos un presupuesto en tu zona.</p>
+                </div>
+              </div>
+              <div class="trust-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                <div>
+                  <strong>Hasta 3 presupuestos</strong>
+                  <p>Comparás opciones y elegís la que mejor se ajusta a tu necesidad.</p>
+                </div>
+              </div>
+            </div>
+
+          </aside>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- SUCCESS -->
+  <div class="success-overlay" id="successOverlay" style="display:none">
+    <div class="success-box">
+      <div class="success-seal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#F25C18" stroke-width="2" stroke-linecap="round">
+          <path d="M5 12l5 5L20 7"/>
+        </svg>
+      </div>
+      <div class="success-ticket" id="successTicket">TICKET #BX-2026-0000</div>
+      <h2>Solicitud<br><em>enviada.</em></h2>
+      <p>Los profesionales de tu zona reciben la solicitud ahora. Te llegará el primer presupuesto en menos de 48 horas.</p>
+      <button class="btn-submit" id="successClose">Volver al inicio</button>
+    </div>
+  </div>
+
+  <script src="scripts/supabase.min.js"></script>
+  <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/01-auth.js" defer></script>
+  <script src="scripts/request-form.js"></script>
+</body>
+</html>
