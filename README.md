@@ -1,13 +1,23 @@
 # Brickø — Sitio web
 
-Plataforma de servicios de construcción. Conecta usuarios con plomeros, gasistas, electricistas, albañiles y pintores verificados.
+Marketplace de servicios de construcción en Argentina. Conecta clientes que necesitan refacciones u obras nuevas con plomeros, gasistas, electricistas, albañiles, pintores, carpinteros, herreros y jardineros verificados.
 
-## Cómo abrirlo
+**Producción:** [brickø.com](https://xn--brick-zua.com) — deploy automático vía GitHub Pages desde `main`.
+
+## Stack
+
+| Capa | Tecnología |
+|---|---|
+| Frontend | HTML/CSS/JS vanilla (sin frameworks ni build step) |
+| Backend | [Supabase](https://supabase.com) (Auth + Postgres + RLS) |
+| Hosting | GitHub Pages (sitio estático) |
+| DNS | Hostinger → GitHub Pages |
+
+## Cómo correrlo en local
 
 **Opción A — Live Server de VS Code (recomendado)**
 1. Abrir esta carpeta en VS Code
 2. Click derecho en `index.html` → "Open with Live Server"
-3. Listo
 
 **Opción B — Cualquier servidor estático**
 ```bash
@@ -18,99 +28,88 @@ npx serve .
 ```
 Luego abrir `http://localhost:8000`
 
-**No funciona con doble click** (file://) porque algunos navegadores bloquean cargar CSS/JS externos. Usá un servidor local.
+**No funciona con doble click** (file://) porque el navegador bloquea los módulos externos. Usá un servidor local.
 
-## Estructura
+> El sitio en local pega contra el **mismo Supabase de producción**. Cuidado con los datos de prueba.
+
+## Arquitectura
+
+Cada vista es una página HTML independiente que carga solo los scripts y estilos que necesita. No hay overlays ni wizard inline: la navegación es entre páginas reales.
 
 ```
-brickø/
-├── index.html          ← HTML principal (estructura del sitio)
-├── styles/             ← Hojas de estilo, una por sección
-│   ├── 00-base.css           Variables, tipografía, grid, animaciones globales
-│   ├── 01-nav.css            Topbar y navegación principal
-│   ├── 02-hero.css           Hero + ticker
-│   ├── 03-sections.css       Secciones de la home (Cómo funciona, Servicios, etc.)
-│   ├── 04-footer.css         Footer
-│   ├── 05-auth.css           Modales login/registro/reset
-│   ├── 06-wizard.css         Wizard "Solicitar servicio"
-│   ├── 07-drawer.css         User chip + drawer lateral
-│   ├── 08-dashboard.css      Dashboard del cliente
-│   ├── 09-pro-landing.css    Landing para profesionales
-│   ├── 10-pages.css          Páginas legales y secundarias
-│   ├── 11-cookie-banner.css  Banner de cookies
-│   ├── 12-whatsapp.css       WhatsApp flotante
-│   └── 13-coverage.css       Mapa de cobertura
-└── scripts/            ← JavaScript, también modular
-    ├── 00-theme.js              Toggle dark/light + anti-flash
-    ├── 01-auth.js               Sistema de autenticación (modo demo)
-    ├── 02-modals.js             Modales de login/registro/reset
-    ├── 02b-drawer.js            User drawer lateral
-    ├── 03-toasts.js             Sistema de toasts
-    ├── 04-wizard.js             Wizard de solicitud
-    ├── 05-dashboard.js          Dashboard
-    ├── 06-pro-landing.js        Landing pro + calculadora
-    ├── 07-pages-nav.js          Navegador entre páginas legales
-    ├── 08-cookie-consent.js     Banner cookies
-    ├── 09-whatsapp.js           WhatsApp flotante
-    ├── 10-coverage.js           Mapa de cobertura
-    └── 11-misc.js               Mobile menu, scroll reveal, etc.
+brickø web/
+├── index.html                  Landing + modales de login/registro (CSS y JS propios inline)
+├── client.html                 Dashboard del cliente (mis solicitudes, presupuestos)
+├── pro.html                    Dashboard del profesional (feed de solicitudes, cotizar)
+├── solicitud-refaccion.html    Formulario de solicitud de refacción
+├── solicitud-obra.html         Formulario de solicitud de obra nueva
+├── pro-presupuesto.html        Prototipo standalone (demo con datos hardcodeados, NO conectado)
+├── CNAME                       Dominio custom (xn--brick-zua.com)
+├── scripts/
+│   ├── supabase.min.js         SDK de Supabase
+│   ├── 00-supabase.js          Inicialización del cliente (window.supabase_client)
+│   ├── 01-auth.js              Auth real: registro, login, logout, restore de sesión, redirect por rol
+│   ├── client-dashboard.js     Lógica de client.html
+│   ├── pro-dashboard.js        Lógica de pro.html
+│   └── request-form.js         Lógica compartida de los dos formularios de solicitud
+└── styles/
+    ├── client-dashboard.css    Estilos de client.html (incluye su propio design system)
+    ├── pro-dashboard.css       Estilos de pro.html (ídem)
+    └── request-form.css        Estilos de los formularios (ídem)
 ```
 
-## Cómo editar
+### Qué carga cada página
 
-### Cambiar un color global (naranja, fondo, etc.)
-→ `styles/00-base.css`. Las variables CSS están al principio en `:root` y `[data-theme="light"]`.
+| Página | Scripts | CSS |
+|---|---|---|
+| index.html | supabase.min + 00-supabase + 01-auth + inline | inline |
+| client.html | supabase.min + 00-supabase + 01-auth + client-dashboard | client-dashboard.css |
+| pro.html | supabase.min + 00-supabase + 01-auth + pro-dashboard | pro-dashboard.css |
+| solicitud-*.html | supabase.min + 00-supabase + 01-auth + request-form | request-form.css |
+| pro-presupuesto.html | — (todo inline, demo) | inline |
 
-### Tocar una sección específica
-→ Ir al archivo CSS que corresponda. Cada archivo tiene un comentario inicial explicando qué contiene.
+Cada CSS define sus propias variables en `:root` — son autosuficientes, no dependen entre sí.
 
-### Cambiar comportamiento de algún componente
-→ Ir al JS correspondiente. Por ejemplo, el wizard está en `scripts/04-wizard.js`.
+## Flujo principal
 
-### Conectar el backend real
-Los archivos que tienen llamadas mock (modo demo) tienen comentarios `// TODO BACKEND` donde cambiar:
-- `scripts/01-auth.js` — registro, login, reset password
-- `scripts/04-wizard.js` — envío de solicitud (método `_submit`)
-- `scripts/05-dashboard.js` — carga de solicitudes del usuario
-- `scripts/06-pro-landing.js` — alta de profesionales
+1. **Cliente** se registra en index → redirect automático a `client.html`
+2. Elige Refacción u Obra Nueva → completa el formulario → la solicitud se inserta en Supabase con status `pending`
+3. **Profesional** ve la solicitud en su feed (`pro.html`) → envía presupuesto → la solicitud pasa a `quoted`
+4. El cliente ve el presupuesto en el detalle de su solicitud → lo acepta → la solicitud pasa a `active` y los demás presupuestos se rechazan automáticamente
 
-## Orden de carga del JavaScript
+## Datos (Supabase)
 
-El orden importa porque algunos archivos exponen funciones que otros usan vía `window.X`:
+### Tablas
 
-1. `00-theme.js` — autónomo
-2. `01-auth.js` — expone `window.Auth`
-3. `03-toasts.js` — expone `window.toast`
-4. `02b-drawer.js` — expone `window.openDrawer`, `window.closeDrawer`
-5. `02-modals.js` — expone `window.openModal`, `window.closeModals`, `window.setFieldError`, `window.clearFieldError`
-6. `04-wizard.js` — usa `Auth`, `toast`, `openModal`, expone `window.Wizard`
-7. `05-dashboard.js` — usa `Auth`, `toast`, expone `window.Dashboard`
-8. `06-pro-landing.js` — expone `window.ProLanding`
-9. `07-pages-nav.js` — expone `window.PagesNav`
-10. `08-cookie-consent.js` — expone `window.CookieConsent`
-11. `09-whatsapp.js` — expone `window.WhatsApp`
-12. `10-coverage.js` — expone `window.Coverage`
-13. `11-misc.js` — varias utilidades sueltas
+- **profiles** — `id, first_name, last_name, phone, role, city`
+- **professionals** — `id, rubro, years_experience, verified, rating, jobs_completed, bio`
+- **requests** — `id (UUID), user_id, ticket_id, tipo, rubros[], titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at`
+- **quotes** — `id, request_id, pro_id, amount, description, features[], status, created_at`
 
-Si querés reordenar, hay que respetar las dependencias.
+### Convenciones
 
-## Tests
+- **Status en inglés en la DB**, mapeado a español en el JS:
+  `pending` → Pendiente · `quoted` → Cotizando · `active` → En curso · `done` → Finalizada · `cancelled` → Cancelada
+- **tipo**: `refaccion` | `obra-nueva` (la UI dice "Obra" pero la DB guarda `obra-nueva`)
+- **urgencia**: `baja` | `media` | `alta`
+- **role**: `cliente` | `profesional`
+- El **título** de la solicitud se genera automáticamente desde los rubros (refacción) o el tipo de construcción (obra)
 
-Para el testing automatizado (E2E con Playwright), mirá los archivos en `/tmp/e2e.js` del entorno de desarrollo. El sitio pasa **28/28 tests** sin errores de consola.
+### Sesión (localStorage / sessionStorage)
 
-## Tema oscuro/claro
+- `bricko-session` — sesión completa: `{userId, email, firstName, lastName, role, oficio, loggedAt}`
+- `bricko-user` — versión simple: `{id, name, email, role}`
 
-El sitio detecta `prefers-color-scheme` del sistema en la primera visita, guarda la elección del usuario en `localStorage` bajo la clave `bricko-theme`. Hay un script anti-flash en `<head>` que aplica el tema antes del primer render.
+`01-auth.js` guarda ambas al loguear y las limpia al desloguear. Las páginas internas leen `bricko-session` para la protección de página: sin sesión → redirect a index; rol equivocado → redirect al dashboard correcto.
 
-## Persistencia local (modo demo)
+## Roadmap
 
-Mientras no haya backend, el sitio usa `localStorage` para:
-- `bricko-session` — sesión actual del usuario
-- `bricko-users-demo` — usuarios "registrados"
-- `bricko-requests` — solicitudes enviadas
-- `bricko-wizard-draft` — borrador del wizard
-- `bricko-theme` — preferencia de tema
-- `bricko-consent` — consentimiento de cookies
-- `bricko-pro-applications` — postulaciones de profesionales
+- [ ] Conectar `pro-presupuesto.html` a Supabase (hoy es demo standalone)
+- [ ] Subir fotos de solicitudes a Supabase Storage (hoy solo preview local)
+- [ ] Integrar Mercado Pago (frontend JS + Supabase Edge Functions para webhooks)
+- [ ] Comprar `bricko.com` como fallback del dominio (la `ø` aparece como punycode al compartir links)
+- [ ] Revisar features de la landing vieja que quedaron afuera (banner de cookies, WhatsApp flotante, páginas legales, mapa de cobertura) — decidir si vuelven y reescribirlas contra el HTML nuevo
 
-Todo esto se reemplaza por llamadas al backend cuando se conecte.
+## Historia
+
+La versión anterior era un `index.html` monolítico de ~4.400 líneas con el wizard y el dashboard como overlays, y persistencia en localStorage (modo demo). Esa arquitectura se reemplazó por completo en junio 2026 por páginas separadas + Supabase real. Los archivos viejos (`04-wizard.js`, `05-dashboard.js`, CSS por sección, etc.) se eliminaron — están disponibles en el historial de Git si hace falta consultarlos.
