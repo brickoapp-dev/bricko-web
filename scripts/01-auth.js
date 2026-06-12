@@ -1,7 +1,19 @@
-/* 01-auth.js — Sistema de autenticación con Supabase */
+/* 01-auth.js — Autenticación con Supabase + redirect según rol */
 
 const Auth = {
   STORAGE_KEY: 'bricko-session',
+  USER_KEY: 'bricko-user', // Convención usada por client-dashboard.js, pro-dashboard.js y request-form.js
+
+  // Detecta si estamos en la landing (index.html) o en una página interna
+  _isIndexPage(){
+    return !!document.getElementById('authLogin') || !!document.getElementById('authRegister');
+  },
+
+  // Redirige al dashboard correspondiente según el rol
+  _redirectToDashboard(role){
+    const target = role === 'profesional' ? 'pro.html' : 'client.html';
+    window.location.href = target;
+  },
 
   // ---- API pública ----
   async register({firstName, lastName, email, phone, password, role, oficio}){
@@ -22,7 +34,7 @@ const Auth = {
 
     if (error) throw new Error(error.message);
 
-    // Crear perfil en la tabla profiles
+    // Crear perfil en profiles
     const { error: profileError } = await sb.from('profiles').insert({
       id: data.user.id,
       first_name: firstName,
@@ -49,29 +61,28 @@ const Auth = {
 
     const user = {
       id: data.user.id,
-      firstName,
-      lastName,
+      firstName, lastName,
       email: email.toLowerCase(),
       phone,
       role: role || 'cliente',
       oficio: oficio || null
     };
     this._setSession(user);
+
+    // Redirigir al dashboard según rol
+    this._redirectToDashboard(user.role);
     return user;
   },
 
   async login({email, password, remember}){
     const sb = window.supabase_client;
-    const { data, error } = await sb.auth.signInWithPassword({
-      email,
-      password
-    });
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
     if (error) throw new Error(error.message === 'Invalid login credentials'
       ? 'Email o contraseña incorrectos'
       : error.message);
 
-    // Cargar perfil desde la tabla profiles
+    // Cargar perfil desde profiles
     const { data: profile } = await sb.from('profiles')
       .select('*')
       .eq('id', data.user.id)
@@ -87,6 +98,9 @@ const Auth = {
       oficio: data.user.user_metadata?.oficio || null
     };
     this._setSession(user, remember);
+
+    // Redirigir al dashboard según rol
+    this._redirectToDashboard(user.role);
     return user;
   },
 
@@ -104,10 +118,14 @@ const Auth = {
     await sb.auth.signOut();
     try { localStorage.removeItem(this.STORAGE_KEY); } catch(e){}
     try { sessionStorage.removeItem(this.STORAGE_KEY); } catch(e){}
-    this._render();
+    try { localStorage.removeItem(this.USER_KEY); } catch(e){}
+    try { sessionStorage.removeItem(this.USER_KEY); } catch(e){}
+    // Volver a la landing
+    window.location.replace('index.html');
   },
 
   _setSession(user, remember = true){
+    // Formato propio (bricko-session)
     const session = {
       userId: user.id,
       email: user.email,
@@ -117,9 +135,18 @@ const Auth = {
       oficio: user.oficio,
       loggedAt: new Date().toISOString()
     };
+    // Formato esperado por los scripts nuevos de Alan (bricko-user)
+    const simpleUser = {
+      id: user.id,
+      name: (user.firstName + ' ' + user.lastName).trim() || user.email?.split('@')[0],
+      email: user.email,
+      role: user.role
+    };
+
     try {
       const store = remember ? localStorage : sessionStorage;
       store.setItem(this.STORAGE_KEY, JSON.stringify(session));
+      store.setItem(this.USER_KEY, JSON.stringify(simpleUser));
     } catch(e){}
     this._render();
   },
@@ -131,26 +158,32 @@ const Auth = {
     } catch(e){ return null; }
   },
 
+  // Render seguro — solo actualiza elementos que existan en la página actual
   _render(){
     const session = this.getSession();
-    const chip = document.getElementById('userChip');
     const body = document.body;
     if (session){
-      body.classList.add('is-authed');
-      chip.classList.add('show');
+      body?.classList.add('is-authed');
       const initials = ((session.firstName?.[0] || '') + (session.lastName?.[0] || '')).toUpperCase() || 'BR';
-      document.getElementById('userAv').textContent = initials;
-      document.getElementById('userNm').textContent = session.firstName;
-      // Drawer
-      document.getElementById('drawerAv').textContent = initials;
-      document.getElementById('drawerName').textContent = session.firstName + ' ' + session.lastName;
-      document.getElementById('drawerEmail').textContent = session.email;
-      document.getElementById('drawerRole').textContent = session.role === 'profesional' ? 'PROFESIONAL' : 'CLIENTE';
-      // Contar solicitudes del usuario
+
+      const set = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      };
+      const addClass = (id, cls) => document.getElementById(id)?.classList.add(cls);
+
+      addClass('userChip', 'show');
+      set('userAv', initials);
+      set('userNm', session.firstName);
+      // Drawer (solo si existe — old index.html)
+      set('drawerAv', initials);
+      set('drawerName', session.firstName + ' ' + session.lastName);
+      set('drawerEmail', session.email);
+      set('drawerRole', session.role === 'profesional' ? 'PROFESIONAL' : 'CLIENTE');
       this._updateRequestCount();
     } else {
-      body.classList.remove('is-authed');
-      chip.classList.remove('show');
+      body?.classList.remove('is-authed');
+      document.getElementById('userChip')?.classList.remove('show');
       document.getElementById('userDrawer')?.classList.remove('open');
       document.getElementById('userDrawerOverlay')?.classList.remove('open');
       document.getElementById('userChip')?.setAttribute('aria-expanded', 'false');
@@ -160,23 +193,31 @@ const Auth = {
   async _updateRequestCount(){
     const session = this.getSession();
     if (!session) return;
+    const el = document.getElementById('drawerReqsCount');
+    if (!el) return; // Solo en old index.html
     try {
       const sb = window.supabase_client;
       const { count } = await sb.from('requests')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', session.userId);
-      document.getElementById('drawerReqsCount').textContent = count || '0';
+      el.textContent = count || '0';
     } catch(e){
-      document.getElementById('drawerReqsCount').textContent = '0';
+      el.textContent = '0';
     }
   },
 
   async init(){
-    // Verificar si hay sesión activa de Supabase
     const sb = window.supabase_client;
+    if (!sb) {
+      console.warn('Supabase client no disponible en Auth.init()');
+      this._render();
+      return;
+    }
+
     const { data: { session } } = await sb.auth.getSession();
+
+    // Hay sesión de Supabase pero no datos locales: restaurar
     if (session && !this.getSession()){
-      // Hay sesión de Supabase pero no local — restaurar
       const { data: profile } = await sb.from('profiles')
         .select('*')
         .eq('id', session.user.id)
@@ -193,13 +234,23 @@ const Auth = {
       };
       this._setSession(user);
     }
+
     this._render();
 
-    // Escuchar cambios de sesión
-    sb.auth.onAuthStateChange((event, session) => {
+    // Si estamos en index.html y hay sesión activa, redirigir al dashboard
+    const currentSession = this.getSession();
+    if (currentSession && this._isIndexPage()){
+      this._redirectToDashboard(currentSession.role);
+      return;
+    }
+
+    // Escuchar cambios de sesión (logout desde otra tab, expiración, etc.)
+    sb.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT'){
         try { localStorage.removeItem(this.STORAGE_KEY); } catch(e){}
         try { sessionStorage.removeItem(this.STORAGE_KEY); } catch(e){}
+        try { localStorage.removeItem(this.USER_KEY); } catch(e){}
+        try { sessionStorage.removeItem(this.USER_KEY); } catch(e){}
         this._render();
       }
     });
