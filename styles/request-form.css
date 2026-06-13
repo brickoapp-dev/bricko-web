@@ -43,6 +43,25 @@
   --grid-strong: rgba(10,10,10,.10);
   --map-filter: none;
 }
+[data-theme="blueprint"] {
+  --bg: #0C2340;
+  --bg-1: #102A4C;
+  --bg-2: #143158;
+  --bg-3: #1B3B68;
+  --line: rgba(234,243,255,.14);
+  --line-strong: rgba(234,243,255,.26);
+  --ink: #EAF3FF;
+  --ink-2: #CFE0F5;
+  --muted: #8FA9C9;
+  --muted-2: #5E7896;
+  --orange: #F25C18;
+  --orange-dim: rgba(242,92,24,.16);
+  --orange-line: rgba(242,92,24,.45);
+  --nav-bg: rgba(12,35,64,.85);
+  --grid: rgba(234,243,255,.05);
+  --grid-strong: rgba(234,243,255,.11);
+  --map-filter: invert(86%) hue-rotate(170deg) saturate(.6) brightness(.8);
+}
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
