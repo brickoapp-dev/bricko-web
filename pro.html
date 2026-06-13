@@ -1,14 +1,25 @@
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('bricko-theme');
+      if (t === 'dark' || t === 'light' || t === 'blueprint')
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <title>Brickø Profesional</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="styles/pro-dashboard.css" />
 </head>
+
 <body>
 
   <div class="blueprint-grid"></div>
@@ -18,9 +29,9 @@
     <div class="nav-inner">
       <a href="index.html" class="brand">
         <svg class="cube" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18"/>
-          <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C"/>
-          <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A"/>
+          <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+          <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C" />
+          <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A" />
         </svg>
         <span>BRICK<span class="o-slash">Ø</span></span>
         <span class="pro-tag">PROFESIONAL</span>
@@ -57,7 +68,7 @@
         </div>
         <button class="btn-logout" id="btnLogout">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
-            <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
           </svg>
         </button>
       </div>
@@ -133,7 +144,8 @@
         <div class="feed-empty" id="feedEmpty" style="display:none">
           <div class="empty-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="11" cy="11" r="8"/><path d="M21 21l-5-5"/>
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-5-5" />
             </svg>
           </div>
           <h4>Sin solicitudes para este filtro.</h4>
@@ -215,7 +227,8 @@
           </div>
           <div class="qf-field">
             <label class="qf-label" for="quoteDesc"><span class="lx">/02</span> Descripción del trabajo</label>
-            <textarea id="quoteDesc" class="form-input" rows="3" placeholder="Explicá qué incluye tu presupuesto: materiales, mano de obra, plazos..."></textarea>
+            <textarea id="quoteDesc" class="form-input" rows="3"
+              placeholder="Explicá qué incluye tu presupuesto: materiales, mano de obra, plazos..."></textarea>
           </div>
           <div class="qf-field">
             <label class="qf-label" for="quoteDias"><span class="lx">/03</span> Plazo estimado</label>
@@ -235,4 +248,5 @@
   <script src="scripts/01-auth.js" defer></script>
   <script src="scripts/pro-dashboard.js"></script>
 </body>
+
 </html>

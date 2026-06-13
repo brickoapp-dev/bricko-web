@@ -4,6 +4,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('bricko-theme');
+      if (t === 'dark' || t === 'light' || t === 'blueprint')
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <meta name="description"
     content="Brickø — Plataforma que conecta profesionales de la construcción verificados con personas que necesitan reparar o construir. Plomería, gas, electricidad, albañilería y pintura." />
   <meta name="theme-color" content="#0A0A0A" />
@@ -89,6 +96,34 @@
       --plan-ink: #0A0A0A;
       --nav-bg: rgba(237, 236, 233, .78);
       --shadow: 0 40px 80px -40px rgba(0, 0, 0, .20);
+    }
+
+    [data-theme="blueprint"] {
+      --bg: #0C2340;
+      --bg-1: #102A4C;
+      --bg-2: #143158;
+      --bg-3: #1B3B68;
+      --ink: #EAF3FF;
+      --ink-2: #CFE0F5;
+      --muted: #8FA9C9;
+      --muted-2: #5E7896;
+      --line: rgba(234, 243, 255, .13);
+      --line-2: rgba(234, 243, 255, .24);
+      --grid: rgba(234, 243, 255, .06);
+      --orange: #F25C18;
+      --orange-br: #FF6F33;
+      --orange-soft: rgba(242, 92, 24, .17);
+      --orange-line: rgba(242, 92, 24, .45);
+      --glow: rgba(242, 92, 24, .22);
+      --ok: #3FB950;
+      --err: #E54E10;
+      --cube-1: #0F2A4C;
+      --cube-2: #1B3B68;
+      --cube-stroke: #8FA9C9;
+      --plan-grid: rgba(234, 243, 255, .18);
+      --plan-ink: #EAF3FF;
+      --nav-bg: rgba(12, 35, 64, .78);
+      --shadow: 0 40px 80px -40px rgba(0, 0, 0, .7);
     }
 
     * {
@@ -439,6 +474,22 @@
 
     .theme-toggle:hover svg {
       stroke: var(--orange);
+    }
+
+    .icon-plan {
+      opacity: 0;
+      transform: rotate(-90deg) scale(.5);
+    }
+
+    [data-theme="blueprint"] .icon-moon,
+    [data-theme="blueprint"] .icon-sun {
+      opacity: 0;
+      transform: rotate(90deg) scale(.5);
+    }
+
+    [data-theme="blueprint"] .icon-plan {
+      opacity: 1;
+      transform: none;
     }
 
     .icon-sun {
@@ -2576,6 +2627,9 @@
             <path
               d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
           </svg>
+          <svg class="icon-plan" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18" />
+          </svg>
         </button>
         <button class="btn btn-ghost auth-trigger" data-open="login">Ingresar</button>
         <button class="btn btn-primary auth-trigger" data-open="register">Crear cuenta <span
@@ -3296,10 +3350,12 @@
       const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
 
       /* ===================== TEMA ===================== */
-      const html = document.documentElement;
+      const THEMES = ['dark', 'light', 'blueprint'];
       $('#themeToggle').addEventListener('click', () => {
         html.classList.add('theme-anim');
-        html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+        const next = THEMES[(THEMES.indexOf(html.getAttribute('data-theme') || 'dark') + 1) % THEMES.length];
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('bricko-theme', next);
         setTimeout(() => html.classList.remove('theme-anim'), 450);
       });
 
@@ -3581,7 +3637,7 @@
       $('#logoutBtn').addEventListener('click', async () => {
         try {
           await Auth.logout();
-        } catch(e) {
+        } catch (e) {
           // Fallback: limpiar manualmente si Auth.logout falla
           localStorage.removeItem(STORAGE_KEY);
           sessionStorage.removeItem(STORAGE_KEY);

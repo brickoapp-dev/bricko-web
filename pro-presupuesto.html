@@ -4,6 +4,13 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+        (function () {
+            var t = localStorage.getItem('bricko-theme');
+            if (t === 'dark' || t === 'light' || t === 'blueprint')
+                document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <meta name="description"
         content="Brickø Profesional — Cartelera de solicitudes en tu zona. Filtrá los trabajos disponibles y enviá tu presupuesto." />
     <meta name="theme-color" content="#0A0A0A" />
@@ -53,6 +60,32 @@
             --gutter: 28px;
             --r: 6px;
             --nav-h: 62px;
+        }
+
+        [data-theme="blueprint"] {
+            --bg: #0C2340;
+            --bg-1: #102A4C;
+            --bg-2: #143158;
+            --bg-3: #1B3B68;
+            --ink: #EAF3FF;
+            --ink-2: #CFE0F5;
+            --muted: #8FA9C9;
+            --muted-2: #5E7896;
+            --line: rgba(234, 243, 255, .13);
+            --line-2: rgba(234, 243, 255, .24);
+            --grid: rgba(234, 243, 255, .06);
+            --orange: #F25C18;
+            --orange-br: #FF6F33;
+            --orange-soft: rgba(242, 92, 24, .17);
+            --orange-line: rgba(242, 92, 24, .45);
+            --glow: rgba(242, 92, 24, .22);
+            --ok: #3FB950;
+            --err: #E54E10;
+            --amber: #E0A52C;
+            --cube-1: #0F2A4C;
+            --cube-2: #1B3B68;
+            --nav-bg: rgba(12, 35, 64, .78);
+            --shadow: 0 40px 80px -40px rgba(0, 0, 0, .7);
         }
 
         * {
