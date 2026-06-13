@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initFilters();
   initModal();
   initLogout();
+  initCursorGlow();
 
   await loadMyQuotes(session.userId);
   await loadRequests();
@@ -316,10 +317,10 @@ async function submitQuote(){
   const plazo = document.getElementById('quoteDias')?.value.trim() || '';
 
   if (!amount || amount <= 0){
-    alert('Ingresá un monto válido.'); return;
+    toast('err', 'Monto inválido', 'Ingresá un monto mayor a cero.'); return;
   }
   if (!description){
-    alert('Describí qué incluye el presupuesto.'); return;
+    toast('err', 'Falta descripción', 'Describí qué incluye el presupuesto.'); return;
   }
 
   const btn = document.getElementById('btnSendQuote');
@@ -337,7 +338,7 @@ async function submitQuote(){
     const { data, error } = await sb.from('quotes').insert(payload).select().single();
     if (error){
       console.error('Error insertando quote:', error);
-      alert('No pudimos enviar el presupuesto: ' + error.message);
+      toast('err', 'Error al enviar', error.message || 'No pudimos enviar el presupuesto.');
       if (btn) btn.disabled = false;
       return;
     }
@@ -348,12 +349,14 @@ async function submitQuote(){
     }
 
     MY_QUOTES.set(CURRENT_REQ.id, data);
+    const fmt = Number(amount).toLocaleString('es-AR');
     closeModal();
+    toast('ok', 'Presupuesto enviado', `$${fmt} enviado a ${CURRENT_REQ.clientName || 'el cliente'}.`);
     await loadRequests();
     updateStats();
   } catch(err){
     console.error('Excepción enviando quote:', err);
-    alert('No pudimos enviar el presupuesto.');
+    toast('err', 'Error al enviar', 'No pudimos enviar el presupuesto.');
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -380,6 +383,40 @@ function initLogout(){
       window.location.replace('index.html');
     }
   });
+}
+
+/* ── Toast system ────────────────────────────────────── */
+const TICONS = {
+  ok:   '<path d="M20 6L9 17l-5-5"/>',
+  err:  '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 8v.5M12 11v5"/>'
+};
+function toast(type, title, msg){
+  const stack = document.getElementById('toastStack');
+  if (!stack) return;
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type === 'ok' ? 'ok' : type === 'err' ? 'err' : '');
+  el.innerHTML = `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor">${TICONS[type] || TICONS.info}</svg><div><div class="t">${title}</div><div class="m">${msg}</div></div>`;
+  stack.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+  setTimeout(() => { el.classList.remove('in'); setTimeout(() => el.remove(), 400); }, 4200);
+}
+
+/* ── Cursor glow ─────────────────────────────────────── */
+function initCursorGlow(){
+  if (!window.matchMedia('(pointer:fine)').matches) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let raf = null;
+  window.addEventListener('pointermove', (e) => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      document.body.classList.add('spot-on');
+      document.body.style.setProperty('--mx', e.clientX + 'px');
+      document.body.style.setProperty('--my', e.clientY + 'px');
+      raf = null;
+    });
+  });
+  window.addEventListener('mouseleave', () => document.body.classList.remove('spot-on'));
 }
 
 /* ── Helpers ─────────────────────────────────────────── */
