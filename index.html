@@ -732,16 +732,28 @@
        HERO
        ========================================================== */
     .hero {
-      padding: 150px 0 90px;
-      min-height: 100svh;
+      padding: 180px 0 90px;
       display: flex;
+      flex-direction: column;
       align-items: center;
+      min-height: 100svh;
+      justify-content: center;
     }
 
-    .hero-grid {
+    .hero-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 960px;
+      margin: 0 auto 70px;
+      width: 100%;
+    }
+
+    .hero-bottom {
       display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
-      gap: 64px;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
       align-items: center;
       width: 100%;
     }
@@ -759,7 +771,7 @@
     .hero h1 {
       font-family: var(--display);
       font-weight: 800;
-      font-size: clamp(48px, 7.4vw, 104px);
+      font-size: clamp(52px, 8vw, 112px);
       letter-spacing: -.04em;
       line-height: .94;
       text-transform: uppercase;
@@ -807,9 +819,9 @@
 
     .hero-sub {
       margin-top: 30px;
-      font-size: 18px;
+      font-size: 19px;
       color: var(--muted);
-      max-width: 52ch;
+      max-width: 62ch;
       opacity: 0;
       animation: fadeUp .9s ease forwards .6s;
     }
@@ -822,6 +834,7 @@
     .hero-ctas {
       margin-top: 36px;
       display: flex;
+      justify-content: center;
       gap: 13px;
       flex-wrap: wrap;
       opacity: 0;
@@ -838,6 +851,7 @@
       opacity: 0;
       animation: fadeUp .9s ease forwards .85s;
       display: flex;
+      justify-content: center;
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
@@ -1180,14 +1194,15 @@
 
     /* ===== Stats bajo el hero ===== */
     .stats-row {
-      margin-top: 90px;
+      margin-top: 0;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: 1fr 1fr;
       gap: 1px;
       background: var(--line);
       border: 1px solid var(--line);
       border-radius: var(--r);
       overflow: hidden;
+      align-self: stretch;
     }
 
     .stat {
@@ -2483,13 +2498,14 @@
        RESPONSIVE
        ========================================================== */
     @media (max-width: 1024px) {
-      .hero-grid {
+      .hero-bottom {
         grid-template-columns: 1fr;
         gap: 56px;
       }
 
       .hero-visual {
         max-width: 440px;
+        margin: 0 auto;
       }
 
       .steps,
@@ -2523,7 +2539,7 @@
       }
 
       .stats-row {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
       }
 
       .steps,
@@ -2685,29 +2701,29 @@
     <!-- ====== HERO ====== -->
     <section class="hero">
       <div class="wrap">
-        <div class="hero-grid">
-          <div>
-            <h1>
-              <span class="ln ln-1"><span>Tu obra,</span></span>
-              <span class="ln ln-2"><span>tu <em>refacción</em>,</span></span>
-              <span class="ln ln-3"><span>resuelta.</span></span>
-            </h1>
-            <p class="hero-sub">
-              Brickø conecta a <strong>plomeros, gasistas, electricistas, albañiles y pintores</strong>
-              verificados con personas que necesitan reparar o construir. Publicás lo que necesitás,
-              recibís presupuestos y elegís.
-            </p>
-            <div class="hero-ctas">
-              <button class="btn btn-primary btn-lg" data-open="register" data-role="cliente">Buscar profesionales <span
-                  class="arrow"></span></button>
-              <button class="btn btn-ghost btn-lg" data-open="register" data-role="profesional">Soy profesional</button>
-            </div>
-            <div class="hero-trust">
-              <span>Gratis para clientes</span><span class="dot"></span>
-              <span>Profesionales matriculados</span><span class="dot"></span>
-            </div>
+        <div class="hero-content">
+          <h1>
+            <span class="ln ln-1"><span>Tu obra,</span></span>
+            <span class="ln ln-2"><span>tu <em>refacción</em>,</span></span>
+            <span class="ln ln-3"><span>resuelta.</span></span>
+          </h1>
+          <p class="hero-sub">
+            Brickø conecta a <strong>plomeros, gasistas, electricistas, albañiles y pintores</strong>
+            verificados con personas que necesitan reparar o construir. Publicás lo que necesitás,
+            recibís presupuestos y elegís.
+          </p>
+          <div class="hero-ctas">
+            <button class="btn btn-primary btn-lg" data-open="register" data-role="cliente">Buscar profesionales <span
+                class="arrow"></span></button>
+            <button class="btn btn-ghost btn-lg" data-open="register" data-role="profesional">Soy profesional</button>
           </div>
+          <div class="hero-trust">
+            <span>Gratis para clientes</span><span class="dot"></span>
+            <span>Profesionales matriculados</span><span class="dot"></span>
+          </div>
+        </div>
 
+        <div class="hero-bottom">
           <!-- Pieza dinámica: plano isométrico vivo -->
           <div class="hero-visual">
             <div class="hero-sheet">
@@ -2748,28 +2764,27 @@
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Stats -->
-      <div class="stats-row reveal">
-        <div class="stat">
-          <div class="n"><span data-count="4872" data-thousands>0</span><span>↗</span></div>
-          <div class="l">Profesionales activos</div>
+          <!-- Stats -->
+          <div class="stats-row reveal">
+            <div class="stat">
+              <div class="n"><span data-count="4872" data-thousands>0</span><span>↗</span></div>
+              <div class="l">Profesionales activos</div>
+            </div>
+            <div class="stat">
+              <div class="n"><span data-count="28" data-suffix="k">0</span><span>+</span></div>
+              <div class="l">Trabajos completados</div>
+            </div>
+            <div class="stat">
+              <div class="n"><span data-count="4.9" data-decimals="1">0</span><span>★</span></div>
+              <div class="l">Satisfacción promedio</div>
+            </div>
+            <div class="stat">
+              <div class="n"><span data-count="48">0</span><span>h</span></div>
+              <div class="l">Respuesta media</div>
+            </div>
+          </div>
         </div>
-        <div class="stat">
-          <div class="n"><span data-count="28" data-suffix="k">0</span><span>+</span></div>
-          <div class="l">Trabajos completados</div>
-        </div>
-        <div class="stat">
-          <div class="n"><span data-count="4.9" data-decimals="1">0</span><span>★</span></div>
-          <div class="l">Satisfacción promedio</div>
-        </div>
-        <div class="stat">
-          <div class="n"><span data-count="48">0</span><span>h</span></div>
-          <div class="l">Respuesta media</div>
-        </div>
-      </div>
       </div>
     </section>
 
