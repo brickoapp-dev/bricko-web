@@ -393,6 +393,11 @@
       align-items: center;
       justify-content: space-between;
       gap: 22px;
+      transition: padding .4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .nav.scrolled .nav-inner {
+      padding: 8px var(--gutter);
     }
 
     .brand {
@@ -410,6 +415,20 @@
       width: 26px;
       height: 26px;
       flex-shrink: 0;
+    }
+
+    .brand .brand-text {
+      display: inline-block;
+      overflow: hidden;
+      white-space: nowrap;
+      max-width: 60px; /* Ancho suficiente para "BRICK" */
+      vertical-align: bottom;
+      transition: max-width .5s cubic-bezier(0.6, 0, 0.2, 1), opacity .35s ease;
+    }
+
+    .nav.scrolled .brand .brand-text {
+      max-width: 0;
+      opacity: 0;
     }
 
     .brand .o {
@@ -2623,7 +2642,7 @@
           <path class="iso-left" d="M2 7 L2 17 L12 22 L12 12 Z" />
           <path class="iso-right" d="M22 7 L22 17 L12 22 L12 12 Z" />
         </svg>
-        <span>BRICK<span class="o">Ø</span></span>
+        <span style="display: flex; align-items: center;"><span class="brand-text">BRICK</span><span class="o">Ø</span></span>
       </a>
 
       <nav class="nav-links" aria-label="Principal">
