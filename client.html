@@ -23,6 +23,7 @@
 <body>
 
   <div class="blueprint-grid"></div>
+  <div class="bg-spot"></div>
 
   <!-- NAV -->
   <header class="nav">
@@ -186,18 +187,7 @@
 
   </main>
 
-  <!-- DETAIL DRAWER -->
-  <div class="detail-overlay" id="detailOverlay">
-    <div class="detail-panel" id="detailPanel">
-      <div class="dp-nav">
-        <span class="dp-id" id="dpId">REQ / BX-2026-0000</span>
-        <button class="dp-close" id="dpClose"></button>
-      </div>
-      <div class="dp-scroll">
-        <div id="dpContent"></div>
-      </div>
-    </div>
-  </div>
+  <div class="toast-stack" id="toastStack"></div>
 
   <script src="scripts/supabase.min.js"></script>
   <script src="scripts/00-supabase.js"></script>
