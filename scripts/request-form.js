@@ -318,8 +318,8 @@ function handleFormSubmit(e){
   const tipoConstruccion = TIPO_CONSTRUCCION_VALUES.has(tipoConstruccionRaw) ? tipoConstruccionRaw : null;
   const urgencia = URG_VALUES.has(urgenciaRaw) ? urgenciaRaw : 'media';
 
-  // Generar ticket
-  const ticketId = 'BX-' + new Date().getFullYear() + '-' + Math.floor(Math.random() * 9000 + 1000);
+  // El ticket_id lo asigna un trigger server-side de forma única (no se genera
+  // en el cliente para evitar colisiones contra el UNIQUE).
 
   // Título
   const rubrosReadable = rubros.map(r => RUBRO_LABELS[r] || r);
@@ -345,7 +345,6 @@ function handleFormSubmit(e){
 
   pendingPayload = {
     user_id: session.userId,
-    ticket_id: ticketId,
     tipo: tipoDB,                            // 'refaccion' | 'obra-nueva'
     rubros: rubros.length ? rubros : ['albanileria'],
     titulo,
@@ -427,14 +426,16 @@ async function handleConfirmPublish(){
   // Separar metadatos visuales antes de la inserción en DB
   const { _meta, ...dbPayload } = pendingPayload;
 
+  let savedTicketId = '';
   try {
-    const { error } = await sb.from('requests').insert(dbPayload);
+    const { data, error } = await sb.from('requests').insert(dbPayload).select('ticket_id').single();
     if (error){
       console.error('Error al guardar en Supabase:', error);
       alert('No pudimos publicar la solicitud. Revisá tu conexión e intentá de nuevo.\n\nDetalle: ' + error.message);
       if (btnConfirm) btnConfirm.disabled = false;
       return;
     }
+    savedTicketId = data?.ticket_id || '';
   } catch(err){
     console.error('Excepción al guardar:', err);
     alert('No pudimos guardar la solicitud. Intentá de nuevo.');
@@ -448,7 +449,7 @@ async function handleConfirmPublish(){
   // Mostrar modal de éxito con el Ticket ID
   const ticketEl = document.getElementById('successTicket');
   const overlay  = document.getElementById('successOverlay');
-  if (ticketEl) ticketEl.textContent = 'TICKET #' + dbPayload.ticket_id;
+  if (ticketEl) ticketEl.textContent = 'TICKET #' + savedTicketId;
   if (overlay)  overlay.style.display = 'flex';
 }
 
@@ -470,4 +471,3 @@ function escapeHTML(s){
   if (s == null) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 }
-
