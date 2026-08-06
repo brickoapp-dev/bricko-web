@@ -260,9 +260,8 @@ async function submitQuote(req, session){
       if (btn){ btn.disabled = false; btn.classList.remove('loading'); }
       return;
     }
-    if (req.status === 'pending'){
-      await sb.from('requests').update({ status: 'quoted' }).eq('id', req.id);
-    }
+    // La transición pending -> quoted la hace un trigger en la DB al insertar
+    // la quote (el pro no es dueño de la request y RLS bloqueaba este update).
     const fmt = Number(amount).toLocaleString('es-AR');
     toast('ok', 'Presupuesto enviado', `$${fmt} enviado correctamente.`);
     setTimeout(() => showExistingQuote(data), 600);
