@@ -8,13 +8,30 @@ const URG_VALUES   = new Set(['baja','media','alta']);
 const ETAPA_VALUES = new Set(['ideas','planos','listo']);
 const TIPO_CONSTRUCCION_VALUES = new Set(['vivienda','ampliacion','local','oficina','otro']);
 const RUBRO_LABELS = {
-  plomeria:'Plomería', gas:'Gas', electricidad:'Electricidad',
-  albanileria:'Albañilería', pintura:'Pintura', carpinteria:'Carpintería',
-  herreria:'Herrería', jardineria:'Jardinería'
+  albanileria: 'Albañilería',
+  plomeria: 'Plomería',
+  electricidad: 'Electricidad',
+  gas: 'Gas',
+  terminaciones: 'Terminaciones',
+  exteriores: 'Exteriores',
+  'limpieza-transporte': 'Limpieza y transporte',
+  'diseno-planificacion': 'Diseño y Planificación',
+  pintura: 'Pintura', carpinteria: 'Carpintería', herreria: 'Herrería', jardineria: 'Jardinería'
+};
+const MODO_PAGO_LABELS = {
+  hitos: 'Pago por hitos',
+  finalizar: 'Pago al finalizar',
+  contratista: 'A elección del contratista'
+};
+const URG_LABELS = {
+  baja: 'Sin apuro',
+  media: 'Este mes',
+  alta: 'Urgente'
 };
 
 /* ── Estado ──────────────────────────────────────────── */
 let uploadedFiles = [];
+let pendingPayload = null;
 
 /* ── Page protection ─────────────────────────────────── */
 function getSession(){
@@ -57,14 +74,14 @@ function loadUserUI(session){
   if (nmEl) nmEl.textContent = display;
 }
 
-/* ── Chips: rubro (multi), etapa/tipo_construccion (single) ─ */
+/* ── Chips: rubro (multi), modo_pago/etapa/tipo_construccion (single) ─ */
 function initChips(){
   // Multi-select para rubros
   document.querySelectorAll('[data-field="rubro"] .chip').forEach(chip => {
     chip.addEventListener('click', () => chip.classList.toggle('selected'));
   });
-  // Single-select para etapa y tipo_construccion
-  ['etapa','tipo_construccion'].forEach(field => {
+  // Single-select para modo_pago, etapa y tipo_construccion
+  ['modo_pago','etapa','tipo_construccion'].forEach(field => {
     const grid = document.querySelector(`[data-field="${field}"]`);
     if (!grid) return;
     grid.querySelectorAll('.chip').forEach(chip => {
@@ -210,10 +227,20 @@ function updateMap(){
   mapEmpty.style.display = 'none';
 }
 
-/* ── Submit ──────────────────────────────────────────── */
+/* ── Submit & Summary Modal ───────────────────────────── */
 function initForm(){
   const form = document.getElementById('requestForm');
-  if (form) form.addEventListener('submit', handleSubmit);
+  if (form) form.addEventListener('submit', handleFormSubmit);
+
+  const btnEdit = document.getElementById('btnEditSummary');
+  const btnCloseSummary = document.getElementById('summaryCloseBtn');
+  const summaryOverlay = document.getElementById('summaryOverlay');
+
+  if (btnEdit) btnEdit.addEventListener('click', () => { if (summaryOverlay) summaryOverlay.style.display = 'none'; });
+  if (btnCloseSummary) btnCloseSummary.addEventListener('click', () => { if (summaryOverlay) summaryOverlay.style.display = 'none'; });
+
+  const btnConfirm = document.getElementById('btnConfirmPublish');
+  if (btnConfirm) btnConfirm.addEventListener('click', handleConfirmPublish);
 
   const successClose = document.getElementById('successClose');
   if (successClose) successClose.addEventListener('click', () => {
@@ -221,7 +248,7 @@ function initForm(){
   });
 }
 
-async function handleSubmit(e){
+function handleFormSubmit(e){
   e.preventDefault();
   const session = requireAuth();
   if (!session) return;
@@ -238,7 +265,8 @@ async function handleSubmit(e){
   const ciudad    = document.getElementById('reqCiudad')?.value    || '';
   const cp        = document.getElementById('reqCP')?.value        || '';
   const direccion = document.getElementById('reqDireccion')?.value || '';
-  const addr = [direccion, ciudad, cp, provincia].filter(Boolean).join(', ') || 'Dirección no especificada';
+  const addrParts = [direccion, ciudad, cp, provincia].filter(Boolean);
+  const addr = addrParts.join(', ') || 'Dirección no especificada';
 
   // Validación mínima: descripción
   if (!desc){
@@ -253,6 +281,7 @@ async function handleSubmit(e){
 
   // Selecciones
   const rubros = [...document.querySelectorAll('[data-field="rubro"] .chip.selected')].map(c => c.dataset.value);
+  const modoPagoKey = document.querySelector('[data-field="modo_pago"] .chip.selected')?.dataset.value || 'hitos';
   const etapaRaw = document.querySelector('[data-field="etapa"] .chip.selected')?.dataset.value || null;
   const tipoConstruccionRaw = document.querySelector('[data-field="tipo_construccion"] .chip.selected')?.dataset.value || null;
   const urgenciaRaw = document.querySelector('[data-field="urgencia"] .urg-btn.selected')?.dataset.value || 'media';
@@ -264,57 +293,124 @@ async function handleSubmit(e){
   // Generar ticket
   const ticketId = 'BX-' + new Date().getFullYear() + '-' + Math.floor(Math.random() * 9000 + 1000);
 
-  // Generar título a partir de rubros (refacción) o tipo_construccion (obra)
+  // Título
+  const rubrosReadable = rubros.map(r => RUBRO_LABELS[r] || r);
   const titulo = formType === 'refaccion'
-    ? (rubros.length
-        ? rubros.map(r => RUBRO_LABELS[r] || r).join(' + ') + ' — Solicitud'
-        : 'Refacción')
-    : (tipoConstruccion
-        ? tipoConstruccion.charAt(0).toUpperCase() + tipoConstruccion.slice(1) + ' — Obra Nueva'
-        : 'Obra Nueva');
+    ? (rubrosReadable.length ? rubrosReadable.join(' + ') + ' — Solicitud' : 'Refacción')
+    : (rubrosReadable.length ? rubrosReadable.join(' + ') + ' — Obra Nueva' : 'Obra Nueva');
 
-  // Payload para Supabase
-  const payload = {
+  const modoPagoLabel = MODO_PAGO_LABELS[modoPagoKey] || modoPagoKey;
+
+  // Descripción formateada para almacenar también el modo de pago de forma transparente
+  const fullDesc = desc + `\n\n[Modo de pago: ${modoPagoLabel}]`;
+
+  pendingPayload = {
     user_id: session.userId,
     ticket_id: ticketId,
     tipo: tipoDB,                            // 'refaccion' | 'obra-nueva'
-    rubros: formType === 'refaccion' ? rubros : ['multi-gremio'],
+    rubros: rubros.length ? rubros : ['albanileria'],
     titulo,
-    descripcion: desc,
+    descripcion: fullDesc,
     urgencia,                                // 'baja' | 'media' | 'alta'
     direccion: addr,
     etapa,
     tipo_construccion: tipoConstruccion,
     superficie: superficie ? parseInt(superficie) : null,
-    status: 'pending'                        // enum en inglés
+    status: 'pending',
+    // metadata visual para la confirmación
+    _meta: {
+      rawDesc: desc,
+      rubrosLabels: rubrosReadable.length ? rubrosReadable.join(', ') : 'Ninguno seleccionado (Albañilería por defecto)',
+      urgenciaLabel: URG_LABELS[urgencia] || 'Sin especificar',
+      modoPagoLabel,
+      superficieLabel: superficie ? `${superficie} m²` : 'No especificada',
+      filesCount: uploadedFiles.length ? `${uploadedFiles.length} archivo(s) subido(s)` : 'Sin fotos/planos',
+      ubicacionLabel: addr
+    }
   };
 
-  // Disabled button mientras guarda
-  const submitBtn = document.querySelector('#requestForm .btn-submit, #requestForm button[type="submit"]');
-  if (submitBtn) submitBtn.disabled = true;
+  // Renderizar modal de resumen
+  renderSummaryModal(pendingPayload._meta);
+
+  // Mostrar modal de resumen
+  const summaryOverlay = document.getElementById('summaryOverlay');
+  if (summaryOverlay) summaryOverlay.style.display = 'flex';
+}
+
+function renderSummaryModal(meta){
+  const container = document.getElementById('summaryContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="summary-item">
+      <div class="summary-item-label">/03 Rubros Afectados</div>
+      <div class="summary-item-val">${escapeHTML(meta.rubrosLabels)}</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-label">/02 Descripción del Proyecto</div>
+      <div class="summary-item-val">${escapeHTML(meta.rawDesc)}</div>
+    </div>
+    <div class="summary-grid-2">
+      <div class="summary-item">
+        <div class="summary-item-label">/01 Fotos o Planos</div>
+        <div class="summary-item-val">${escapeHTML(meta.filesCount)}</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-item-label">/04 Superficie</div>
+        <div class="summary-item-val">${escapeHTML(meta.superficieLabel)}</div>
+      </div>
+    </div>
+    <div class="summary-grid-2">
+      <div class="summary-item">
+        <div class="summary-item-label">/05 Urgencia</div>
+        <div class="summary-item-val">${escapeHTML(meta.urgenciaLabel)}</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-item-label">/07 Modo de Pago</div>
+        <div class="summary-item-val">${escapeHTML(meta.modoPagoLabel)}</div>
+      </div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-label">/06 Ubicación</div>
+      <div class="summary-item-val">${escapeHTML(meta.ubicacionLabel)}</div>
+    </div>
+  `;
+}
+
+async function handleConfirmPublish(){
+  if (!pendingPayload) return;
+
+  const btnConfirm = document.getElementById('btnConfirmPublish');
+  if (btnConfirm) btnConfirm.disabled = true;
+
+  const summaryOverlay = document.getElementById('summaryOverlay');
+
+  // Separar metadatos visuales antes de la inserción en DB
+  const { _meta, ...dbPayload } = pendingPayload;
 
   try {
-    const { error } = await sb.from('requests').insert(payload);
+    const { error } = await sb.from('requests').insert(dbPayload);
     if (error){
       console.error('Error al guardar en Supabase:', error);
-      alert('No pudimos guardar la solicitud. Revisá la conexión e intentá de nuevo.\n\nDetalle: ' + error.message);
-      if (submitBtn) submitBtn.disabled = false;
+      alert('No pudimos publicar la solicitud. Revisá tu conexión e intentá de nuevo.\n\nDetalle: ' + error.message);
+      if (btnConfirm) btnConfirm.disabled = false;
       return;
     }
   } catch(err){
     console.error('Excepción al guardar:', err);
     alert('No pudimos guardar la solicitud. Intentá de nuevo.');
-    if (submitBtn) submitBtn.disabled = false;
+    if (btnConfirm) btnConfirm.disabled = false;
     return;
   }
 
-  // Éxito: mostrar overlay con el ticket
+  // Ocultar modal de resumen
+  if (summaryOverlay) summaryOverlay.style.display = 'none';
+
+  // Mostrar modal de éxito con el Ticket ID
   const ticketEl = document.getElementById('successTicket');
   const overlay  = document.getElementById('successOverlay');
-  if (ticketEl) ticketEl.textContent = 'TICKET #' + ticketId;
+  if (ticketEl) ticketEl.textContent = 'TICKET #' + dbPayload.ticket_id;
   if (overlay)  overlay.style.display = 'flex';
-
-  // TODO: subir fotos a Supabase Storage cuando esté configurado el bucket
 }
 
 /* ── Logout ──────────────────────────────────────────── */
@@ -330,3 +426,9 @@ function initLogout(){
     }
   });
 }
+
+function escapeHTML(s){
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+

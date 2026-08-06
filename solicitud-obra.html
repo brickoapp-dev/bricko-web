@@ -84,90 +84,9 @@
 
               <form id="requestForm" novalidate>
 
-                <!-- /01 DESCRIPCIÓN -->
+                <!-- /01 FOTOS O PLANOS -->
                 <div class="form-section">
-                  <label class="form-label" for="reqDesc"><span class="lx">/01</span> Describí el proyecto</label>
-                  <textarea id="reqDesc" class="form-input"
-                    placeholder="Contanos qué querés construir o ampliar: tipo de obra, materiales que tenés en mente, si ya tenés planos, el estado actual del terreno o espacio, etc."
-                    rows="6"></textarea>
-                </div>
-
-                <!-- /02 TIPO DE CONSTRUCCIÓN -->
-                <div class="form-section">
-                  <label class="form-label"><span class="lx">/02</span> Tipo de construcción</label>
-                  <div class="chip-grid" data-field="tipo_construccion">
-                    <button type="button" class="chip" data-value="vivienda">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                        <polyline points="9 22 9 12 15 12 15 22" />
-                      </svg>
-                      Vivienda
-                    </button>
-                    <button type="button" class="chip" data-value="ampliacion">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                      </svg>
-                      Ampliación
-                    </button>
-                    <button type="button" class="chip" data-value="local">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9zM3 9l2-6h14l2 6" />
-                        <path d="M12 9v12" />
-                      </svg>
-                      Local comercial
-                    </button>
-                    <button type="button" class="chip" data-value="oficina">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <rect x="2" y="3" width="20" height="14" rx="2" />
-                        <path d="M8 21h8M12 17v4" />
-                      </svg>
-                      Oficina
-                    </button>
-                    <button type="button" class="chip" data-value="otro">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 8v4M12 16h.01" />
-                      </svg>
-                      Otro
-                    </button>
-                  </div>
-                </div>
-
-                <!-- /03 ETAPA -->
-                <div class="form-section">
-                  <label class="form-label"><span class="lx">/03</span> Etapa del proyecto</label>
-                  <div class="chip-grid" data-field="etapa">
-                    <button type="button" class="chip" data-value="ideas">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path
-                          d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.5-1 4.5-3 6l-1 1H9l-1-1C6 13.5 5 11.5 5 9a7 7 0 0 1 7-7z" />
-                      </svg>
-                      Solo tengo ideas
-                    </button>
-                    <button type="button" class="chip" data-value="planos">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                        <polyline points="10 9 9 9 8 9" />
-                      </svg>
-                      Tengo planos
-                    </button>
-                    <button type="button" class="chip" data-value="listo">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                        <polyline points="22 4 12 14.01 9 11.01" />
-                      </svg>
-                      Listo para construir
-                    </button>
-                  </div>
-                </div>
-
-                <!-- /04 FOTOS / PLANOS -->
-                <div class="form-section">
-                  <label class="form-label"><span class="lx">/04</span> Fotos o planos <span class="label-opt">·
-                      opcional</span></label>
+                  <label class="form-label"><span class="lx">/01</span> Fotos o planos <span class="label-opt">· opcional</span></label>
                   <div class="upload-zone" id="uploadZone">
                     <input type="file" id="imgInput" accept="image/*,.pdf" multiple />
                     <div class="upload-empty" id="uploadEmpty">
@@ -189,9 +108,78 @@
                   </div>
                 </div>
 
-                <!-- /05 SUPERFICIE -->
+                <!-- /02 DESCRIBÍ EL PROYECTO -->
                 <div class="form-section">
-                  <label class="form-label" for="reqSuperficie"><span class="lx">/05</span> Superficie estimada <span
+                  <label class="form-label" for="reqDesc"><span class="lx">/02</span> Describí el proyecto</label>
+                  <textarea id="reqDesc" class="form-input"
+                    placeholder="Contanos qué querés construir, refaccionar o ampliar: detalles del trabajo, materiales contemplados, requerimientos específicos, etc."
+                    rows="6"></textarea>
+                </div>
+
+                <!-- /03 RUBROS AFECTADOS -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/03</span> Rubros afectados</label>
+                  <div class="chip-grid" data-field="rubro">
+                    <button type="button" class="chip" data-value="albanileria">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 21h18M5 21V7l7-4 7 4v14M9 10h6M9 14h6M9 18h6" />
+                      </svg>
+                      Albañilería
+                    </button>
+                    <button type="button" class="chip" data-value="plomeria">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                      </svg>
+                      Plomería
+                    </button>
+                    <button type="button" class="chip" data-value="electricidad">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                      </svg>
+                      Electricidad
+                    </button>
+                    <button type="button" class="chip" data-value="gas">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2c-3.3 0-6 2.7-6 6 0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6z" />
+                      </svg>
+                      Gas
+                    </button>
+                    <button type="button" class="chip" data-value="terminaciones">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-1.5M2 22h5l11.5-11.5-5-5L2 17v5z" />
+                      </svg>
+                      Terminaciones
+                    </button>
+                    <button type="button" class="chip" data-value="exteriores">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 3v18M3 12h18M5.3 5.3l13.4 13.4M5.3 18.7L18.7 5.3" />
+                      </svg>
+                      Exteriores
+                    </button>
+                    <button type="button" class="chip" data-value="limpieza-transporte">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="1" y="3" width="15" height="13" />
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                        <circle cx="5.5" cy="18.5" r="2.5" />
+                        <circle cx="18.5" cy="18.5" r="2.5" />
+                      </svg>
+                      Limpieza y transporte
+                    </button>
+                    <button type="button" class="chip" data-value="diseno-planificacion">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                      </svg>
+                      Diseño y Planificación
+                    </button>
+                  </div>
+                </div>
+
+                <!-- /04 SUPERFICIE ESTIMADA -->
+                <div class="form-section">
+                  <label class="form-label" for="reqSuperficie"><span class="lx">/04</span> Superficie estimada <span
                       class="label-opt">· opcional</span></label>
                   <div class="input-suffix">
                     <input type="number" id="reqSuperficie" class="form-input" placeholder="0" min="1" />
@@ -199,9 +187,9 @@
                   </div>
                 </div>
 
-                <!-- /06 URGENCIA -->
+                <!-- /05 URGENCIA -->
                 <div class="form-section">
-                  <label class="form-label"><span class="lx">/06</span> Urgencia</label>
+                  <label class="form-label"><span class="lx">/05</span> Urgencia</label>
                   <div class="urgency-grid" data-field="urgencia">
                     <button type="button" class="urg-btn selected" data-value="baja">
                       <div class="urg-bars"><span></span><span></span><span></span></div>
@@ -218,9 +206,9 @@
                   </div>
                 </div>
 
-                <!-- /07 UBICACIÓN -->
+                <!-- /06 UBICACIÓN DEL PROYECTO -->
                 <div class="form-section">
-                  <label class="form-label"><span class="lx">/07</span> Ubicación del proyecto</label>
+                  <label class="form-label"><span class="lx">/06</span> Ubicación del proyecto</label>
                   <div class="address-grid">
                     <div class="addr-field">
                       <span class="addr-sublabel">Provincia</span>
@@ -252,17 +240,17 @@
                         <option>Tucumán</option>
                       </select>
                     </div>
-                    <div class="addr-field">
-                      <span class="addr-sublabel">Código postal</span>
-                      <input type="text" id="reqCP" class="form-input" placeholder="Ej: 1414" maxlength="8" />
-                    </div>
                     <div class="addr-field addr-field--ciudad">
-                      <span class="addr-sublabel">Ciudad / Localidad</span>
-                      <input type="text" id="reqCiudad" class="form-input" placeholder="Ej: Palermo" />
+                      <span class="addr-sublabel">Localidad / Ciudad</span>
+                      <input type="text" id="reqCiudad" class="form-input" placeholder="Ej: Palermo / Rosario" />
                     </div>
                     <div class="addr-field addr-field--direccion">
-                      <span class="addr-sublabel">Calle y número</span>
+                      <span class="addr-sublabel">Dirección (Calle y número)</span>
                       <input type="text" id="reqDireccion" class="form-input" placeholder="Ej: Av. Corrientes 1234" />
+                    </div>
+                    <div class="addr-field">
+                      <span class="addr-sublabel">Código Postal</span>
+                      <input type="text" id="reqCP" class="form-input" placeholder="Ej: 1414" maxlength="8" />
                     </div>
                   </div>
                   <div class="map-preview" id="mapPreview">
@@ -277,9 +265,38 @@
                   </div>
                 </div>
 
+                <!-- /07 MODO DE PAGO -->
+                <div class="form-section">
+                  <label class="form-label"><span class="lx">/07</span> Modo de pago</label>
+                  <div class="chip-grid" data-field="modo_pago">
+                    <button type="button" class="chip selected" data-value="hitos">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M9 11l3 3L22 4" />
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                      </svg>
+                      Pago por hitos
+                    </button>
+                    <button type="button" class="chip" data-value="finalizar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                      </svg>
+                      Pago al finalizar
+                    </button>
+                    <button type="button" class="chip" data-value="contratista">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      </svg>
+                      A elección del contratista
+                    </button>
+                  </div>
+                </div>
+
                 <div class="form-submit-row">
                   <button type="submit" class="btn-submit">
-                    Planificar proyecto <span class="arrow"></span>
+                    Publicar <span class="arrow"></span>
                   </button>
                 </div>
 
@@ -370,6 +387,29 @@
     </div>
   </main>
 
+  <!-- MODAL DE RESUMEN Y CONFIRMACIÓN -->
+  <div class="summary-overlay" id="summaryOverlay" style="display:none">
+    <div class="summary-box">
+      <div class="summary-head">
+        <span class="summary-tag">REVISIÓN DE SOLICITUD</span>
+        <button type="button" class="summary-close" id="summaryCloseBtn" aria-label="Cerrar"></button>
+      </div>
+      <h2>Confirmá tu <em>publicación</em></h2>
+      <p class="summary-sub">Verificá los datos antes de publicar tu proyecto en el Muro de trabajos.</p>
+
+      <div class="summary-body" id="summaryContent">
+        <!-- Renderizado dinámico desde JS -->
+      </div>
+
+      <div class="summary-actions">
+        <button type="button" class="btn-secondary" id="btnEditSummary">Modificar datos</button>
+        <button type="button" class="btn-submit" id="btnConfirmPublish">
+          Confirmar y publicar <span class="arrow"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- SUCCESS -->
   <div class="success-overlay" id="successOverlay" style="display:none">
     <div class="success-box">
@@ -379,10 +419,9 @@
         </svg>
       </div>
       <div class="success-ticket" id="successTicket">TICKET #BX-2026-0000</div>
-      <h2>Proyecto<br><em>registrado.</em></h2>
-      <p>Recibimos tu solicitud. Un Project Manager de Brickø se va a poner en contacto con vos dentro de las próximas
-        24 horas.</p>
-      <button class="btn-submit" id="successClose">Volver al inicio</button>
+      <h2>Proyecto<br><em>publicado.</em></h2>
+      <p>Tu solicitud ya fue subida al <strong>Muro de trabajos</strong>. Los profesionales verificados podrán enviarte sus presupuestos.</p>
+      <button class="btn-submit" id="successClose">Volver a Mis Obras</button>
     </div>
   </div>
 
