@@ -258,9 +258,9 @@ function quoteCardHTML(q, hasAccepted) {
 /* ── Aceptar / rechazar ────────────────────────────────── */
 async function acceptQuote(quoteId, reqId) {
   try {
-    const { error } = await sb.from('quotes').update({ status: 'accepted' }).eq('id', quoteId);
+    // Aceptación atómica en el backend (rechaza el resto + pone la obra en curso).
+    const { error } = await sb.rpc('accept_quote', { p_quote_id: quoteId });
     if (error) throw error;
-    await sb.from('requests').update({ status: 'active' }).eq('id', reqId);
     toast('ok', 'Presupuesto aceptado', 'El profesional fue notificado.');
     const quotes = await loadQuotes(reqId);
     renderQuotes(quotes, MY_REQ, getSession());
