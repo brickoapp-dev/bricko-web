@@ -57,7 +57,7 @@ function loadUserUI(session){
 /* ── Action cards ────────────────────────────────────── */
 function initActionCards(){
   document.getElementById('cardMisObras')?.addEventListener('click', () => {
-    document.getElementById('myRequests')?.scrollIntoView({ behavior: 'smooth' });
+    window.location.href = 'mis-obras.html';
   });
   document.getElementById('cardObraNueva')?.addEventListener('click', () => {
     window.location.href = 'solicitud-obra.html';
