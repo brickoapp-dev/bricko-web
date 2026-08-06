@@ -56,6 +56,12 @@ function loadUserUI(session){
 
 /* ── Action cards ────────────────────────────────────── */
 function initActionCards(){
+  document.getElementById('cardMisObras')?.addEventListener('click', () => {
+    document.getElementById('myRequests')?.scrollIntoView({ behavior: 'smooth' });
+  });
+  document.getElementById('cardObraNueva')?.addEventListener('click', () => {
+    window.location.href = 'solicitud-obra.html';
+  });
   document.getElementById('cardRefaccion')?.addEventListener('click', () => {
     window.location.href = 'solicitud-refaccion.html';
   });
