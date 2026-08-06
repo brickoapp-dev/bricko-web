@@ -301,8 +301,19 @@ function handleFormSubmit(e){
 
   const modoPagoLabel = MODO_PAGO_LABELS[modoPagoKey] || modoPagoKey;
 
-  // Descripción formateada para almacenar también el modo de pago de forma transparente
-  const fullDesc = desc + `\n\n[Modo de pago: ${modoPagoLabel}]`;
+  // Preparar lista de archivos/imágenes subidas
+  const filesData = uploadedFiles.map(f => ({
+    url: f.url,
+    isPdf: f.isPdf || false,
+    name: f.file ? f.file.name : (f.name || 'Archivo')
+  })).filter(f => f.url || f.isPdf);
+
+  // Descripción formateada para almacenar transparente el modo de pago y archivos
+  let fullDesc = desc;
+  if (filesData.length > 0) {
+    fullDesc += `\n\n[ArchivosJSON: ${JSON.stringify(filesData)}]`;
+  }
+  fullDesc += `\n\n[Modo de pago: ${modoPagoLabel}]`;
 
   pendingPayload = {
     user_id: session.userId,

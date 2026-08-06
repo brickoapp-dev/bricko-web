@@ -154,9 +154,22 @@ async function fetchClientObras(userId){
 function normalizeObra(r, quotesList){
   const stInfo = STATUS_MAP[r.status] || { key: r.status, label: r.status, class: 'st-pending' };
   
-  // Extraer modo de pago si está guardado en la descripción
+  let filesList = [];
   let modoPagoText = 'No especificado';
   let cleanDesc = r.descripcion || '';
+
+  // Extraer JSON de archivos/imágenes si existe
+  if (cleanDesc.includes('[ArchivosJSON:')){
+    const match = cleanDesc.match(/\[ArchivosJSON:\s*([^\]]+)\]/);
+    if (match && match[1]){
+      try {
+        filesList = JSON.parse(match[1]);
+      } catch(e){}
+    }
+    cleanDesc = cleanDesc.replace(/\[ArchivosJSON:\s*[^\]]+\]/, '').trim();
+  }
+
+  // Extraer modo de pago si está guardado en la descripción
   if (cleanDesc.includes('[Modo de pago:')){
     const match = cleanDesc.match(/\[Modo de pago:\s*([^\]]+)\]/);
     if (match && match[1]){
@@ -181,6 +194,7 @@ function normalizeObra(r, quotesList){
     direccion: r.direccion || 'No especificada',
     superficie: r.superficie ? `${r.superficie} m²` : 'No especificada',
     modoPago: modoPagoText,
+    files: filesList,
     statusKey: stInfo.key,
     statusLabel: stInfo.label,
     statusClass: stInfo.class,
@@ -308,6 +322,66 @@ function renderObras(){
       handleRejectQuote(qId, rId);
     });
   });
+
+  // Vincular apertura de imagen al hacer clic
+  container.querySelectorAll('.file-thumb-item').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      const src = thumb.dataset.imgSrc;
+      if (src) openImageModal(src);
+    });
+  });
+}
+
+function renderObraFiles(files){
+  if (!files || files.length === 0){
+    return `
+      <div class="file-thumb-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        <span>Sin fotos o planos adjuntos</span>
+      </div>
+    `;
+  }
+  return files.map((f, i) => {
+    if (f.isPdf){
+      return `
+        <a href="${escapeHTML(f.url || '#')}" target="_blank" class="file-thumb-pdf" title="${escapeHTML(f.name || 'PDF')}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>${escapeHTML(f.name || 'Documento PDF')}</span>
+        </a>
+      `;
+    }
+    return `
+      <div class="file-thumb-item" data-img-src="${escapeHTML(f.url)}" title="Ver imagen ampliada">
+        <img src="${escapeHTML(f.url)}" alt="${escapeHTML(f.name || 'Foto ' + (i + 1))}" />
+        <div class="file-thumb-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openImageModal(src){
+  let modal = document.getElementById('imageModalOverlay');
+  if (!modal){
+    modal = document.createElement('div');
+    modal.id = 'imageModalOverlay';
+    modal.className = 'img-modal-overlay';
+    modal.innerHTML = `
+      <div class="img-modal-content">
+        <button class="img-modal-close" id="btnImgModalClose" aria-label="Cerrar">&times;</button>
+        <img id="imgModalSrc" src="" alt="Imagen ampliada" />
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || e.target.id === 'btnImgModalClose') {
+        modal.classList.remove('open');
+      }
+    });
+  }
+  document.getElementById('imgModalSrc').src = src;
+  modal.classList.add('open');
 }
 
 /* ── HTML de cada Tarjeta de Obra ────────────────────── */
@@ -384,10 +458,7 @@ function obraCardHTML(o){
       <div class="obra-files-box">
         <span class="od-label">/01 Fotos o Planos</span>
         <div class="files-preview-list">
-          <div class="file-thumb-placeholder">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-            <span>Proyecto adjunto</span>
-          </div>
+          ${renderObraFiles(o.files)}
         </div>
       </div>
 
