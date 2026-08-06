@@ -126,23 +126,51 @@ function initUpload(){
   });
 }
 
+function compressImage(file, maxWidth = 900, quality = 0.75) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function addFiles(files){
   const MAX = 5;
   const allowed = Array.from(files).filter(f =>
     f.type.startsWith('image/') || f.type === 'application/pdf'
   );
   const remaining = MAX - uploadedFiles.length;
-  allowed.slice(0, remaining).forEach(file => {
+  allowed.slice(0, remaining).forEach(async (file) => {
     if (file.type === 'application/pdf'){
       uploadedFiles.push({ file, url: null, isPdf: true });
       renderPreviews();
     } else {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        uploadedFiles.push({ file, url: ev.target.result, isPdf: false });
-        renderPreviews();
-      };
-      reader.readAsDataURL(file);
+      const compressedUrl = await compressImage(file);
+      uploadedFiles.push({ file, url: compressedUrl, isPdf: false });
+      renderPreviews();
     }
   });
 }
