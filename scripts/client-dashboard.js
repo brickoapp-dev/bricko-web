@@ -29,7 +29,7 @@ function getSession(){
   } catch(e){ return null; }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initDashboard() {
   const session = getSession();
   if (!session || !session.userId){ window.location.replace('index.html'); return; }
   if (session.role === 'profesional'){ window.location.replace('pro.html'); return; }
@@ -42,7 +42,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   initCursorGlow();
 
   await loadRequests(session.userId);
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDashboard);
+} else {
+  initDashboard();
+}
 
 /* ── UI: usuario en el nav ───────────────────────────── */
 function loadUserUI(session){
