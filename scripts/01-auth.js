@@ -34,28 +34,24 @@ const Auth = {
 
     if (error) throw new Error(error.message);
 
-    // Crear perfil en profiles
-    const { error: profileError } = await sb.from('profiles').insert({
+    // El perfil lo crea un trigger (handle_new_user) desde la metadata del signUp.
+    // Este upsert es idempotente: rellena/actualiza sin chocar con el trigger.
+    const { error: profileError } = await sb.from('profiles').upsert({
       id: data.user.id,
       first_name: firstName,
       last_name: lastName,
       phone: phone,
       role: role || 'cliente',
       city: ''
-    });
+    }, { onConflict: 'id' });
     if (profileError) console.warn('Error creando perfil:', profileError.message);
 
-    // Si es profesional, crear registro en professionals
+    // Si es profesional, asegurar registro en professionals (idempotente)
     if (role === 'profesional' && oficio) {
-      const { error: proError } = await sb.from('professionals').insert({
+      const { error: proError } = await sb.from('professionals').upsert({
         id: data.user.id,
-        rubro: oficio,
-        years_experience: 0,
-        verified: false,
-        rating: 5.0,
-        jobs_completed: 0,
-        bio: ''
-      });
+        rubro: oficio
+      }, { onConflict: 'id', ignoreDuplicates: true });
       if (proError) console.warn('Error creando perfil profesional:', proError.message);
     }
 
