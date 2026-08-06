@@ -539,21 +539,10 @@ async function handleAcceptQuote(quoteId, reqId){
   if (!confirm('¿Estás seguro de que querés aceptar este presupuesto? El profesional será notificado.')) return;
 
   try {
-    // 1. Marcar presupuesto como aceptado
-    const { error: qErr } = await sb
-      .from('quotes')
-      .update({ status: 'accepted' })
-      .eq('id', quoteId);
-
-    if (qErr) throw qErr;
-
-    // 2. Marcar obra como en curso (active)
-    const { error: rErr } = await sb
-      .from('requests')
-      .update({ status: 'active' })
-      .eq('id', reqId);
-
-    if (rErr) throw rErr;
+    // Aceptación atómica en el backend: marca este presupuesto como aceptado,
+    // rechaza el resto y pone la obra en curso, todo en una sola transacción.
+    const { error } = await sb.rpc('accept_quote', { p_quote_id: quoteId });
+    if (error) throw error;
 
     toast('ok', '¡Presupuesto Aceptado!', 'Notificamos al contratista para iniciar la obra.');
     
