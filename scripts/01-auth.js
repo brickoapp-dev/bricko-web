@@ -381,4 +381,25 @@ const Auth = {
   }
 };
 
+// Global Listener para actualización de UI en cajas de subida de archivos (.file-upload-box)
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.matches('.file-upload-box input[type="file"]')) {
+    const box = e.target.closest('.file-upload-box');
+    const titleEl = box?.querySelector('.file-upload-title');
+    if (box && titleEl) {
+      if (!box.dataset.defaultTitle) {
+        box.dataset.defaultTitle = titleEl.textContent;
+      }
+      if (e.target.files && e.target.files[0]) {
+        titleEl.textContent = '✓ ' + e.target.files[0].name;
+        box.classList.add('has-file');
+      } else {
+        titleEl.textContent = box.dataset.defaultTitle;
+        box.classList.remove('has-file');
+      }
+    }
+  }
+});
+
 Auth.init();
+
