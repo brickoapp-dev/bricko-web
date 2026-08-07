@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('bricko-theme');
+      if (t === 'dark' || t === 'light' || t === 'blueprint')
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <title>Brickø · Mi perfil profesional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles/pro-dashboard.css" />
+  <style>
+    .perfil-main { max-width: 860px; margin: 0 auto; padding: 40px var(--gutter) 80px; }
+    .perfil-head { margin-bottom: 32px; }
+    .perfil-head .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; color: var(--orange); text-transform: uppercase; }
+    .perfil-head h1 { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 5vw, 40px); color: var(--ink); margin: 8px 0 6px; }
+    .perfil-head p { color: var(--muted); font-size: 14.5px; max-width: 60ch; }
+
+    .card { background: var(--bg-1); border: 1px solid var(--line); border-radius: 16px; padding: 26px; margin-bottom: 22px; }
+    .card-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; color: var(--muted-2); text-transform: uppercase; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+    .card-label .lock { color: var(--orange); }
+
+    .avatar-row { display: flex; align-items: center; gap: 22px; }
+    .avatar-preview { width: 92px; height: 92px; border-radius: 50%; object-fit: cover; background: var(--bg-3); border: 1px solid var(--line-strong); display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 30px; color: var(--muted); overflow: hidden; flex-shrink: 0; }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+    .field { margin-bottom: 18px; }
+    .field:last-child { margin-bottom: 0; }
+    .field > label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 8px; }
+    .field .hint { font-size: 11.5px; color: var(--muted-2); margin-top: 6px; }
+    input[type="text"], input[type="number"] {
+      width: 100%; background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px;
+      padding: 12px 14px; color: var(--ink); font-family: var(--body); font-size: 14px; outline: none;
+    }
+    input[type="text"]:focus, input[type="number"]:focus { border-color: var(--orange-line); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--ink-2); font-family: var(--body); font-size: 13px; cursor: pointer; transition: .15s; }
+    .chip:hover { border-color: var(--orange-line); }
+    .chip.selected { background: var(--orange-dim); border-color: var(--orange-line); color: var(--orange); font-weight: 600; }
+
+    .dni-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 560px) { .dni-grid { grid-template-columns: 1fr; } }
+    .drop {
+      border: 1.5px dashed var(--line-strong); border-radius: 12px; background: var(--bg-2);
+      aspect-ratio: 16/10; display: grid; place-items: center; text-align: center; cursor: pointer; overflow: hidden; position: relative; transition: .15s;
+    }
+    .drop:hover { border-color: var(--orange-line); }
+    .drop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .drop .ph { color: var(--muted); font-size: 12.5px; padding: 12px; }
+    .drop .ph svg { width: 26px; height: 26px; stroke: var(--muted-2); margin-bottom: 8px; }
+    .drop.filled .ph { display: none; }
+
+    .btn-file { display: inline-block; margin-top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--orange); cursor: pointer; text-transform: uppercase; }
+
+    .actions { display: flex; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 26px; }
+    .btn-save {
+      background: var(--orange); color: #fff; border: none; border-radius: 10px; padding: 13px 26px;
+      font-family: var(--display); font-weight: 700; font-size: 14px; cursor: pointer; transition: .15s;
+    }
+    .btn-save:hover { filter: brightness(1.06); }
+    .btn-save:disabled { opacity: .55; cursor: default; }
+    .btn-ghost { color: var(--muted); font-size: 13px; text-decoration: none; }
+    input[type="file"] { display: none; }
+  </style>
+</head>
+
+<body>
+  <div class="blueprint-grid"></div>
+  <div class="bg-spot"></div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="pro.html" class="brand">
+        <svg class="cube" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+          <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C" />
+          <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A" />
+        </svg>
+        <span>BRICK<span class="o-slash">Ø</span></span>
+        <span class="pro-tag">PROFESIONAL</span>
+      </a>
+      <div class="nav-right">
+        <a href="pro.html" class="btn-ghost" style="margin-right:16px">← Volver al panel</a>
+        <div class="user-chip">
+          <div class="av" id="proAv">P</div>
+          <div class="user-info">
+            <span id="proNm">Profesional</span>
+            <span class="user-trade" id="proTrade">Oficio</span>
+          </div>
+        </div>
+        <button class="btn-logout" id="btnLogout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+            <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="perfil-main">
+    <div class="perfil-head">
+      <span class="eyebrow">Mi cuenta</span>
+      <h1>Perfil profesional</h1>
+      <p>Completá tu perfil para generar más confianza. Los datos de DNI y dirección son privados: solo los ve el equipo de verificación de Brickø, nunca otros usuarios.</p>
+    </div>
+
+    <!-- Foto + datos públicos -->
+    <div class="card">
+      <div class="card-label">Perfil público</div>
+
+      <div class="avatar-row" style="margin-bottom:24px">
+        <div class="avatar-preview" id="avatarPreview">P</div>
+        <div>
+          <label class="btn-save" for="avatarInput" style="cursor:pointer">Subir foto de perfil</label>
+          <input type="file" id="avatarInput" accept="image/*" />
+          <div class="hint">JPG o PNG. Se muestra a los clientes.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Rubro/s</label>
+        <div class="chips" id="rubrosChips">
+          <button type="button" class="chip" data-value="plomeria">Plomería</button>
+          <button type="button" class="chip" data-value="gas">Gas</button>
+          <button type="button" class="chip" data-value="electricidad">Electricidad</button>
+          <button type="button" class="chip" data-value="albanileria">Albañilería</button>
+          <button type="button" class="chip" data-value="pintura">Pintura</button>
+          <button type="button" class="chip" data-value="carpinteria">Carpintería</button>
+          <button type="button" class="chip" data-value="herreria">Herrería</button>
+          <button type="button" class="chip" data-value="jardineria">Jardinería</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="fLocalidad">Localidad</label>
+          <input type="text" id="fLocalidad" placeholder="Ej: La Plata" />
+        </div>
+        <div class="field">
+          <label for="fResidencia">Residencia</label>
+          <input type="text" id="fResidencia" placeholder="Ej: Buenos Aires" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Datos privados / verificación -->
+    <div class="card">
+      <div class="card-label"><span class="lock">🔒</span> Verificación — datos privados</div>
+
+      <div class="field">
+        <label for="fDireccion">Dirección</label>
+        <input type="text" id="fDireccion" placeholder="Calle, número, piso/depto" />
+        <div class="hint">Privada. No se muestra en el directorio.</div>
+      </div>
+
+      <div class="field">
+        <label>Foto de DNI</label>
+        <div class="dni-grid">
+          <div>
+            <div class="drop" id="dropFront">
+              <div class="ph">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M15 9h3M15 13h3M5 17h9"/></svg>
+                <div>DNI — Frente</div>
+              </div>
+            </div>
+            <input type="file" id="dniFrontInput" accept="image/*" />
+            <label class="btn-file" for="dniFrontInput">Elegir frente</label>
+          </div>
+          <div>
+            <div class="drop" id="dropBack">
+              <div class="ph">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>
+                <div>DNI — Dorso</div>
+              </div>
+            </div>
+            <input type="file" id="dniBackInput" accept="image/*" />
+            <label class="btn-file" for="dniBackInput">Elegir dorso</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a href="pro.html" class="btn-ghost">Cancelar</a>
+      <button class="btn-save" id="btnSave">Guardar cambios</button>
+    </div>
+  </main>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script src="scripts/supabase.min.js"></script>
+  <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/01-auth.js" defer></script>
+  <script src="scripts/pro-perfil.js" defer></script>
+</body>
+
+</html>
