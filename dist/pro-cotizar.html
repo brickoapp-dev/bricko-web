@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('bricko-theme');
+      if (t === 'dark' || t === 'light' || t === 'blueprint')
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <title>Brickø — Cotizar solicitud</title>
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 L22 7 L12 12 L2 7 Z' fill='%23F25C18'/%3E%3Cpath d='M2 7 L2 17 L12 22 L12 12 Z' fill='%231C1C1C'/%3E%3Cpath d='M22 7 L22 17 L12 22 L12 12 Z' fill='%232A2A2A'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles/pro-dashboard.css" />
+</head>
+
+<body>
+
+  <div class="blueprint-grid"></div>
+  <div class="bg-spot"></div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav-inner">
+
+      <div style="display:flex;align-items:center;gap:16px">
+        <a href="pro.html" class="btn-back" aria-label="Volver a la cartelera">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+            <path d="M19 12H5M12 5l-7 7 7 7" />
+          </svg>
+        </a>
+        <a href="index.html" class="brand">
+          <svg class="cube" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+            <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C" />
+            <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A" />
+          </svg>
+          <span>BRICK<span class="o-slash">Ø</span></span>
+          <span class="pro-tag">PROFESIONAL</span>
+        </a>
+      </div>
+
+      <div class="nav-right">
+        <div class="user-chip">
+          <div class="av" id="proAv">P</div>
+          <div class="user-info">
+            <span id="proNm">Profesional</span>
+            <span class="user-trade" id="proTrade">Oficio</span>
+          </div>
+        </div>
+        <button class="btn-logout" id="btnLogout" aria-label="Cerrar sesión">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+            <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="cotizar-layout">
+
+        <!-- Izquierda: detalle de la solicitud (llenado por JS) -->
+        <div id="solicitudDetail">
+          <div class="sol-skeleton">
+            <div class="skel-line" style="height:11px;width:130px;margin-bottom:22px"></div>
+            <div class="skel-line" style="height:48px;width:82%"></div>
+            <div class="skel-line" style="height:48px;width:60%;margin-bottom:24px"></div>
+            <div style="display:flex;gap:8px;margin-bottom:28px">
+              <div class="skel-line" style="height:26px;width:100px;margin-bottom:0"></div>
+              <div class="skel-line" style="height:26px;width:80px;margin-bottom:0"></div>
+              <div class="skel-line" style="height:26px;width:76px;margin-bottom:0"></div>
+            </div>
+            <div class="skel-line" style="height:1px;margin-bottom:28px"></div>
+            <div class="skel-line" style="height:11px;width:110px;margin-bottom:16px"></div>
+            <div class="skel-line" style="height:14px;width:92%"></div>
+            <div class="skel-line" style="height:14px;width:87%"></div>
+            <div class="skel-line" style="height:14px;width:74%"></div>
+            <div class="skel-line" style="height:14px;width:80%"></div>
+          </div>
+        </div>
+
+        <!-- Derecha: panel de cotización -->
+        <div class="cotizar-panel">
+
+          <div class="cotizar-panel-head">
+            <span class="cotizar-panel-id" id="panelId">SOL / —</span>
+            <span class="eyebrow" style="margin:0;font-size:9px">PRESUPUESTO</span>
+          </div>
+
+          <!-- Estado: ya cotizaste -->
+          <div class="quoted-state" id="quotedState" style="display:none"></div>
+
+          <!-- Form de cotización -->
+          <div class="cotizar-form-body" id="cotizarForm">
+            <div class="qf-field">
+              <label class="qf-label" for="quoteMonto">
+                <span class="lx">/01</span> Monto total (ARS)
+              </label>
+              <input type="number" id="quoteMonto" class="form-input" placeholder="0" inputmode="numeric" />
+            </div>
+            <div class="qf-field">
+              <label class="qf-label" for="quoteDesc">
+                <span class="lx">/02</span> Descripción del trabajo
+              </label>
+              <textarea id="quoteDesc" class="form-input" rows="4"
+                placeholder="Explicá qué incluye tu presupuesto: materiales, mano de obra, plazos…"></textarea>
+            </div>
+            <div class="qf-field">
+              <label class="qf-label" for="quoteDias">
+                <span class="lx">/03</span> Plazo estimado
+              </label>
+              <input type="text" id="quoteDias" class="form-input" placeholder="Ej: 2 días, 1 semana…" />
+            </div>
+            <button class="btn-submit" id="btnSendQuote">
+              Enviar presupuesto <span class="arrow"></span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script src="scripts/supabase.min.js"></script>
+  <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/01-auth.js" defer></script>
+  <script src="scripts/pro-cotizar.js"></script>
+
+</body>
+
+</html>

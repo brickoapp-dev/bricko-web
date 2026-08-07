@@ -1,0 +1,29 @@
+{
+  "name": "bricko-web",
+  "version": "1.0.0",
+  "description": "Marketplace de servicios de construcción en Argentina. Conecta clientes que necesitan refacciones u obras nuevas con plomeros, gasistas, electricistas, albañiles, pintores, carpinteros, herreros y jardineros verificados.",
+  "main": "index.js",
+  "scripts": {
+    "build": "mkdir -p dist && cp -r *.html styles/ scripts/ images/ dist/ 2>/dev/null || true",
+    "sync": "npm run build && npx cap sync"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brickoapp-dev/bricko-web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/brickoapp-dev/bricko-web/issues"
+  },
+  "homepage": "https://github.com/brickoapp-dev/bricko-web#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.0"
+  }
+}

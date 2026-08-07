@@ -1,0 +1,3979 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('bricko-theme');
+      if (t === 'dark' || t === 'light' || t === 'blueprint')
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <meta name="description"
+    content="Brickø — Plataforma que conecta profesionales de la construcción verificados con personas que necesitan reparar o construir. Plomería, gas, electricidad, albañilería y pintura." />
+  <meta name="theme-color" content="#0A0A0A" />
+  <meta name="format-detection" content="telephone=no" />
+
+  <title>Brickø — Tu obra, tu refacción, resuelta.</title>
+
+  <!-- Favicon: cubo isométrico Brickø -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 L22 7 L12 12 L2 7 Z' fill='%23F25C18'/%3E%3Cpath d='M2 7 L2 17 L12 22 L12 12 Z' fill='%231C1C1C'/%3E%3Cpath d='M22 7 L22 17 L12 22 L12 12 Z' fill='%232A2A2A'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <style>
+    /* ==========================================================
+       BRICKØ — Sistema de diseño (recreación limpia)
+       Inspiración dinámica: antigravity.google
+       ========================================================== */
+    :root,
+    [data-theme="dark"] {
+      --bg: #0A0A0A;
+      --bg-1: #0F0F10;
+      --bg-2: #151517;
+      --bg-3: #1C1C20;
+      --ink: #F7F7F8;
+      --ink-2: #D6D6DA;
+      --muted: #98989F;
+      --muted-2: #5E5E66;
+      --line: rgba(255, 255, 255, .08);
+      --line-2: rgba(255, 255, 255, .15);
+      --grid: rgba(255, 255, 255, .035);
+      --orange: #F25C18;
+      --orange-br: #FF6F33;
+      --orange-soft: rgba(242, 92, 24, .13);
+      --orange-line: rgba(242, 92, 24, .40);
+      --glow: rgba(242, 92, 24, .20);
+      --ok: #3FB950;
+      --err: #E54E10;
+
+      --cube-1: #1A1A1E;
+      --cube-2: #2A2A30;
+      --cube-stroke: #3A3A42;
+      --plan-grid: rgba(255, 255, 255, .10);
+      --plan-ink: #F7F7F8;
+      --nav-bg: rgba(10, 10, 10, .66);
+      --shadow: 0 40px 80px -40px rgba(0, 0, 0, .85);
+
+      --display: 'Archivo', sans-serif;
+      --body: 'Manrope', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+
+      --max: 1240px;
+      --gutter: 28px;
+      --r: 6px;
+    }
+
+    [data-theme="light"] {
+      --bg: #EDECE9;
+      --bg-1: #F5F4F2;
+      --bg-2: #FFFFFF;
+      --bg-3: #E2E1DD;
+      --ink: #0A0A0A;
+      --ink-2: #232327;
+      --muted: #5A5A61;
+      --muted-2: #97979D;
+      --line: rgba(10, 10, 10, .10);
+      --line-2: rgba(10, 10, 10, .20);
+      --grid: rgba(10, 10, 10, .05);
+      --orange: #DC4A0C;
+      --orange-br: #F25C18;
+      --orange-soft: rgba(242, 92, 24, .11);
+      --orange-line: rgba(220, 74, 12, .36);
+      --glow: rgba(242, 92, 24, .14);
+
+      --cube-1: #1A1A1A;
+      --cube-2: #2E2E2E;
+      --cube-stroke: #000;
+      --plan-grid: rgba(10, 10, 10, .14);
+      --plan-ink: #0A0A0A;
+      --nav-bg: rgba(237, 236, 233, .78);
+      --shadow: 0 40px 80px -40px rgba(0, 0, 0, .20);
+    }
+
+    [data-theme="blueprint"] {
+      --bg: #0C2340;
+      --bg-1: #102A4C;
+      --bg-2: #143158;
+      --bg-3: #1B3B68;
+      --ink: #EAF3FF;
+      --ink-2: #CFE0F5;
+      --muted: #8FA9C9;
+      --muted-2: #5E7896;
+      --line: rgba(234, 243, 255, .13);
+      --line-2: rgba(234, 243, 255, .24);
+      --grid: rgba(234, 243, 255, .06);
+      --orange: #F25C18;
+      --orange-br: #FF6F33;
+      --orange-soft: rgba(242, 92, 24, .17);
+      --orange-line: rgba(242, 92, 24, .45);
+      --glow: rgba(242, 92, 24, .22);
+      --ok: #3FB950;
+      --err: #E54E10;
+      --cube-1: #0F2A4C;
+      --cube-2: #1B3B68;
+      --cube-stroke: #8FA9C9;
+      --plan-grid: rgba(234, 243, 255, .18);
+      --plan-ink: #EAF3FF;
+      --nav-bg: rgba(12, 35, 64, .78);
+      --shadow: 0 40px 80px -40px rgba(0, 0, 0, .7);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* Scrollbar estética: una sola, fina y redondeada */
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: var(--bg-3) transparent;
+    }
+
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg-3);
+      background-clip: padding-box;
+      border: 3px solid transparent;
+      border-radius: 100px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--muted-2);
+      background-clip: padding-box;
+      border: 3px solid transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--body);
+      line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background-color .45s ease, color .45s ease;
+    }
+
+    body.modal-lock {
+      overflow: hidden;
+    }
+
+    html.theme-anim *,
+    html.theme-anim *::before,
+    html.theme-anim *::after {
+      transition: background-color .4s ease, border-color .4s ease, color .4s ease, fill .4s ease, stroke .4s ease !important;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+    }
+
+    img,
+    svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    ::selection {
+      background: var(--orange);
+      color: #000;
+    }
+
+    /* ===== Capas de fondo ===== */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, var(--grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 90% 60% at 50% 22%, #000 35%, transparent 88%);
+      -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 22%, #000 35%, transparent 88%);
+    }
+
+    /* Glow que sigue al cursor (se enciende sobre el grid) */
+    .bg-spot {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), var(--glow), transparent 70%);
+      opacity: 0;
+      transition: opacity .6s ease;
+    }
+
+    body.spot-on .bg-spot {
+      opacity: 1;
+    }
+
+    /* ==========================================================
+       Tipografía / utilidades
+       ========================================================== */
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 var(--gutter);
+      position: relative;
+      z-index: 1;
+    }
+
+    section {
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 22px;
+      height: 1px;
+      background: var(--orange);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 6px 11px;
+      border-radius: 100px;
+      border: 1px solid var(--line-2);
+      color: var(--muted);
+    }
+
+    .tag .pip {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 8px var(--orange);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 13px 22px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .01em;
+      border-radius: var(--r);
+      transition: all .25s cubic-bezier(.2, .7, .2, 1);
+      border: 1px solid transparent;
+      white-space: nowrap;
+      font-family: var(--body);
+    }
+
+    .btn-lg {
+      padding: 16px 28px;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: var(--orange);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 14px 30px -16px rgba(242, 92, 24, .8);
+    }
+
+    .btn-primary:hover {
+      background: var(--orange-br);
+      transform: translateY(-2px);
+      box-shadow: 0 20px 36px -16px rgba(242, 92, 24, .9);
+    }
+
+    .btn-ghost {
+      color: var(--ink);
+      border-color: var(--line-2);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--ink);
+      background: color-mix(in srgb, var(--ink) 6%, transparent);
+      transform: translateY(-2px);
+    }
+
+    .btn .arrow {
+      width: 15px;
+      height: 1.6px;
+      background: currentColor;
+      position: relative;
+      transition: width .25s ease;
+    }
+
+    .btn .arrow::after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      top: -3.5px;
+      width: 8px;
+      height: 8px;
+      border-right: 1.6px solid currentColor;
+      border-top: 1.6px solid currentColor;
+      transform: rotate(45deg);
+    }
+
+    .btn:hover .arrow {
+      width: 21px;
+    }
+
+    /* ==========================================================
+       NAV
+       ========================================================== */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 80;
+      background: var(--nav-bg);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border-bottom: 1px solid transparent;
+      transition: border-color .3s ease;
+    }
+
+    .nav.scrolled {
+      border-bottom-color: var(--line);
+    }
+
+    .nav-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px var(--gutter);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      transition: padding .4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .nav.scrolled .nav-inner {
+      padding: 8px var(--gutter);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -.02em;
+      text-transform: uppercase;
+    }
+
+    .brand .cube {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .brand .brand-text {
+      display: inline-block;
+      overflow: hidden;
+      white-space: nowrap;
+      max-width: 80px; /* Ancho suficiente para "BRICK" */
+      vertical-align: bottom;
+      transition: max-width .5s cubic-bezier(0.6, 0, 0.2, 1), opacity .35s ease;
+    }
+
+    .nav.scrolled .brand .brand-text {
+      max-width: 0;
+      opacity: 0;
+    }
+
+    .brand .o {
+      color: var(--orange);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-links a {
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: var(--r);
+      color: var(--ink-2);
+      transition: all .2s ease;
+    }
+
+    .nav-links a:hover {
+      background: color-mix(in srgb, var(--ink) 7%, transparent);
+      color: var(--ink);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-toggle {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all .25s ease;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--orange);
+      background: var(--orange-soft);
+    }
+
+    .theme-toggle svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--ink);
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      position: absolute;
+      transition: opacity .3s ease, transform .4s cubic-bezier(.2, .7, .2, 1);
+    }
+
+    .theme-toggle:hover svg {
+      stroke: var(--orange);
+    }
+
+    .icon-plan {
+      opacity: 0;
+      transform: rotate(-90deg) scale(.5);
+    }
+
+    [data-theme="blueprint"] .icon-moon,
+    [data-theme="blueprint"] .icon-sun {
+      opacity: 0;
+      transform: rotate(90deg) scale(.5);
+    }
+
+    [data-theme="blueprint"] .icon-plan {
+      opacity: 1;
+      transform: none;
+    }
+
+    .icon-sun {
+      opacity: 0;
+      transform: rotate(-90deg) scale(.5);
+    }
+
+    .icon-moon {
+      opacity: 1;
+    }
+
+    [data-theme="light"] .icon-sun {
+      opacity: 1;
+      transform: none;
+    }
+
+    [data-theme="light"] .icon-moon {
+      opacity: 0;
+      transform: rotate(90deg) scale(.5);
+    }
+
+    .burger {
+      display: none;
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .burger span {
+      width: 15px;
+      height: 1.6px;
+      background: var(--ink);
+      transition: .3s;
+    }
+
+    /* Chip de usuario logueado */
+    .user-chip {
+      display: none;
+      align-items: center;
+      gap: 9px;
+      padding: 5px 12px 5px 5px;
+      background: var(--bg-2);
+      border: 1px solid var(--line-2);
+      border-radius: 100px;
+      transition: all .25s ease;
+      position: relative;
+    }
+
+    body.authed .user-chip {
+      display: inline-flex;
+    }
+
+    body.authed .nav-actions .auth-trigger {
+      display: none;
+    }
+
+    .user-chip:hover,
+    .user-chip[aria-expanded="true"] {
+      border-color: var(--orange);
+    }
+
+    .user-chip .av {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--orange);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .user-chip .nm {
+      font-size: 13.5px;
+      font-weight: 600;
+      max-width: 130px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .user-chip .caret {
+      width: 13px;
+      height: 13px;
+      color: var(--muted);
+      transition: transform .3s ease;
+    }
+
+    .user-chip[aria-expanded="true"] .caret {
+      transform: rotate(180deg);
+    }
+
+    .user-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: var(--gutter);
+      width: 230px;
+      background: var(--bg-1);
+      border: 1px solid var(--line-2);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      padding: 8px;
+      z-index: 85;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: all .25s cubic-bezier(.2, .7, .2, 1);
+    }
+
+    .user-menu.open {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+
+    .user-menu .um-head {
+      padding: 12px 12px 14px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 6px;
+    }
+
+    .user-menu .um-name {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -.01em;
+    }
+
+    .user-menu .um-role {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--orange);
+      border: 1px solid var(--orange-line);
+      background: var(--orange-soft);
+      border-radius: 3px;
+      padding: 2px 7px 1px;
+      margin-top: 8px;
+    }
+
+    .user-menu button {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: 100%;
+      text-align: left;
+      padding: 11px 12px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--ink-2);
+      border-radius: var(--r);
+      transition: all .18s ease;
+    }
+
+    .user-menu button:hover {
+      background: var(--bg-2);
+      color: var(--ink);
+    }
+
+    .user-menu button svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--muted);
+      fill: none;
+      stroke-width: 1.6;
+    }
+
+    .user-menu button:hover svg {
+      stroke: var(--orange);
+    }
+
+    .user-menu .um-out {
+      color: var(--muted);
+    }
+
+    .user-menu .um-out:hover {
+      color: var(--err);
+    }
+
+    .user-menu .um-out:hover svg {
+      stroke: var(--err);
+    }
+
+    /* Mobile menu */
+    .mobile-menu {
+      position: fixed;
+      top: 64px;
+      left: 0;
+      right: 0;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 22px var(--gutter) 28px;
+      z-index: 70;
+      transform: translateY(-115%);
+      transition: transform .35s cubic-bezier(.2, .7, .2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .mobile-menu.open {
+      transform: none;
+    }
+
+    .mobile-menu a {
+      padding: 14px 4px;
+      font-size: 16px;
+      font-weight: 500;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .mobile-menu .btn {
+      margin-top: 16px;
+    }
+
+    @media (max-width: 880px) {
+
+      .nav-links,
+      .nav-actions .auth-trigger {
+        display: none;
+      }
+
+      .burger {
+        display: flex;
+      }
+    }
+
+    /* ==========================================================
+       HERO
+       ========================================================== */
+    .hero {
+      padding: 180px 0 90px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100svh;
+      justify-content: center;
+    }
+
+    .hero-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 960px;
+      margin: 0 auto 70px;
+      width: 100%;
+    }
+
+    .hero-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+      opacity: 0;
+      animation: fadeUp .7s ease forwards .1s;
+    }
+
+    .hero h1 {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(52px, 8vw, 112px);
+      letter-spacing: -.04em;
+      line-height: .94;
+      text-transform: uppercase;
+    }
+
+    .hero h1 .ln {
+      display: block;
+      overflow: hidden;
+    }
+
+    .hero h1 .ln>span {
+      display: inline-block;
+      transform: translateY(105%);
+      animation: lineUp .9s cubic-bezier(.2, .8, .2, 1) forwards;
+    }
+
+    .hero h1 .ln-1>span {
+      animation-delay: .15s;
+    }
+
+    .hero h1 .ln-2>span {
+      animation-delay: .29s;
+    }
+
+    .hero h1 .ln-3>span {
+      animation-delay: .43s;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--orange);
+      position: relative;
+    }
+
+    .hero h1 em::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 9%;
+      height: .4em;
+      background: var(--orange-soft);
+      z-index: -1;
+    }
+
+    .hero-sub {
+      margin-top: 30px;
+      font-size: 19px;
+      color: var(--muted);
+      max-width: 62ch;
+      opacity: 0;
+      animation: fadeUp .9s ease forwards .6s;
+    }
+
+    .hero-sub strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .hero-ctas {
+      margin-top: 36px;
+      display: flex;
+      justify-content: center;
+      gap: 13px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp .9s ease forwards .72s;
+    }
+
+    .hero-trust {
+      margin-top: 22px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .08em;
+      color: var(--muted-2);
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeUp .9s ease forwards .85s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hero-trust .dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--muted-2);
+    }
+
+    /* ---- Visual isométrico del hero (la pieza dinámica) ---- */
+    .hero-visual {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards .5s;
+    }
+
+    .hero-sheet {
+      position: absolute;
+      inset: 0;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(160deg, var(--bg-1), color-mix(in srgb, var(--bg) 70%, var(--bg-1)));
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-sheet::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(225deg, var(--orange) 0 52%, transparent 52%);
+      z-index: 4;
+    }
+
+    .sheet-grid {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(var(--plan-grid) 1px, transparent 1.4px);
+      background-size: 18px 18px;
+      opacity: .55;
+    }
+
+    .sheet-head {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .16em;
+      color: var(--muted-2);
+      text-transform: uppercase;
+      z-index: 3;
+    }
+
+    .sheet-head .live {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--orange);
+    }
+
+    .sheet-head .live .pip {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 0 0 var(--orange);
+      animation: pulse 2.2s infinite;
+    }
+
+    .sheet-foot {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 13px 16px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: .14em;
+      color: var(--muted-2);
+      text-transform: uppercase;
+      z-index: 3;
+      border-top: 1px solid var(--line);
+    }
+
+    .iso-stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .iso-stage svg {
+      width: 74%;
+      height: 74%;
+      overflow: visible;
+    }
+
+    .iso-top {
+      fill: var(--orange);
+    }
+
+    .iso-left {
+      fill: var(--cube-1);
+      stroke: var(--cube-2);
+      stroke-width: .6;
+    }
+
+    .iso-right {
+      fill: var(--cube-2);
+      stroke: var(--cube-stroke);
+      stroke-width: .6;
+    }
+
+    .iso-edge {
+      fill: none;
+      stroke: var(--orange-line);
+      stroke-width: .5;
+    }
+
+    .iso-ring {
+      fill: none;
+      stroke: var(--orange-line);
+      stroke-width: .6;
+      stroke-dasharray: 4 5;
+    }
+
+    .iso-ring-2 {
+      fill: none;
+      stroke: var(--line-2);
+      stroke-width: .5;
+      stroke-dasharray: 2 6;
+    }
+
+    .iso-dim {
+      stroke: var(--orange);
+      stroke-width: .4;
+    }
+
+    .iso-dim-t {
+      fill: var(--orange);
+      font-family: var(--mono);
+      font-size: 6px;
+    }
+
+    /* Ensamblado en load + flotación continua */
+    .cube-grp {
+      animation: floatY 7s ease-in-out infinite;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .face-top {
+      opacity: 0;
+      animation: dropIn .7s cubic-bezier(.2, .8, .2, 1) forwards .7s;
+    }
+
+    .face-left {
+      opacity: 0;
+      animation: slideL .7s cubic-bezier(.2, .8, .2, 1) forwards .85s;
+    }
+
+    .face-right {
+      opacity: 0;
+      animation: slideR .7s cubic-bezier(.2, .8, .2, 1) forwards .85s;
+    }
+
+    .iso-edge,
+    .iso-dim,
+    .iso-dim-t {
+      opacity: 0;
+      animation: fadeIn .6s ease forwards 1.15s;
+    }
+
+    .ring-spin {
+      transform-box: fill-box;
+      transform-origin: center;
+      opacity: 0;
+      animation: spin 26s linear infinite, fadeIn 1s ease forwards 1.1s;
+    }
+
+    .ring-spin.r2 {
+      animation: spinRev 34s linear infinite, fadeIn 1s ease forwards 1.25s;
+    }
+
+    @keyframes dropIn {
+      from {
+        opacity: 0;
+        transform: translateY(-22px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes slideL {
+      from {
+        opacity: 0;
+        transform: translateX(-22px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes slideR {
+      from {
+        opacity: 0;
+        transform: translateX(22px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes floatY {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-9px);
+      }
+    }
+
+    /* Chips flotantes sobre el plano */
+    .chip {
+      position: absolute;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px;
+      background: color-mix(in srgb, var(--bg-1) 88%, transparent);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--line-2);
+      border-radius: 100px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      box-shadow: 0 12px 30px -16px rgba(0, 0, 0, .6);
+      opacity: 0;
+    }
+
+    .chip svg {
+      width: 13px;
+      height: 13px;
+      stroke: var(--orange);
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .chip-1 {
+      top: 16%;
+      left: -7%;
+      animation: chipIn .6s ease forwards 1.3s, floatY 6s ease-in-out infinite 1.9s;
+    }
+
+    .chip-2 {
+      top: 44%;
+      right: -9%;
+      animation: chipIn .6s ease forwards 1.5s, floatY 6.5s ease-in-out infinite 2.1s;
+    }
+
+    .chip-3 {
+      bottom: 17%;
+      left: 4%;
+      animation: chipIn .6s ease forwards 1.7s, floatY 7s ease-in-out infinite 2.3s;
+    }
+
+    @keyframes chipIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(.94);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(242, 92, 24, .7);
+      }
+
+      70% {
+        box-shadow: 0 0 0 11px rgba(242, 92, 24, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(242, 92, 24, 0);
+      }
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes spinRev {
+      from {
+        transform: rotate(0);
+      }
+
+      to {
+        transform: rotate(-360deg);
+      }
+    }
+
+    /* ===== Stats bajo el hero ===== */
+    .stats-row {
+      margin-top: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      overflow: hidden;
+      align-self: stretch;
+    }
+
+    .stat {
+      background: var(--bg-1);
+      padding: 26px 24px;
+    }
+
+    .stat .n {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(30px, 3.6vw, 42px);
+      letter-spacing: -.02em;
+      line-height: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .stat .n span {
+      color: var(--orange);
+      font-size: .55em;
+    }
+
+    .stat .l {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: var(--muted-2);
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+
+    /* ==========================================================
+       TICKER
+       ========================================================== */
+    .ticker {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 20px 0;
+      overflow: hidden;
+      margin-top: 90px;
+    }
+
+    .ticker-row {
+      display: flex;
+      gap: 52px;
+      white-space: nowrap;
+      width: max-content;
+      animation: ticker 38s linear infinite;
+      font-family: var(--display);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 17px;
+      letter-spacing: .03em;
+      color: var(--ink-2);
+    }
+
+    .ticker-row span {
+      display: inline-flex;
+      align-items: center;
+      gap: 52px;
+    }
+
+    .ticker .star {
+      color: var(--orange);
+    }
+
+    @keyframes ticker {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* ==========================================================
+       SECCIÓN — encabezado común
+       ========================================================== */
+    .sec {
+      padding: 120px 0;
+    }
+
+    .sec-head {
+      max-width: 720px;
+      margin-bottom: 70px;
+    }
+
+    .sec-head h2 {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(38px, 5.2vw, 68px);
+      letter-spacing: -.035em;
+      line-height: .98;
+      text-transform: uppercase;
+      margin-top: 18px;
+    }
+
+    .sec-head h2 em {
+      font-style: normal;
+      color: var(--orange);
+    }
+
+    .sec-head .lead {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 17px;
+      max-width: 56ch;
+    }
+
+    /* ===== Cómo funciona ===== */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .step {
+      padding: 34px 30px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg-1);
+      position: relative;
+      overflow: hidden;
+      transition: border-color .3s ease, transform .3s ease;
+    }
+
+    .step:hover {
+      border-color: var(--line-2);
+      transform: translateY(-4px);
+    }
+
+    .step::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--orange);
+      transition: width .4s ease;
+    }
+
+    .step:hover::before {
+      width: 100%;
+    }
+
+    .step .ix {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .14em;
+      color: var(--orange);
+    }
+
+    .step .si {
+      width: 50px;
+      height: 50px;
+      border: 1px solid var(--line-2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 22px 0 24px;
+      transition: all .3s ease;
+    }
+
+    .step:hover .si {
+      border-color: var(--orange);
+      background: var(--orange-soft);
+    }
+
+    .step .si svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--ink);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke .3s ease;
+    }
+
+    .step:hover .si svg {
+      stroke: var(--orange);
+    }
+
+    .step h3 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 21px;
+      letter-spacing: -.01em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    /* ===== Servicios ===== */
+    .services {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .svc {
+      background: var(--bg-1);
+      padding: 34px 30px;
+      transition: background .25s ease;
+      position: relative;
+    }
+
+    .svc:hover {
+      background: var(--bg-2);
+    }
+
+    .svc-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 26px;
+    }
+
+    .svc-ico {
+      width: 46px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line-2);
+      border-radius: 10px;
+      transition: all .25s ease;
+    }
+
+    .svc:hover .svc-ico {
+      border-color: var(--orange);
+      background: var(--orange-soft);
+    }
+
+    .svc-ico svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--ink);
+      fill: none;
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke .25s ease;
+    }
+
+    .svc:hover .svc-ico svg {
+      stroke: var(--orange);
+    }
+
+    .svc-id {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted-2);
+      letter-spacing: .1em;
+    }
+
+    .svc h4 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 19px;
+      text-transform: uppercase;
+      letter-spacing: -.01em;
+      margin-bottom: 9px;
+    }
+
+    .svc p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* ===== Para quién (split) ===== */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+
+    .panel {
+      padding: 40px 36px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--bg-1);
+      position: relative;
+      overflow: hidden;
+      transition: border-color .3s ease;
+    }
+
+    .panel:hover {
+      border-color: var(--line-2);
+    }
+
+    .panel.pro {
+      background: linear-gradient(165deg, color-mix(in srgb, var(--orange) 9%, var(--bg-1)), var(--bg-1) 65%);
+      border-color: var(--orange-line);
+    }
+
+    .panel .ptag {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .panel.pro .ptag {
+      color: var(--orange);
+    }
+
+    .panel h3 {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(26px, 3vw, 34px);
+      letter-spacing: -.025em;
+      line-height: 1;
+      text-transform: uppercase;
+      margin: 16px 0 14px;
+    }
+
+    .panel .pdesc {
+      color: var(--muted);
+      font-size: 15px;
+      margin-bottom: 28px;
+      max-width: 40ch;
+    }
+
+    .plist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .plist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      font-size: 15px;
+      color: var(--ink-2);
+    }
+
+    .plist .ck {
+      width: 21px;
+      height: 21px;
+      border-radius: 50%;
+      background: var(--orange-soft);
+      border: 1px solid var(--orange-line);
+      flex-shrink: 0;
+      position: relative;
+      margin-top: 1px;
+    }
+
+    .plist .ck::after {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 4px;
+      width: 5px;
+      height: 9px;
+      border-right: 1.6px solid var(--orange);
+      border-bottom: 1.6px solid var(--orange);
+      transform: rotate(45deg);
+    }
+
+    /* ===== Verificación ===== */
+    .verify {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .vcard {
+      padding: 32px 28px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg-1);
+    }
+
+    .vcard .vn {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .14em;
+      color: var(--orange);
+      margin-bottom: 18px;
+    }
+
+    .vcard .vi {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line-2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .vcard .vi svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--orange);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .vcard h4 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 18px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .vcard p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* ===== CTA final ===== */
+    .cta {
+      padding: 130px 0;
+    }
+
+    .cta-box {
+      border: 1px solid var(--orange-line);
+      border-radius: 18px;
+      background: linear-gradient(165deg, color-mix(in srgb, var(--orange) 12%, var(--bg-1)), var(--bg-1) 70%);
+      padding: 72px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(500px circle at 50% 0%, var(--orange-soft), transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-box .eyebrow {
+      justify-content: center;
+    }
+
+    .cta-box h2 {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(40px, 6vw, 80px);
+      letter-spacing: -.04em;
+      line-height: .96;
+      text-transform: uppercase;
+      margin: 22px 0 18px;
+      position: relative;
+    }
+
+    .cta-box h2 em {
+      font-style: normal;
+      color: var(--orange);
+    }
+
+    .cta-box p {
+      color: var(--muted);
+      font-size: 17px;
+      max-width: 48ch;
+      margin: 0 auto 36px;
+      position: relative;
+    }
+
+    .cta-box .hero-ctas {
+      justify-content: center;
+      animation: none;
+      opacity: 1;
+      position: relative;
+    }
+
+    /* ==========================================================
+       FOOTER
+       ========================================================== */
+    footer {
+      background: var(--bg-1);
+      border-top: 1px solid var(--line);
+      padding: 70px 0 30px;
+    }
+
+    .foot-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 1fr 1fr;
+      gap: 48px;
+      padding-bottom: 50px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .foot-brand .brand {
+      font-size: 23px;
+      margin-bottom: 16px;
+    }
+
+    .foot-brand p {
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 32ch;
+    }
+
+    .foot-col h5 {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+      margin-bottom: 18px;
+    }
+
+    .foot-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .foot-col a {
+      font-size: 14px;
+      color: var(--ink-2);
+      transition: color .2s ease;
+    }
+
+    .foot-col a:hover {
+      color: var(--orange);
+    }
+
+    .foot-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 26px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted-2);
+      letter-spacing: .08em;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .foot-bottom .social {
+      display: flex;
+      gap: 7px;
+    }
+
+    .foot-bottom .social a {
+      width: 33px;
+      height: 33px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .25s ease;
+    }
+
+    .foot-bottom .social a:hover {
+      border-color: var(--orange);
+      background: var(--orange-soft);
+    }
+
+    .foot-bottom .social svg {
+      width: 14px;
+      height: 14px;
+      fill: var(--ink-2);
+    }
+
+    /* ==========================================================
+       AUTH MODALS
+       ========================================================== */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: color-mix(in srgb, var(--bg) 72%, transparent);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 90px 22px 22px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s ease;
+      overflow-y: auto;
+    }
+
+    .auth-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .auth-modal {
+      background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      border: 1px solid var(--line-2);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+      transform: translateY(22px) scale(.98);
+      opacity: 0;
+      transition: all .4s cubic-bezier(.2, .7, .2, 1);
+      margin: auto;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .auth-overlay.open .auth-modal {
+      transform: none;
+      opacity: 1;
+    }
+
+    .auth-modal::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(225deg, var(--orange) 0 52%, transparent 52%);
+      pointer-events: none;
+    }
+
+    .auth-head {
+      padding: 20px 26px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .18em;
+      color: var(--muted-2);
+      text-transform: uppercase;
+    }
+
+    .auth-head .id {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .auth-head .id::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 8px var(--orange);
+    }
+
+    .auth-close {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all .25s ease;
+    }
+
+    .auth-close::before,
+    .auth-close::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 1.5px;
+      background: var(--ink);
+      transition: background .25s ease;
+    }
+
+    .auth-close::before {
+      transform: rotate(45deg);
+    }
+
+    .auth-close::after {
+      transform: rotate(-45deg);
+    }
+
+    .auth-close:hover {
+      border-color: var(--orange);
+    }
+
+    .auth-close:hover::before,
+    .auth-close:hover::after {
+      background: var(--orange);
+    }
+
+    .auth-body {
+      padding: 30px 32px 26px;
+    }
+
+    .auth-title {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(28px, 4vw, 33px);
+      letter-spacing: -.03em;
+      line-height: 1;
+      text-transform: uppercase;
+      margin-bottom: 11px;
+    }
+
+    .auth-title em {
+      font-style: normal;
+      color: var(--orange);
+    }
+
+    .auth-sub {
+      color: var(--muted);
+      font-size: 15px;
+      margin-bottom: 26px;
+      max-width: 36ch;
+    }
+
+    /* Role tabs con highlight deslizante */
+    .role-tabs {
+      position: relative;
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--line-2);
+      border-radius: 10px;
+      background: var(--bg-2);
+      padding: 5px;
+      margin-bottom: 22px;
+    }
+
+    .role-thumb {
+      position: absolute;
+      top: 5px;
+      bottom: 5px;
+      left: 5px;
+      width: calc(50% - 5px);
+      background: linear-gradient(180deg, var(--orange), var(--orange-br));
+      border-radius: 7px;
+      box-shadow: 0 10px 24px -14px rgba(242, 92, 24, .8);
+      transition: transform .32s cubic-bezier(.4, 1.3, .5, 1);
+    }
+
+    .role-tabs[data-role="profesional"] .role-thumb {
+      transform: translateX(100%);
+    }
+
+    .role-tab {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--muted);
+      border-radius: 7px;
+      transition: color .3s ease;
+    }
+
+    .role-tab svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.7;
+    }
+
+    .role-tab.active {
+      color: #fff;
+    }
+
+    /* Campos */
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .field-label .ix {
+      color: var(--orange);
+    }
+
+    .field-label .req {
+      color: var(--orange);
+      font-size: 9px;
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--bg-2);
+      border: 1px solid var(--line-2);
+      border-radius: 8px;
+      padding: 13px 15px;
+      font-family: var(--body);
+      font-size: 14.5px;
+      color: var(--ink);
+      transition: all .22s ease;
+      outline: none;
+    }
+
+    .field-input::placeholder {
+      color: var(--muted-2);
+    }
+
+    .field-input:hover {
+      border-color: var(--muted);
+    }
+
+    .field-input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px var(--orange-soft);
+    }
+
+    .field-input.bad {
+      border-color: var(--err);
+    }
+
+    select.field-input {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 40px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2398989F' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+
+    .field-msg {
+      display: none;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--err);
+      margin-top: 6px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .field-msg::before {
+      content: "⚠ ";
+    }
+
+    .field.invalid .field-msg {
+      display: block;
+    }
+
+    .field-wrap {
+      position: relative;
+    }
+
+    .field-wrap .field-input {
+      padding-right: 46px;
+    }
+
+    .field-toggle {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--r);
+      transition: background .2s ease;
+    }
+
+    .field-toggle:hover {
+      background: var(--bg-3);
+    }
+
+    .field-toggle svg {
+      width: 17px;
+      height: 17px;
+      stroke: var(--muted);
+      fill: none;
+      stroke-width: 1.5;
+    }
+
+    .field-toggle:hover svg {
+      stroke: var(--ink);
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 13px;
+    }
+
+    /* Custom File Upload Box */
+    .file-upload-box {
+      position: relative;
+      background: var(--bg-2);
+      border: 1.5px dashed var(--line-2);
+      border-radius: 8px;
+      padding: 13px 15px;
+      cursor: pointer;
+      transition: all .22s ease;
+      overflow: hidden;
+    }
+    .file-upload-box:hover {
+      border-color: var(--orange);
+      background: var(--orange-soft, rgba(242, 92, 24, 0.06));
+    }
+    .file-upload-box.has-file {
+      border-color: #3FB950;
+      border-style: solid;
+      background: rgba(63, 185, 80, 0.07);
+    }
+    .file-upload-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+    .file-upload-icon {
+      width: 22px;
+      height: 22px;
+      stroke: var(--orange);
+      flex-shrink: 0;
+      transition: stroke .2s ease;
+    }
+    .file-upload-box.has-file .file-upload-icon {
+      stroke: #3FB950;
+    }
+    .file-upload-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .file-upload-title {
+      font-family: var(--body);
+      font-weight: 600;
+      font-size: 13.5px;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-upload-box.has-file .file-upload-title {
+      color: #3FB950;
+      font-weight: 700;
+    }
+    .file-upload-hint {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      color: var(--muted-2);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .file-input-hidden {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .strength {
+      margin-top: 9px;
+      height: 3px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+    }
+
+    .strength span {
+      background: var(--line-2);
+      border-radius: 2px;
+      transition: background .3s ease;
+    }
+
+    .strength.s1 span:nth-child(-n+1) {
+      background: var(--err);
+    }
+
+    .strength.s2 span:nth-child(-n+2) {
+      background: #E08A2C;
+    }
+
+    .strength.s3 span:nth-child(-n+3) {
+      background: #C7A93A;
+    }
+
+    /* Rubro Chips Select & Custom Checkboxes */
+    .rubro-chips-select {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 6px 0;
+    }
+    .rchip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--bg-2);
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+      font-family: var(--body);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      transition: all .22s ease;
+    }
+    .rchip:hover {
+      border-color: var(--muted);
+      color: var(--ink);
+    }
+    .rchip input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--line-2);
+      border-radius: 4px;
+      background: var(--bg);
+      cursor: pointer;
+      position: relative;
+      outline: none;
+      flex-shrink: 0;
+      transition: all .2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .rchip input[type="checkbox"]:hover {
+      border-color: var(--orange);
+    }
+    .rchip input[type="checkbox"]:checked {
+      background: var(--orange);
+      border-color: var(--orange);
+    }
+    .rchip input[type="checkbox"]:checked::after {
+      content: "";
+      display: block;
+      width: 4px;
+      height: 8px;
+      border-right: 1.8px solid #fff;
+      border-bottom: 1.8px solid #fff;
+      transform: rotate(45deg);
+      margin-top: -2px;
+    }
+    .rchip:has(input:checked) {
+      border-color: var(--orange);
+      color: var(--ink);
+      background: var(--orange-soft, rgba(242, 92, 24, 0.08));
+    }
+
+    .field-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      margin: 6px 0 22px;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    .field-check input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .field-check .box {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--line-2);
+      border-radius: 4px;
+      background: var(--bg);
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: all .22s ease;
+      pointer-events: none;
+      position: relative;
+    }
+
+    .field-check input:checked+.box {
+      background: var(--orange);
+      border-color: var(--orange);
+    }
+
+    .field-check input:checked+.box::after {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 1px;
+      width: 5px;
+      height: 10px;
+      border-right: 1.6px solid #fff;
+      border-bottom: 1.6px solid #fff;
+      transform: rotate(45deg);
+    }
+
+    .field-check .lbl {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .field-check .lbl a {
+      color: var(--ink);
+      text-decoration: underline;
+      text-decoration-color: var(--orange-line);
+      text-underline-offset: 3px;
+      position: relative;
+      z-index: 3;
+    }
+
+    .auth-forgot {
+      text-align: right;
+      margin: -6px 0 16px;
+    }
+
+    .auth-forgot a {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      transition: color .2s ease;
+    }
+
+    .auth-forgot a:hover {
+      color: var(--orange);
+    }
+
+    .auth-submit {
+      width: 100%;
+      min-height: 50px;
+      padding: 16px 22px;
+      background: linear-gradient(180deg, var(--orange), var(--orange-br));
+      color: #fff;
+      font-family: var(--body);
+      font-size: 13.5px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all .25s ease;
+      position: relative;
+      box-shadow: 0 16px 30px -18px rgba(242, 92, 24, .85);
+    }
+
+    .auth-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 36px -18px rgba(242, 92, 24, .9);
+    }
+
+    .auth-submit.loading {
+      pointer-events: none;
+      color: transparent;
+    }
+
+    .auth-submit.loading::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #fff;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin: 22px 0 16px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted-2);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .auth-social {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .auth-social-btn {
+      padding: 12px 14px;
+      background: var(--bg-2);
+      border: 1px solid var(--line-2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      transition: all .25s ease;
+    }
+
+    .auth-social-btn:hover {
+      border-color: var(--orange);
+      transform: translateY(-1px);
+    }
+
+    .auth-social-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .auth-foot {
+      padding: 18px 32px 26px;
+      border-top: 1px solid var(--line);
+      text-align: center;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+
+    .auth-foot a {
+      color: var(--ink);
+      font-weight: 600;
+      margin-left: 6px;
+      border-bottom: 1px solid var(--orange);
+      padding-bottom: 1px;
+      transition: color .2s ease;
+    }
+
+    .auth-foot a:hover {
+      color: var(--orange);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ==========================================================
+       TOASTS
+       ========================================================== */
+    .toast-stack {
+      position: fixed;
+      top: 78px;
+      right: 20px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 350px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--bg-1);
+      border: 1px solid var(--line-2);
+      border-radius: 8px;
+      padding: 14px 18px 14px 16px;
+      position: relative;
+      overflow: hidden;
+      transform: translateX(120%);
+      opacity: 0;
+      transition: all .35s cubic-bezier(.2, .7, .2, 1);
+      pointer-events: auto;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .toast.in {
+      transform: none;
+      opacity: 1;
+    }
+
+    .toast::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--orange);
+    }
+
+    .toast.ok::before {
+      background: var(--ok);
+    }
+
+    .toast.err::before {
+      background: var(--err);
+    }
+
+    .toast .ic {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      stroke: var(--orange);
+      fill: none;
+      stroke-width: 2;
+      margin-top: 1px;
+    }
+
+    .toast.ok .ic {
+      stroke: var(--ok);
+    }
+
+    .toast.err .ic {
+      stroke: var(--err);
+    }
+
+    .toast .t {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .toast .m {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    /* ==========================================================
+       REVEAL ON SCROLL
+       ========================================================== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(26px);
+      transition: opacity .8s ease, transform .8s cubic-bezier(.2, .7, .2, 1);
+    }
+
+    .reveal.in {
+      opacity: 1;
+      transform: none;
+    }
+
+    .rd1 {
+      transition-delay: .07s;
+    }
+
+    .rd2 {
+      transition-delay: .14s;
+    }
+
+    .rd3 {
+      transition-delay: .21s;
+    }
+
+    .rd4 {
+      transition-delay: .28s;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes lineUp {
+      to {
+        transform: none;
+      }
+    }
+
+    /* ==========================================================
+       RESPONSIVE
+       ========================================================== */
+    @media (max-width: 1024px) {
+      .hero-bottom {
+        grid-template-columns: 1fr;
+        gap: 56px;
+      }
+
+      .hero-visual {
+        max-width: 440px;
+        margin: 0 auto;
+      }
+
+      .steps,
+      .services,
+      .verify {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .foot-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 36px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      :root {
+        --gutter: 18px;
+      }
+
+      .hero {
+        padding: 120px 0 70px;
+      }
+
+      .hero-ctas {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .hero-ctas .btn {
+        width: 100%;
+      }
+
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+
+      .steps,
+      .services,
+      .split,
+      .verify {
+        grid-template-columns: 1fr;
+      }
+
+      .sec {
+        padding: 84px 0;
+      }
+
+      .cta {
+        padding: 84px 0;
+      }
+
+      .cta-box {
+        padding: 52px 26px;
+      }
+
+      .foot-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+
+      .foot-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-body {
+        padding: 24px 22px;
+      }
+    }
+
+    /* Accesibilidad: respetar reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+      }
+
+      .hero h1 .ln>span {
+        transform: none;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
+
+      .bg-spot {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Capas de fondo -->
+  <div class="bg-grid"></div>
+  <div class="bg-spot"></div>
+
+  <!-- ====== NAV ====== -->
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#top" class="brand" aria-label="Brickø, inicio">
+        <svg class="cube" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path class="iso-top" d="M12 2 L22 7 L12 12 L2 7 Z" />
+          <path class="iso-left" d="M2 7 L2 17 L12 22 L12 12 Z" />
+          <path class="iso-right" d="M22 7 L22 17 L12 22 L12 12 Z" />
+        </svg>
+        <span style="display: flex; align-items: center;"><span class="brand-text">BRICK</span><span class="o">Ø</span></span>
+      </a>
+
+      <nav class="nav-links" aria-label="Principal">
+        <a href="#como">Cómo funciona</a>
+        <a href="#servicios">Servicios</a>
+        <a href="#quien">Para quién</a>
+        <a href="#confianza">Confianza</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-plan" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18" />
+          </svg>
+        </button>
+        <button class="btn btn-ghost auth-trigger" data-open="login">Ingresar</button>
+        <button class="btn btn-primary auth-trigger" data-open="register">Crear cuenta <span
+            class="arrow"></span></button>
+
+        <!-- Chip usuario logueado -->
+        <button class="user-chip" id="userChip" aria-expanded="false" aria-label="Menú de usuario">
+          <span class="av" id="chipAv">U</span>
+          <span class="nm" id="chipName">Usuario</span>
+          <svg class="caret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"
+            aria-hidden="true">
+            <path d="M3 5l3 3 3-3" />
+          </svg>
+        </button>
+      </div>
+
+      <button class="burger" id="burger" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+
+  <!-- Menú de usuario (dropdown) -->
+  <div class="user-menu" id="userMenu" role="menu">
+    <div class="um-head">
+      <div class="um-name" id="menuName">Usuario</div>
+      <span class="um-role" id="menuRole">CLIENTE</span>
+    </div>
+    <button role="menuitem"><svg viewBox="0 0 24 24">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <path d="M9 22V12h6v10" />
+      </svg> Mi panel</button>
+    <button role="menuitem"><svg viewBox="0 0 24 24">
+        <path d="M20 21a8 8 0 1 0-16 0" />
+        <circle cx="12" cy="7" r="4" />
+      </svg> Mi perfil</button>
+    <button role="menuitem" class="um-out" id="logoutBtn"><svg viewBox="0 0 24 24">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <path d="M16 17l5-5-5-5M21 12H9" />
+      </svg> Cerrar sesión</button>
+  </div>
+
+  <!-- Menú mobile -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#como">Cómo funciona</a>
+    <a href="#servicios">Servicios</a>
+    <a href="#quien">Para quién</a>
+    <a href="#confianza">Confianza</a>
+    <button class="btn btn-ghost" data-open="login">Ingresar</button>
+    <button class="btn btn-primary" data-open="register">Crear cuenta <span class="arrow"></span></button>
+  </div>
+
+  <main id="top">
+
+    <!-- ====== HERO ====== -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-content">
+          <h1>
+            <span class="ln ln-1"><span>Tu obra,</span></span>
+            <span class="ln ln-2"><span>tu <em>refacción</em>,</span></span>
+            <span class="ln ln-3"><span>resuelta.</span></span>
+          </h1>
+          <p class="hero-sub">
+            Brickø conecta a <strong>plomeros, gasistas, electricistas, albañiles y pintores</strong>
+            verificados con personas que necesitan reparar o construir. Publicás lo que necesitás,
+            recibís presupuestos y elegís.
+          </p>
+          <div class="hero-ctas">
+            <button class="btn btn-primary btn-lg" data-open="register" data-role="cliente">Buscar profesionales <span
+                class="arrow"></span></button>
+            <button class="btn btn-ghost btn-lg" data-open="register" data-role="profesional">Soy profesional</button>
+          </div>
+          <div class="hero-trust">
+            <span>Gratis para clientes</span><span class="dot"></span>
+            <span>Profesionales matriculados</span><span class="dot"></span>
+          </div>
+        </div>
+
+        <div class="hero-bottom">
+          <!-- Pieza dinámica: plano isométrico vivo -->
+          <div class="hero-visual">
+            <div class="hero-sheet">
+              <div class="sheet-grid"></div>
+              <div class="sheet-head">
+                <span>EXP / 001 — BLOCK A</span>
+                <span class="live"><span class="pip"></span> EN VIVO</span>
+              </div>
+
+              <div class="iso-stage">
+                <svg viewBox="0 0 220 200" aria-hidden="true">
+                  <!-- Anillos que orbitan -->
+                  <g class="ring-spin">
+                    <circle class="iso-ring" cx="110" cy="100" r="78" />
+                  </g>
+                  <g class="ring-spin r2">
+                    <circle class="iso-ring-2" cx="110" cy="100" r="92" />
+                  </g>
+
+                  <!-- Cubo isométrico (se ensambla y flota) -->
+                  <g transform="translate(110,98)">
+                    <g class="cube-grp">
+                      <path class="iso-left face-left" d="M-52,-22 L0,6 L0,58 L-52,30 Z" />
+                      <path class="iso-right face-right" d="M52,-22 L0,6 L0,58 L52,30 Z" />
+                      <path class="iso-top face-top" d="M0,-50 L52,-22 L0,6 L-52,-22 Z" />
+                      <path class="iso-edge"
+                        d="M0,-50 L52,-22 L0,6 L-52,-22 Z M-52,-22 L-52,30 L0,58 L52,30 L52,-22 M0,6 L0,58" />
+                      <!-- Cotas -->
+                      <line class="iso-dim" x1="-64" y1="-22" x2="-64" y2="30" />
+                      <line class="iso-dim" x1="-67" y1="-22" x2="-61" y2="-22" />
+                      <line class="iso-dim" x1="-67" y1="30" x2="-61" y2="30" />
+                      <text class="iso-dim-t" x="-71" y="6" text-anchor="end">240</text>
+                      <line class="iso-dim" x1="0" y1="68" x2="52" y2="40" />
+                      <text class="iso-dim-t" x="30" y="62">180</text>
+                    </g>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-row reveal">
+            <div class="stat">
+              <div class="n"><span data-count="4872" data-thousands>0</span><span>↗</span></div>
+              <div class="l">Profesionales activos</div>
+            </div>
+            <div class="stat">
+              <div class="n"><span data-count="28" data-suffix="k">0</span><span>+</span></div>
+              <div class="l">Trabajos completados</div>
+            </div>
+            <div class="stat">
+              <div class="n"><span data-count="4.9" data-decimals="1">0</span><span>★</span></div>
+              <div class="l">Satisfacción promedio</div>
+            </div>
+            <div class="stat">
+              <div class="n"><span data-count="48">0</span><span>h</span></div>
+              <div class="l">Respuesta media</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== TICKER ====== -->
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-row">
+        <span>Plomería <i class="star">✦</i> Gas <i class="star">✦</i> Electricidad <i class="star">✦</i> Albañilería <i
+            class="star">✦</i> Pintura <i class="star">✦</i> Refacciones <i class="star">✦</i> Obra nueva <i
+            class="star">✦</i> Profesionales verificados <i class="star">✦</i></span>
+        <span>Plomería <i class="star">✦</i> Gas <i class="star">✦</i> Electricidad <i class="star">✦</i> Albañilería <i
+            class="star">✦</i> Pintura <i class="star">✦</i> Refacciones <i class="star">✦</i> Obra nueva <i
+            class="star">✦</i> Profesionales verificados <i class="star">✦</i></span>
+      </div>
+    </div>
+
+    <!-- ====== CÓMO FUNCIONA ====== -->
+    <section class="sec" id="como">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <span class="eyebrow">¿Cómo funciona?</span>
+          <h2>Tres pasos<br>y <em>listo.</em></h2>
+          <p class="lead">Sin llamados a ciegas ni presupuestos que nunca llegan. Brickø ordena todo el proceso en un
+            mismo lugar.</p>
+        </div>
+
+        <div class="steps">
+          <article class="step reveal rd1">
+            <span class="ix">/01 — PUBLICÁS</span>
+            <div class="si"><svg viewBox="0 0 24 24">
+                <path d="M12 5v14M5 12h14" />
+              </svg></div>
+            <h3>Contás qué necesitás</h3>
+            <p>Describís el trabajo, sumás fotos y marcás tu zona. Te toma dos minutos y es gratis.</p>
+          </article>
+          <article class="step reveal rd2">
+            <span class="ix">/02 — RECIBÍS</span>
+            <div class="si"><svg viewBox="0 0 24 24">
+                <path d="M3 3h18v14H3z" />
+                <path d="M3 8h18M8 13h5" />
+              </svg></div>
+            <h3>Te llegan presupuestos</h3>
+            <p>Los profesionales verificados de tu zona cotizan. Comparás precio, reseñas y plazos.</p>
+          </article>
+          <article class="step reveal rd3">
+            <span class="ix">/03 — ELEGÍS</span>
+            <div class="si"><svg viewBox="0 0 24 24">
+                <path d="M20 6L9 17l-5-5" />
+              </svg></div>
+            <h3>Elegís y seguís la obra</h3>
+            <p>Te quedás con el que más te convence. El pago queda protegido hasta que aprobás el trabajo.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SERVICIOS ====== -->
+    <section class="sec" id="servicios">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <span class="eyebrow">Servicios</span>
+          <h2>Todos los oficios<br>de la <em>obra.</em></h2>
+          <p class="lead">Cinco rubros que cubren tanto una reparación urgente como una obra completa de punta a punta.
+          </p>
+        </div>
+
+        <div class="services">
+          <article class="svc reveal rd1">
+            <div class="svc-top">
+              <div class="svc-ico"><svg viewBox="0 0 24 24">
+                  <path d="M9 3v6l-4 4a4 4 0 0 0 6 6l4-4h2a3 3 0 0 0 0-6" />
+                  <path d="M9 3h4" />
+                </svg></div>
+              <span class="svc-id">/01</span>
+            </div>
+            <h4>Plomería</h4>
+            <p>Pérdidas, instalaciones, destapaciones y conexión de artefactos.</p>
+          </article>
+          <article class="svc reveal rd2">
+            <div class="svc-top">
+              <div class="svc-ico"><svg viewBox="0 0 24 24">
+                  <path d="M10 3h4v5h-4zM8 8h8v6H8zM10 14v7M14 14v7" />
+                </svg></div>
+              <span class="svc-id">/02</span>
+            </div>
+            <h4>Gas</h4>
+            <p>Instalación, reparación y habilitaciones con matrícula al día.</p>
+          </article>
+          <article class="svc reveal rd3">
+            <div class="svc-top">
+              <div class="svc-ico"><svg viewBox="0 0 24 24">
+                  <path d="M13 2L4 14h6l-1 8 9-12h-6z" />
+                </svg></div>
+              <span class="svc-id">/03</span>
+            </div>
+            <h4>Electricidad</h4>
+            <p>Tableros, instalaciones, iluminación y certificados eléctricos.</p>
+          </article>
+          <article class="svc reveal rd1">
+            <div class="svc-top">
+              <div class="svc-ico"><svg viewBox="0 0 24 24">
+                  <path d="M3 21V9l9-6 9 6v12M3 13h18M9 9v4M15 9v4M12 13v8" />
+                </svg></div>
+              <span class="svc-id">/04</span>
+            </div>
+            <h4>Albañilería</h4>
+            <p>Mampostería, revoques, contrapisos, demoliciones y reformas.</p>
+          </article>
+          <article class="svc reveal rd2">
+            <div class="svc-top">
+              <div class="svc-ico"><svg viewBox="0 0 24 24">
+                  <path d="M4 6h13v6H4zM17 8h3l1 4v4l-3 1-2-1V8M18 18v3" />
+                </svg></div>
+              <span class="svc-id">/05</span>
+            </div>
+            <h4>Pintura</h4>
+            <p>Interiores, exteriores, frentes y tratamientos antihumedad.</p>
+          </article>
+          <article class="svc reveal rd3">
+            <div class="svc-top">
+              <div class="svc-ico"><svg viewBox="0 0 24 24">
+                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" />
+                </svg></div>
+              <span class="svc-id">/06</span>
+            </div>
+            <h4>Refacciones y obra</h4>
+            <p>Desde un arreglo puntual hasta una obra completa coordinada por hitos.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== PERFILES ====== -->
+    <section class="sec" id="quien">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <span class="eyebrow">Perfiles</span>
+          <h2>Un lado pide,<br>el otro <em>resuelve.</em></h2>
+          <p class="lead">Brickø funciona para los dos extremos del trabajo. Elegí tu lado y empezá en minutos.</p>
+        </div>
+
+        <div class="split">
+          <div class="panel reveal rd1">
+            <span class="ptag">/ Para clientes</span>
+            <h3>Reparás o<br>construís.</h3>
+            <p class="pdesc">Encontrás al profesional indicado sin perder tiempo ni arriesgar tu casa.</p>
+            <ul class="plist">
+              <li><span class="ck"></span> Presupuestos sin cargo y sin compromiso</li>
+              <li><span class="ck"></span> Profesionales con identidad y matrícula verificadas</li>
+              <li><span class="ck"></span> Pago protegido: liberás cuando aprobás</li>
+              <li><span class="ck"></span> Garantía Brickø de 6 meses en cada trabajo</li>
+            </ul>
+            <button class="btn btn-ghost btn-lg" data-open="register" data-role="cliente">Crear cuenta de cliente <span
+                class="arrow"></span></button>
+          </div>
+
+          <div class="panel pro reveal rd2">
+            <span class="ptag">/ Para profesionales</span>
+            <h3>Trabajás y<br>cobrás bien.</h3>
+            <p class="pdesc">La herramienta para conseguir trabajo de tu zona y cobrar a tiempo, siempre.</p>
+            <ul class="plist">
+              <li><span class="ck"></span> Clientes pre-calificados filtrados por rubro y zona</li>
+              <li><span class="ck"></span> Cobro asegurado, liberado por hito cumplido</li>
+              <li><span class="ck"></span> Perfil con reseñas reales que suma reputación</li>
+              <li><span class="ck"></span> Agenda, partes y facturación en un solo lugar</li>
+            </ul>
+            <button class="btn btn-primary btn-lg" data-open="register" data-role="profesional">Sumarme como profesional
+              <span class="arrow"></span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== CONFIANZA ====== -->
+    <section class="sec" id="confianza">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <span class="eyebrow">Verificación</span>
+          <h2>No mandamos<br>a <em>cualquiera.</em></h2>
+          <p class="lead">Cada profesional pasa por tres etapas antes de poder aparecer en la plataforma.</p>
+        </div>
+
+        <div class="verify">
+          <article class="vcard reveal rd1">
+            <div class="vn">/01 — IDENTIDAD</div>
+            <div class="vi"><svg viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <circle cx="9" cy="10" r="2" />
+                <path d="M13 9h5M13 13h5M5 16c.7-1.5 2-2 4-2s3.3.5 4 2" />
+              </svg></div>
+            <h4>Identidad real</h4>
+            <p>Validamos DNI y datos de contacto. Sabemos quién es cada persona del otro lado.</p>
+          </article>
+          <article class="vcard reveal rd2">
+            <div class="vn">/02 — MATRÍCULA</div>
+            <div class="vi"><svg viewBox="0 0 24 24">
+                <path d="M12 2l3 6 6 .9-4.5 4.3 1 6.1L12 17l-5.5 2.3 1-6.1L3 8.9 9 8z" />
+              </svg></div>
+            <h4>Matrícula al día</h4>
+            <p>Comprobamos credenciales y habilitaciones según el rubro y la jurisdicción.</p>
+          </article>
+          <article class="vcard reveal rd3">
+            <div class="vn">/03 — REPUTACIÓN</div>
+            <div class="vi"><svg viewBox="0 0 24 24">
+                <path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" />
+                <path d="M9 12l2 2 4-4" />
+              </svg></div>
+            <h4>Reputación y Trayectoria</h4>
+            <p>Revisamos opiniones y mantenemos un puntaje vivo con las reseñas de cada trabajo.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== CTA FINAL ====== -->
+    <section class="cta">
+      <div class="wrap">
+        <div class="cta-box reveal">
+          <span class="eyebrow">Empezá hoy</span>
+          <h2>Tu próxima obra<br>arranca <em>acá.</em></h2>
+          <p>Creá tu cuenta gratis y publicá tu primera solicitud, o sumate al equipo de profesionales de Brickø.</p>
+          <div class="hero-ctas">
+            <button class="btn btn-primary btn-lg" data-open="register" data-role="cliente">Crear cuenta gratis <span
+                class="arrow"></span></button>
+            <button class="btn btn-ghost btn-lg" data-open="login">Ya tengo cuenta</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ====== FOOTER ====== -->
+  <footer>
+    <div class="wrap">
+      <div class="foot-grid">
+        <div class="foot-brand">
+          <div class="brand">
+            <svg class="cube" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path class="iso-top" d="M12 2 L22 7 L12 12 L2 7 Z" />
+              <path class="iso-left" d="M2 7 L2 17 L12 22 L12 12 Z" />
+              <path class="iso-right" d="M22 7 L22 17 L12 22 L12 12 Z" />
+            </svg>
+            <span>BRICK<span class="o">Ø</span></span>
+          </div>
+          <p>La plataforma que conecta profesionales de la construcción verificados con quienes necesitan reparar o
+            construir en Argentina.</p>
+        </div>
+        <div class="foot-col">
+          <h5>Producto</h5>
+          <ul>
+            <li><a href="#como">Cómo funciona</a></li>
+            <li><a href="#servicios">Servicios</a></li>
+            <li><a href="#quien">Para quién</a></li>
+            <li><a href="#confianza">Confianza</a></li>
+          </ul>
+        </div>
+        <div class="foot-col">
+          <h5>Cuenta</h5>
+          <ul>
+            <li><a href="#" data-open="login">Ingresar</a></li>
+            <li><a href="#" data-open="register" data-role="cliente">Soy cliente</a></li>
+            <li><a href="#" data-open="register" data-role="profesional">Soy profesional</a></li>
+          </ul>
+        </div>
+        <div class="foot-col">
+          <h5>Empresa</h5>
+          <ul>
+            <li><a href="#">Sobre Brickø</a></li>
+            <li><a href="#">Soporte</a></li>
+            <li><a href="#">Términos</a></li>
+            <li><a href="#">Privacidad</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>© 2026 BRICKØ S.A. — HECHO EN ARGENTINA</span>
+        <div class="social">
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24">
+              <path
+                d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.4a3.8 3.8 0 0 1-1.4-.9 3.8 3.8 0 0 1-.9-1.4c-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1 0 18.6 12 6.6 6.6 0 0 0 12 5.4zm0 10.9A4.3 4.3 0 1 1 16.3 12 4.3 4.3 0 0 1 12 16.3zm6.8-11.2a1.5 1.5 0 1 0 1.5 1.5 1.5 1.5 0 0 0-1.5-1.5z" />
+            </svg></a>
+          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24">
+              <path
+                d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zM8.3 18H5.7V9.8h2.6zM7 8.6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM18.3 18h-2.6v-4c0-1-.4-1.6-1.2-1.6a1.3 1.3 0 0 0-1.2.9 1.7 1.7 0 0 0-.1.6V18H10.6V9.8h2.5v1.1a2.6 2.6 0 0 1 2.3-1.3c1.7 0 2.9 1.1 2.9 3.4z" />
+            </svg></a>
+          <a href="#" aria-label="X"><svg viewBox="0 0 24 24">
+              <path
+                d="M18.2 2.2h3.3l-7.2 8.3 8.5 11.3h-6.6l-5.2-6.8-6 6.8H1.7l7.7-8.8L1.3 2.2h6.8l4.7 6.2zm-1.2 17.7h1.8L7.1 4h-2z" />
+            </svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==========================================================
+       AUTH MODALS
+       ========================================================== -->
+
+  <!-- LOGIN -->
+  <div class="auth-overlay" id="authLogin" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="auth-modal">
+      <header class="auth-head">
+        <span class="id">AUTH / LOGIN — 001</span>
+        <button class="auth-close" data-close aria-label="Cerrar"></button>
+      </header>
+      <div class="auth-body">
+        <h2 class="auth-title" id="loginTitle">Bienvenido<br>de <em>vuelta.</em></h2>
+        <p class="auth-sub">Ingresá a tu cuenta para seguir tus obras y solicitudes.</p>
+
+        <form id="loginForm" novalidate>
+          <div class="role-tabs" data-role="cliente" id="loginRoleTabs">
+            <span class="role-thumb"></span>
+            <button class="role-tab active" type="button" data-role="cliente">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 21V9l9-6 9 6v12h-6v-7h-6v7H3z" />
+              </svg> Cliente
+            </button>
+            <button class="role-tab" type="button" data-role="profesional">
+              <svg viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg> Profesional
+            </button>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="loginEmail"><span><span class="ix">/01</span> Email</span><span
+                class="req">*</span></label>
+            <input type="email" id="loginEmail" class="field-input" placeholder="vos@ejemplo.com"
+              autocomplete="email" />
+            <div class="field-msg">Ingresá un email válido</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="loginPass"><span><span class="ix">/02</span> Contraseña</span><span
+                class="req">*</span></label>
+            <div class="field-wrap">
+              <input type="password" id="loginPass" class="field-input" placeholder="••••••••"
+                autocomplete="current-password" />
+              <button type="button" class="field-toggle" data-toggle="loginPass" aria-label="Mostrar contraseña">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+            <div class="field-msg">Mínimo 6 caracteres</div>
+          </div>
+
+          <div class="auth-forgot"><a href="#" data-switch="reset">¿Olvidaste tu contraseña?</a></div>
+
+          <label class="field-check">
+            <input type="checkbox" id="loginRemember" />
+            <span class="box"></span>
+            <span class="lbl">Mantener sesión iniciada en este dispositivo.</span>
+          </label>
+
+          <button type="submit" class="auth-submit">Iniciar sesión <span class="arrow"></span></button>
+
+          <div class="auth-divider">o continuar con</div>
+          <div class="auth-social">
+            <button type="button" class="auth-social-btn" data-social="google">
+              <svg viewBox="0 0 24 24">
+                <path fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05"
+                  d="M5.84 14.09A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.43.35-2.09V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93z" />
+                <path fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" />
+              </svg>
+              Google
+            </button>
+            <button type="button" class="auth-social-btn" data-social="apple">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+              </svg>
+              Apple
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="auth-foot">¿Todavía no tenés cuenta?<a href="#" data-switch="register">Creá una</a></div>
+    </div>
+  </div>
+
+  <!-- REGISTRO -->
+  <div class="auth-overlay" id="authRegister" role="dialog" aria-modal="true" aria-labelledby="registerTitle">
+    <div class="auth-modal">
+      <header class="auth-head">
+        <span class="id">AUTH / REGISTER — 002</span>
+        <button class="auth-close" data-close aria-label="Cerrar"></button>
+      </header>
+      <div class="auth-body">
+        <h2 class="auth-title" id="registerTitle">Creá tu<br>cuenta <em>Brickø.</em></h2>
+        <p class="auth-sub">Empezá a resolver tus obras en minutos. O sumate al equipo de profesionales.</p>
+
+        <form id="registerForm" novalidate>
+          <div class="role-tabs" data-role="cliente" id="regRoleTabs">
+            <span class="role-thumb"></span>
+            <button class="role-tab active" type="button" data-role="cliente">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 21V9l9-6 9 6v12h-6v-7h-6v7H3z" />
+              </svg> Soy cliente
+            </button>
+            <button class="role-tab" type="button" data-role="profesional">
+              <svg viewBox="0 0 24 24">
+                <path d="M2 10l3-5h14l3 5M2 10v9h20v-9M2 10h20M8 14h2M14 14h2" />
+              </svg> Soy profesional
+            </button>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label" for="regName"><span><span class="ix">/01</span> Nombre</span><span
+                  class="req">*</span></label>
+              <input type="text" id="regName" class="field-input" placeholder="Juan" autocomplete="given-name" />
+              <div class="field-msg">Requerido</div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="regLast"><span><span class="ix">/02</span> Apellido</span><span
+                  class="req">*</span></label>
+              <input type="text" id="regLast" class="field-input" placeholder="Pérez" autocomplete="family-name" />
+              <div class="field-msg">Requerido</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="regEmail"><span><span class="ix">/03</span> Email</span><span
+                class="req">*</span></label>
+            <input type="email" id="regEmail" class="field-input" placeholder="vos@ejemplo.com" autocomplete="email" />
+            <div class="field-msg">Ingresá un email válido</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="regPhone"><span><span class="ix">/04</span> Teléfono</span><span
+                class="req">*</span></label>
+            <input type="tel" id="regPhone" class="field-input" placeholder="+54 11 1234 5678" autocomplete="tel" />
+            <div class="field-msg">Ingresá un teléfono válido</div>
+          </div>
+
+          <!-- Campos para profesionales -->
+          <div class="pro-fields-wrapper hidden" id="regProFields">
+
+            <!-- Nombre de usuario -->
+            <div class="field">
+              <label class="field-label" for="regUsername"><span><span class="ix">/05</span> Nombre de usuario</span><span class="req">*</span></label>
+              <div class="field-wrap">
+                <span class="input-prefix" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--accent,#F25C18); font-weight:600;">@</span>
+                <input type="text" id="regUsername" class="field-input" placeholder="miusuario" style="padding-left:28px;" />
+              </div>
+              <div class="field-msg">Ingresá tu nombre de usuario</div>
+            </div>
+
+            <!-- Rubros de Trabajo (múltiples) -->
+            <div class="field">
+              <label class="field-label"><span><span class="ix">/06</span> Rubros de trabajo</span><span class="req">*</span></label>
+              <div class="rubro-chips-select" id="regRubrosSelect">
+                <label class="rchip"><input type="checkbox" name="regRubro" value="plomeria"> <span>Plomería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="gas"> <span>Gas</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="electricidad"> <span>Electricidad</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="albanileria" checked> <span>Albañilería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="pintura"> <span>Pintura</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="carpinteria"> <span>Carpintería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="herreria"> <span>Herrería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="jardineria"> <span>Jardinería</span></label>
+              </div>
+              <div class="field-msg">Seleccioná al menos un rubro</div>
+            </div>
+
+            <!-- Número de DNI -->
+            <div class="field">
+              <label class="field-label" for="regDni"><span><span class="ix">/07</span> Número de DNI</span><span class="req">*</span></label>
+              <input type="text" id="regDni" class="field-input" placeholder="12345678" maxlength="10" />
+              <div class="field-msg">Ingresá tu DNI</div>
+            </div>
+
+            <!-- Foto de perfil -->
+            <div class="field">
+              <label class="field-label" for="regAvatar"><span><span class="ix">/08</span> Foto de perfil</span></label>
+              <div class="file-upload-box" id="boxRegAvatar">
+                <input type="file" id="regAvatar" class="file-input-hidden" accept="image/*" />
+                <div class="file-upload-content">
+                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                  <div class="file-upload-info">
+                    <span class="file-upload-title">Subir foto de perfil</span>
+                    <span class="file-upload-hint">JPG, PNG o WEBP (Opcional)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DNI Frente -->
+            <div class="field">
+              <label class="field-label" for="regDniFront"><span><span class="ix">/09</span> DNI Frente</span><span class="req">*</span></label>
+              <div class="file-upload-box" id="boxRegDniFront">
+                <input type="file" id="regDniFront" class="file-input-hidden" accept="image/*" />
+                <div class="file-upload-content">
+                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="4" width="18" height="16" rx="2"/>
+                    <circle cx="9" cy="10" r="2"/>
+                    <line x1="15" y1="8" x2="19" y2="8"/>
+                    <line x1="15" y1="12" x2="19" y2="12"/>
+                    <line x1="7" y1="16" x2="17" y2="16"/>
+                  </svg>
+                  <div class="file-upload-info">
+                    <span class="file-upload-title">Subir DNI Frente</span>
+                    <span class="file-upload-hint">Imagen clara del frente del DNI</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DNI Dorso -->
+            <div class="field">
+              <label class="field-label" for="regDniBack"><span><span class="ix">/10</span> DNI Dorso</span><span class="req">*</span></label>
+              <div class="file-upload-box" id="boxRegDniBack">
+                <input type="file" id="regDniBack" class="file-input-hidden" accept="image/*" />
+                <div class="file-upload-content">
+                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="4" width="18" height="16" rx="2"/>
+                    <line x1="7" y1="8" x2="17" y2="8"/>
+                    <line x1="7" y1="12" x2="17" y2="12"/>
+                    <line x1="7" y1="16" x2="13" y2="16"/>
+                  </svg>
+                  <div class="file-upload-info">
+                    <span class="file-upload-title">Subir DNI Dorso</span>
+                    <span class="file-upload-hint">Imagen clara del dorso del DNI</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dirección de Residencia -->
+            <div class="field">
+              <label class="field-label" for="regAddress"><span><span class="ix">/11</span> Dirección de residencia</span><span class="req">*</span></label>
+              <input type="text" id="regAddress" class="field-input" placeholder="Av. Corrientes 1234" />
+            </div>
+
+            <!-- Localidad / Ciudad -->
+            <div class="field">
+              <label class="field-label" for="regCity"><span><span class="ix">/12</span> Localidad / Ciudad</span><span class="req">*</span></label>
+              <input type="text" id="regCity" class="field-input" placeholder="CABA / La Plata" />
+            </div>
+
+            <!-- Provincia -->
+            <div class="field">
+              <label class="field-label" for="regProvince"><span><span class="ix">/13</span> Provincia</span><span class="req">*</span></label>
+              <select id="regProvince" class="field-input">
+                <option value="Buenos Aires">Buenos Aires</option>
+                <option value="CABA" selected>CABA</option>
+                <option value="Córdoba">Córdoba</option>
+                <option value="Santa Fe">Santa Fe</option>
+                <option value="Mendoza">Mendoza</option>
+                <option value="Otras">Otra Provincia</option>
+              </select>
+            </div>
+
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="regPass"><span><span class="ix" id="regPwIx">/05</span>
+                Contraseña</span><span class="req">*</span></label>
+            <div class="field-wrap">
+              <input type="password" id="regPass" class="field-input" placeholder="Mínimo 8 caracteres"
+                autocomplete="new-password" />
+              <button type="button" class="field-toggle" data-toggle="regPass" aria-label="Mostrar contraseña">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+            <div class="strength" id="regStrength"><span></span><span></span><span></span><span></span></div>
+            <div class="field-msg">La contraseña es muy débil</div>
+          </div>
+
+          <label class="field-check">
+            <input type="checkbox" id="regTerms" />
+            <span class="box"></span>
+            <span class="lbl">Acepto los <a href="#">Términos y Condiciones</a> y la <a href="#">Política de
+                Privacidad</a>.</span>
+          </label>
+
+          <button type="submit" class="auth-submit">Crear cuenta <span class="arrow"></span></button>
+
+          <div class="auth-divider">o registrarte con</div>
+          <div class="auth-social">
+            <button type="button" class="auth-social-btn" data-social="google">
+              <svg viewBox="0 0 24 24">
+                <path fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05"
+                  d="M5.84 14.09A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.43.35-2.09V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93z" />
+                <path fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" />
+              </svg>
+              Google
+            </button>
+            <button type="button" class="auth-social-btn" data-social="apple">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+              </svg>
+              Apple
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="auth-foot">¿Ya tenés una cuenta?<a href="#" data-switch="login">Ingresá</a></div>
+    </div>
+  </div>
+
+  <!-- RESET -->
+  <div class="auth-overlay" id="authReset" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+    <div class="auth-modal">
+      <header class="auth-head">
+        <span class="id">AUTH / RESET — 003</span>
+        <button class="auth-close" data-close aria-label="Cerrar"></button>
+      </header>
+      <div class="auth-body">
+        <h2 class="auth-title" id="resetTitle">Recuperar<br><em>contraseña.</em></h2>
+        <p class="auth-sub">Ingresá tu email y te mandamos las instrucciones para crear una nueva.</p>
+        <form id="resetForm" novalidate>
+          <div class="field">
+            <label class="field-label" for="resetEmail"><span><span class="ix">/01</span> Email</span><span
+                class="req">*</span></label>
+            <input type="email" id="resetEmail" class="field-input" placeholder="vos@ejemplo.com"
+              autocomplete="email" />
+            <div class="field-msg">Ingresá un email válido</div>
+          </div>
+          <button type="submit" class="auth-submit">Enviar instrucciones <span class="arrow"></span></button>
+        </form>
+      </div>
+      <div class="auth-foot">¿Te acordaste?<a href="#" data-switch="login">Iniciar sesión</a></div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="scripts/supabase.min.js"></script>
+  <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/01-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      /* =========================================================
+         Estado de sesión — Auth.init() (01-auth.js) se encarga
+         de redirigir si ya hay sesión activa de Supabase.
+         ========================================================= */
+      const STORAGE_KEY = 'bricko-session';
+      const session = { active: false, name: '', role: 'cliente' };
+
+      const $ = (s, c = document) => c.querySelector(s);
+      const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+      const html = document.documentElement;
+
+      /* ===================== TEMA ===================== */
+      const THEMES = ['dark', 'light', 'blueprint'];
+      $('#themeToggle').addEventListener('click', () => {
+        html.classList.add('theme-anim');
+        const next = THEMES[(THEMES.indexOf(html.getAttribute('data-theme') || 'dark') + 1) % THEMES.length];
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('bricko-theme', next);
+        setTimeout(() => html.classList.remove('theme-anim'), 450);
+      });
+
+      /* ============== NAV scrolled + glow cursor ============== */
+      const nav = $('#nav');
+      const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 8);
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+
+      const finePointer = window.matchMedia('(pointer:fine)').matches;
+      if (finePointer && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        let raf = null, mx = 0, my = 0;
+        window.addEventListener('pointermove', (e) => {
+          mx = e.clientX; my = e.clientY;
+          if (raf) return;
+          raf = requestAnimationFrame(() => {
+            document.body.classList.add('spot-on');
+            document.body.style.setProperty('--mx', mx + 'px');
+            document.body.style.setProperty('--my', my + 'px');
+            raf = null;
+          });
+        });
+        window.addEventListener('mouseleave', () => document.body.classList.remove('spot-on'));
+      }
+
+      /* ===================== MENÚ MOBILE ===================== */
+      const burger = $('#burger'), mobileMenu = $('#mobileMenu');
+      burger.addEventListener('click', () => {
+        const open = mobileMenu.classList.toggle('open');
+        burger.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+      });
+      $$('#mobileMenu a').forEach(a => a.addEventListener('click', () => mobileMenu.classList.remove('open')));
+
+      /* ===================== REVEAL ON SCROLL ===================== */
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(en => {
+          if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+        });
+      }, { threshold: 0.14, rootMargin: '0px 0px -8% 0px' });
+      $$('.reveal').forEach(el => io.observe(el));
+
+      /* ===================== CONTADORES ===================== */
+      const fmt = (el, val) => {
+        const dec = parseInt(el.dataset.decimals || '0', 10);
+        const suffix = el.dataset.suffix || '';
+        let out = dec ? val.toFixed(dec) : Math.round(val).toString();
+        if (el.hasAttribute('data-thousands')) out = Math.round(val).toLocaleString('es-AR');
+        el.textContent = out + suffix;
+      };
+      const animateCount = (el) => {
+        const target = parseFloat(el.dataset.count);
+        const dur = 1400; const start = performance.now();
+        const tick = (now) => {
+          const p = Math.min((now - start) / dur, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          fmt(el, target * eased);
+          if (p < 1) requestAnimationFrame(tick); else fmt(el, target);
+        };
+        requestAnimationFrame(tick);
+      };
+      const statsRow = $('.stats-row');
+      if (statsRow) {
+        const sio = new IntersectionObserver((entries) => {
+          entries.forEach(en => {
+            if (en.isIntersecting) { $$('[data-count]', en.target).forEach(animateCount); sio.unobserve(en.target); }
+          });
+        }, { threshold: 0.4 });
+        sio.observe(statsRow);
+      }
+
+      /* ===================== TOASTS ===================== */
+      const stack = $('#toastStack');
+      const ICONS = {
+        ok: '<path d="M20 6L9 17l-5-5"/>',
+        err: '<path d="M12 8v5M12 16v.5"/><circle cx="12" cy="12" r="9"/>',
+        info: '<circle cx="12" cy="12" r="9"/><path d="M12 8v.5M12 11v5"/>'
+      };
+      function toast(type, title, msg) {
+        const el = document.createElement('div');
+        el.className = 'toast ' + (type === 'ok' ? 'ok' : type === 'err' ? 'err' : '');
+        el.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor">' + (ICONS[type] || ICONS.info) + '</svg>'
+          + '<div><div class="t">' + title + '</div><div class="m">' + msg + '</div></div>';
+        stack.appendChild(el);
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+        setTimeout(() => { el.classList.remove('in'); setTimeout(() => el.remove(), 400); }, 4200);
+      }
+
+      /* ===================== MODALES AUTH ===================== */
+      const overlays = { login: $('#authLogin'), register: $('#authRegister'), reset: $('#authReset') };
+
+      function openModal(name, role) {
+        Object.values(overlays).forEach(o => o.classList.remove('open'));
+        const ov = overlays[name];
+        if (!ov) return;
+        if (role && (name === 'login' || name === 'register')) setRole(name, role);
+        ov.classList.add('open');
+        document.body.classList.add('modal-lock');
+        mobileMenu.classList.remove('open');
+        setTimeout(() => { const f = ov.querySelector('.field-input'); if (f) f.focus(); }, 120);
+      }
+      function closeModals() {
+        Object.values(overlays).forEach(o => o.classList.remove('open'));
+        document.body.classList.remove('modal-lock');
+      }
+
+      // Abrir (cualquier elemento con data-open)
+      $$('[data-open]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openModal(btn.dataset.open, btn.dataset.role);
+        });
+      });
+      // Cerrar
+      $$('[data-close]').forEach(b => b.addEventListener('click', closeModals));
+      Object.values(overlays).forEach(ov => ov.addEventListener('click', (e) => { if (e.target === ov) closeModals(); }));
+      // Cambiar entre modales
+      $$('[data-switch]').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); openModal(a.dataset.switch); }));
+      // Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closeModals(); $('#userMenu').classList.remove('open'); $('#userChip').setAttribute('aria-expanded', 'false'); }
+      });
+
+      /* ============ ROLE TABS (login + registro) ============ */
+      const roleState = { login: 'cliente', register: 'cliente' };
+      function setRole(form, role) {
+        roleState[form] = role;
+        const tabsId = form === 'login' ? '#loginRoleTabs' : '#regRoleTabs';
+        const tabs = $(tabsId);
+        tabs.setAttribute('data-role', role);
+        $$('.role-tab', tabs).forEach(t => t.classList.toggle('active', t.dataset.role === role));
+        if (form === 'register') {
+          const isPro = role === 'profesional';
+          const proFields = $('#regProFields');
+          if (proFields) proFields.classList.toggle('hidden', !isPro);
+          const pwIx = $('#regPwIx');
+          if (pwIx) pwIx.textContent = isPro ? '/14' : '/05';
+        }
+      }
+      $$('#loginRoleTabs .role-tab').forEach(t => t.addEventListener('click', () => setRole('login', t.dataset.role)));
+      $$('#regRoleTabs .role-tab').forEach(t => t.addEventListener('click', () => setRole('register', t.dataset.role)));
+
+      /* ============ MOSTRAR / OCULTAR CONTRASEÑA ============ */
+      $$('[data-toggle]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = $('#' + btn.dataset.toggle);
+          input.type = input.type === 'password' ? 'text' : 'password';
+        });
+      });
+
+      /* ============ STRENGTH METER ============ */
+      const regPass = $('#regPass'), strength = $('#regStrength');
+      regPass.addEventListener('input', () => {
+        const v = regPass.value; let s = 0;
+        if (v.length >= 8) s++;
+        if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+        if (/\d/.test(v)) s++;
+        if (/[^A-Za-z0-9]/.test(v)) s++;
+        strength.className = 'strength' + (v ? ' s' + s : '');
+      });
+
+      /* ============ VALIDACIÓN ============ */
+      const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+      const isPhone = v => v.replace(/[^\d]/g, '').length >= 8;
+      function fieldFail(input) {
+        if (!input) return;
+        const field = input.closest('.field');
+        if (field) field.classList.add('invalid');
+        input.classList.add('bad');
+        input.addEventListener('input', () => { if (field) field.classList.remove('invalid'); input.classList.remove('bad'); }, { once: true });
+      }
+      function clearForm(form) { 
+        $$('.field', form).forEach(f => f.classList.remove('invalid')); 
+        $$('.field-input', form).forEach(i => i.classList.remove('bad')); 
+        $$('.file-upload-box', form).forEach(box => {
+          if (box.dataset.defaultTitle) {
+            const titleEl = box.querySelector('.file-upload-title');
+            if (titleEl) titleEl.textContent = box.dataset.defaultTitle;
+          }
+          box.classList.remove('has-file');
+        });
+      }
+
+      // LOGIN submit — usa Auth.login() de Supabase
+      $('#loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearForm(e.target);
+        let ok = true;
+        const email = $('#loginEmail'), pass = $('#loginPass');
+        if (!isEmail(email.value)) { fieldFail(email); ok = false; }
+        if (pass.value.length < 6) { fieldFail(pass); ok = false; }
+        if (!ok) return;
+
+        const btn = e.target.querySelector('.auth-submit');
+        btn.classList.add('loading');
+        try {
+          const remember = $('#loginRemember')?.checked || false;
+          await Auth.login({
+            email: email.value.trim(),
+            password: pass.value,
+            remember: remember,
+            role: roleState.login
+          });
+        } catch (err) {
+          btn.classList.remove('loading');
+          toast('err', 'Error', err.message || 'No se pudo iniciar sesión.');
+        }
+      });
+
+      // REGISTER submit — usa Auth.register() de Supabase
+      $('#registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearForm(e.target);
+        let ok = true;
+        const fn = $('#regName'), ln = $('#regLast'), email = $('#regEmail'), phone = $('#regPhone'), pass = $('#regPass'), terms = $('#regTerms');
+        if (fn.value.trim().length < 2) { fieldFail(fn); ok = false; }
+        if (ln.value.trim().length < 2) { fieldFail(ln); ok = false; }
+        if (!isEmail(email.value)) { fieldFail(email); ok = false; }
+        if (!isPhone(phone.value)) { fieldFail(phone); ok = false; }
+
+        let proData = {
+          username: '',
+          rubros: [],
+          dniNumber: '',
+          address: '',
+          city: '',
+          province: '',
+          avatarFile: null,
+          dniFrontFile: null,
+          dniBackFile: null
+        };
+
+        if (roleState.register === 'profesional') {
+          const username$ = $('#regUsername');
+          const dni$ = $('#regDni');
+          const address$ = $('#regAddress');
+          const city$ = $('#regCity');
+          const province$ = $('#regProvince');
+
+          const selectedRubros = $$('#regRubrosSelect input[name="regRubro"]:checked').map(cb => cb.value);
+
+          if (username$ && !username$.value.trim()) { fieldFail(username$); ok = false; }
+          if (dni$ && !dni$.value.trim()) { fieldFail(dni$); ok = false; }
+          if (address$ && !address$.value.trim()) { fieldFail(address$); ok = false; }
+          if (city$ && !city$.value.trim()) { fieldFail(city$); ok = false; }
+
+          if (!selectedRubros.length) {
+            toast('err', 'Rubro requerido', 'Seleccioná al menos un rubro de trabajo.');
+            ok = false;
+          }
+
+          const dniFrontFile = $('#regDniFront')?.files?.[0];
+          const dniBackFile = $('#regDniBack')?.files?.[0];
+
+          if (!dniFrontFile || !dniBackFile) {
+            toast('err', 'DNI requerido', 'Tenés que adjuntar foto del DNI (frente y dorso).');
+            ok = false;
+          }
+
+          proData = {
+            username: username$?.value.trim().replace(/^@/, '') || '',
+            rubros: selectedRubros,
+            dniNumber: dni$?.value.trim() || '',
+            address: address$?.value.trim() || '',
+            city: city$?.value.trim() || '',
+            province: province$?.value || 'CABA',
+            avatarFile: $('#regAvatar')?.files?.[0] || null,
+            dniFrontFile: dniFrontFile || null,
+            dniBackFile: dniBackFile || null
+          };
+        }
+
+        if (pass.value.length < 8) { fieldFail(pass); ok = false; }
+        if (!terms.checked) { toast('err', 'Falta un paso', 'Tenés que aceptar los términos para crear la cuenta.'); ok = false; }
+        if (!ok) return;
+
+        const btn = e.target.querySelector('.auth-submit');
+        btn.classList.add('loading');
+        try {
+          await Auth.register({
+            firstName: fn.value.trim(),
+            lastName: ln.value.trim(),
+            email: email.value.trim(),
+            phone: phone.value.trim(),
+            password: pass.value,
+            role: roleState.register,
+            username: proData.username,
+            rubros: proData.rubros,
+            oficio: proData.rubros[0] || null,
+            dniNumber: proData.dniNumber,
+            address: proData.address,
+            city: proData.city,
+            province: proData.province,
+            avatarFile: proData.avatarFile,
+            dniFrontFile: proData.dniFrontFile,
+            dniBackFile: proData.dniBackFile
+          });
+        } catch (err) {
+          btn.classList.remove('loading');
+          toast('err', 'Error', err.message || 'No se pudo crear la cuenta.');
+        }
+      });
+
+      // RESET submit
+      $('#resetForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        clearForm(e.target);
+        const email = $('#resetEmail');
+        if (!isEmail(email.value)) { fieldFail(email); return; }
+        const btn = e.target.querySelector('.auth-submit');
+        btn.classList.add('loading');
+        setTimeout(() => {
+          btn.classList.remove('loading');
+          toast('ok', 'Listo', 'Si el email existe, te llegan las instrucciones en unos minutos.');
+          openModal('login');
+        }, 900);
+      });
+
+      // Social (demo)
+      $$('[data-social]').forEach(b => b.addEventListener('click', () => {
+        toast('info', 'Próximamente', 'El acceso con ' + (b.dataset.social === 'google' ? 'Google' : 'Apple') + ' se activa con el backend.');
+      }));
+
+      /* ============ ESTADO LOGUEADO ============ */
+      function updateAuthUI() {
+        document.body.classList.toggle('authed', session.active);
+        if (session.active) {
+          const initial = session.name.trim().charAt(0).toUpperCase() || 'U';
+          $('#chipAv').textContent = initial;
+          $('#chipName').textContent = session.name.split(' ')[0];
+          $('#menuName').textContent = session.name;
+          $('#menuRole').textContent = session.role === 'profesional' ? 'PROFESIONAL' : 'CLIENTE';
+        }
+      }
+
+      // Dropdown usuario
+      const chip = $('#userChip'), userMenu = $('#userMenu');
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = userMenu.classList.toggle('open');
+        chip.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('click', (e) => {
+        if (!userMenu.contains(e.target) && e.target !== chip) {
+          userMenu.classList.remove('open'); chip.setAttribute('aria-expanded', 'false');
+        }
+      });
+      $('#logoutBtn').addEventListener('click', async () => {
+        try {
+          await Auth.logout();
+        } catch (e) {
+          // Fallback: limpiar manualmente si Auth.logout falla
+          localStorage.removeItem(STORAGE_KEY);
+          sessionStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem('bricko-user');
+          session.active = false;
+          updateAuthUI();
+          userMenu.classList.remove('open'); chip.setAttribute('aria-expanded', 'false');
+          toast('info', 'Sesión cerrada', 'Cerraste tu sesión. ¡Hasta la próxima!');
+        }
+      });
+
+    })();
+  </script>
+</body>
+
+</html>
