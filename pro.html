@@ -85,136 +85,329 @@
 
   <main>
 
-    <!-- HERO PROFILE CARD (Inspirado en hero-action de client.html) -->
-    <section class="hero-action">
-      <div class="wrap">
-        <div class="pro-profile-card">
-          <div class="pro-card-avatar">
-            <div class="avatar-box">
-              <span id="proCardInitials">BR</span>
-              <img id="proCardAvatarImg" src="" alt="Foto Perfil" style="display:none;" />
-            </div>
-            <span class="pro-status-badge verified" id="proVerificationBadge">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
-              Verificado
-            </span>
-          </div>
+    <!-- CONTENEDOR VISTA: DASHBOARD PRINCIPAL -->
+    <div id="dashboardView">
 
-          <div class="pro-card-info">
-            <div class="pro-card-header">
-              <h1 id="proCardName">Cargando Nombre...</h1>
-              <span class="pro-card-username" id="proCardUsername">@usuario</span>
-            </div>
-
-            <div class="pro-card-details">
-              <div class="pro-detail-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <span id="proCardLocation">Ubicación no especificada</span>
+      <!-- HERO PROFILE CARD (Inspirado en hero-action de client.html) -->
+      <section class="hero-action">
+        <div class="wrap">
+          <div class="pro-profile-card">
+            <div class="pro-card-avatar">
+              <div class="avatar-box">
+                <span id="proCardInitials">BR</span>
+                <img id="proCardAvatarImg" src="" alt="Foto Perfil" style="display:none;" />
               </div>
-              <div class="pro-detail-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-                <span id="proCardDni">DNI: —</span>
+              <span class="pro-status-badge verified" id="proVerificationBadge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                Verificado
+              </span>
+            </div>
+
+            <div class="pro-card-info">
+              <div class="pro-card-header">
+                <h1 id="proCardName">Cargando Nombre...</h1>
+                <span class="pro-card-username" id="proCardUsername">@usuario</span>
+              </div>
+
+              <div class="pro-card-details">
+                <div class="pro-detail-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span id="proCardLocation">Ubicación no especificada</span>
+                </div>
+                <div class="pro-detail-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                  <span id="proCardDni">DNI: —</span>
+                </div>
+              </div>
+
+              <!-- Rubros activos -->
+              <div class="pro-card-rubros" id="proCardRubros">
+                <span class="rubro-tag">Cargando rubros...</span>
               </div>
             </div>
 
-            <!-- Rubros activos -->
-            <div class="pro-card-rubros" id="proCardRubros">
-              <span class="rubro-tag">Cargando rubros...</span>
+            <div class="pro-card-actions">
+              <button class="btn-edit-profile" id="btnEditProfile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Editar mi perfil
+              </button>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div class="pro-card-actions">
-            <button class="btn-edit-profile" id="btnEditProfile">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Editar mi perfil
-            </button>
+      <!-- TOOLBAR: FILTROS -->
+      <div class="toolbar">
+        <div class="wrap">
+          <div class="toolbar-inner">
+
+            <div class="filter-group">
+              <span class="filter-label">UBICACIÓN</span>
+              <div class="filter-tabs" id="filterZone">
+                <button class="ftab active" data-filter="myzone" id="tabMyZone">Mi zona</button>
+                <button class="ftab" data-filter="all">Todas las zonas</button>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <span class="filter-label">RUBRO</span>
+              <div class="filter-tabs" id="filterRubro">
+                <button class="ftab active" data-filter="all">Todos</button>
+                <button class="ftab" data-filter="plomeria">Plomería</button>
+                <button class="ftab" data-filter="gas">Gas</button>
+                <button class="ftab" data-filter="electricidad">Electricidad</button>
+                <button class="ftab" data-filter="albanileria">Albañilería</button>
+                <button class="ftab" data-filter="pintura">Pintura</button>
+                <button class="ftab" data-filter="carpinteria">Carpintería</button>
+                <button class="ftab" data-filter="herreria">Herrería</button>
+                <button class="ftab" data-filter="jardineria">Jardinería</button>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <span class="filter-label">TIPO</span>
+              <div class="filter-tabs" id="filterTipo">
+                <button class="ftab active" data-filter="all">Todos</button>
+                <button class="ftab" data-filter="refaccion">Refacción</button>
+                <button class="ftab" data-filter="obra">Obra Nueva</button>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <span class="filter-label">URGENCIA</span>
+              <div class="filter-tabs" id="filterUrgencia">
+                <button class="ftab active" data-filter="all">Todas</button>
+                <button class="ftab urgent" data-filter="alta">Urgente</button>
+                <button class="ftab" data-filter="media">Media</button>
+                <button class="ftab" data-filter="baja">Baja</button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- TOOLBAR: FILTROS -->
-    <div class="toolbar">
-      <div class="wrap">
-        <div class="toolbar-inner">
+      <!-- FEED DE SOLICITUDES -->
+      <section class="feed-section">
+        <div class="wrap">
 
-          <div class="filter-group">
-            <span class="filter-label">UBICACIÓN</span>
-            <div class="filter-tabs" id="filterZone">
-              <button class="ftab active" data-filter="myzone" id="tabMyZone">Mi zona</button>
-              <button class="ftab" data-filter="all">Todas las zonas</button>
+          <div class="feed-head">
+            <div>
+              <span class="eyebrow" id="feedEyebrow">OPORTUNIDADES DE TRABAJO</span>
+              <h2>Obras y refacciones <em>disponibles</em>.</h2>
+            </div>
+            <div class="feed-meta">
+              <span class="live-badge"><span class="dot"></span> EN VIVO</span>
+              <span class="req-total" id="reqTotal">0 solicitudes</span>
             </div>
           </div>
 
-          <div class="filter-group">
-            <span class="filter-label">RUBRO</span>
-            <div class="filter-tabs" id="filterRubro">
-              <button class="ftab active" data-filter="all">Todos</button>
-              <button class="ftab" data-filter="plomeria">Plomería</button>
-              <button class="ftab" data-filter="gas">Gas</button>
-              <button class="ftab" data-filter="electricidad">Electricidad</button>
-              <button class="ftab" data-filter="albanileria">Albañilería</button>
-              <button class="ftab" data-filter="pintura">Pintura</button>
-              <button class="ftab" data-filter="carpinteria">Carpintería</button>
-              <button class="ftab" data-filter="herreria">Herrería</button>
-              <button class="ftab" data-filter="jardineria">Jardinería</button>
-            </div>
+          <!-- Cards de solicitudes -->
+          <div class="requests-feed" id="requestsFeed">
+            <!-- Llenado por JS -->
           </div>
 
-          <div class="filter-group">
-            <span class="filter-label">TIPO</span>
-            <div class="filter-tabs" id="filterTipo">
-              <button class="ftab active" data-filter="all">Todos</button>
-              <button class="ftab" data-filter="refaccion">Refacción</button>
-              <button class="ftab" data-filter="obra">Obra Nueva</button>
+          <!-- Empty -->
+          <div class="feed-empty" id="feedEmpty" style="display:none">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-5-5" />
+              </svg>
             </div>
-          </div>
-
-          <div class="filter-group">
-            <span class="filter-label">URGENCIA</span>
-            <div class="filter-tabs" id="filterUrgencia">
-              <button class="ftab active" data-filter="all">Todas</button>
-              <button class="ftab urgent" data-filter="alta">Urgente</button>
-              <button class="ftab" data-filter="media">Media</button>
-              <button class="ftab" data-filter="baja">Baja</button>
-            </div>
+            <h4>Sin solicitudes para los filtros seleccionados.</h4>
+            <p>Probá cambiar el rubro, la zona o la urgencia.</p>
           </div>
 
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- FEED DE SOLICITUDES -->
-    <section class="feed-section">
+    </div><!-- /#dashboardView -->
+
+    <!-- CONTENEDOR VISTA: EDITAR PERFIL PROFESIONAL (NUEVA PANTALLA COMPLETA) -->
+    <section class="profile-edit-screen" id="editProfileScreen" style="display:none;">
       <div class="wrap">
 
-        <div class="feed-head">
-          <div>
-            <span class="eyebrow" id="feedEyebrow">OPORTUNIDADES DE TRABAJO</span>
-            <h2>Obras y refacciones <em>disponibles</em>.</h2>
-          </div>
-          <div class="feed-meta">
-            <span class="live-badge"><span class="dot"></span> EN VIVO</span>
-            <span class="req-total" id="reqTotal">0 solicitudes</span>
+        <!-- Header de la pantalla -->
+        <div class="screen-nav-bar">
+          <button class="btn-back-nav" id="btnBackToDashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Volver al Panel de Trabajos
+          </button>
+          <div class="screen-title-group">
+            <span class="eyebrow">CONFIGURACIÓN DE CUENTA</span>
+            <h2>Perfil Profesional</h2>
+            <p>Revisá la previsualización de tus datos cargados al registrarte y actualizá tu información personal o documentos.</p>
           </div>
         </div>
 
-        <!-- Cards de solicitudes -->
-        <div class="requests-feed" id="requestsFeed">
-          <!-- Llenado por JS -->
-        </div>
+        <form id="formEditProfileScreen" class="edit-profile-grid">
 
-        <!-- Empty -->
-        <div class="feed-empty" id="feedEmpty" style="display:none">
-          <div class="empty-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-5-5" />
-            </svg>
+          <!-- COLUMNA IZQUIERDA: PREVISUALIZACIÓN DE DATOS DEL REGISTRO (SOLO LECTURA) -->
+          <div class="edit-profile-card readonly-card">
+            <div class="card-section-head">
+              <span class="lock-tag">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                DATOS DE REGISTRO (SOLO LECTURA)
+              </span>
+              <h3>Información Identificatoria</h3>
+              <p>Estos datos fueron validados al momento de tu registro y no son modificables.</p>
+            </div>
+
+            <!-- Avatar preview actual -->
+            <div class="profile-preview-header">
+              <div class="preview-avatar-wrap">
+                <span id="screenCardInitials">BR</span>
+                <img id="screenCardAvatarImg" src="" alt="Avatar Actual" style="display:none;" />
+              </div>
+              <div class="preview-user-meta">
+                <h4 id="screenViewFullName">Cargando Nombre...</h4>
+                <span class="handle" id="screenViewUsername">@usuario</span>
+                <span class="pro-status-badge verified" id="screenVerificationBadge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                  Verificado
+                </span>
+              </div>
+            </div>
+
+            <div class="readonly-fields-stack">
+              <div class="field">
+                <label class="field-label">Nombre y Apellido</label>
+                <div class="readonly-input-box">
+                  <span id="screenReadonlyName">—</span>
+                  <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field-label">Nombre de Usuario (@username)</label>
+                <div class="readonly-input-box">
+                  <span id="screenReadonlyUsername">@—</span>
+                  <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field-label">Número de DNI</label>
+                <div class="readonly-input-box">
+                  <span id="screenReadonlyDni">—</span>
+                  <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field-label">Rubros de Trabajo Habilitados</label>
+                <div class="readonly-rubros-tags" id="screenReadonlyRubros">
+                  <span class="rubro-tag">Cargando...</span>
+                </div>
+                <span class="field-hint-text">Tus especialidades registradas no pueden ser alteradas desde este panel.</span>
+              </div>
+            </div>
           </div>
-          <h4>Sin solicitudes para los filtros seleccionados.</h4>
-          <p>Probá cambiar el rubro, la zona o la urgencia.</p>
-        </div>
+
+          <!-- COLUMNA DERECHA: CONFIGURACIÓN EDITABLE -->
+          <div class="edit-profile-card editable-card">
+            <div class="card-section-head">
+              <span class="edit-tag">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                PARÁMETROS EDITABLES
+              </span>
+              <h3>Configuración Personal</h3>
+              <p>Actualizá tu foto de perfil, dirección de residencia o tu documentación adjunta.</p>
+            </div>
+
+            <div class="editable-fields-stack">
+
+              <!-- Cambiar foto de perfil -->
+              <div class="field">
+                <label class="field-label" for="screenEditAvatarFile">Foto de Perfil</label>
+                <div class="file-upload-box" id="boxScreenEditAvatar">
+                  <input type="file" id="screenEditAvatarFile" class="file-input-hidden" accept="image/*" />
+                  <div class="file-upload-content">
+                    <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <div class="file-upload-info">
+                      <span class="file-upload-title">Seleccionar Nueva Foto de Perfil</span>
+                      <span class="file-upload-hint">Foto clara e identificatoria (opcional)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dirección -->
+              <div class="field">
+                <label class="field-label" for="screenEditAddress">Dirección de residencia</label>
+                <input type="text" id="screenEditAddress" class="field-input" placeholder="Ej. Calle 123 N° 456" />
+              </div>
+
+              <!-- Ciudad y Provincia -->
+              <div class="field-row">
+                <div class="field">
+                  <label class="field-label" for="screenEditCity">Localidad / Ciudad</label>
+                  <input type="text" id="screenEditCity" class="field-input" placeholder="Ej. CABA / La Plata" />
+                </div>
+                <div class="field">
+                  <label class="field-label" for="screenEditProvince">Provincia</label>
+                  <select id="screenEditProvince" class="field-input">
+                    <option value="Buenos Aires">Buenos Aires</option>
+                    <option value="CABA">CABA</option>
+                    <option value="Córdoba">Córdoba</option>
+                    <option value="Santa Fe">Santa Fe</option>
+                    <option value="Mendoza">Mendoza</option>
+                    <option value="Otras">Otra Provincia</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Documentación DNI -->
+              <div class="field">
+                <label class="field-label" for="screenEditDniFrontFile">Actualizar DNI Frente</label>
+                <div class="file-upload-box" id="boxScreenEditDniFront">
+                  <input type="file" id="screenEditDniFrontFile" class="file-input-hidden" accept="image/*" />
+                  <div class="file-upload-content">
+                    <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <rect x="3" y="4" width="18" height="16" rx="2"/>
+                      <circle cx="9" cy="10" r="2"/>
+                      <line x1="15" y1="8" x2="19" y2="8"/>
+                    </svg>
+                    <div class="file-upload-info">
+                      <span class="file-upload-title">Subir Imagen Frente DNI</span>
+                      <span class="file-upload-hint">Foto legible del frente</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="screenEditDniBackFile">Actualizar DNI Dorso</label>
+                <div class="file-upload-box" id="boxScreenEditDniBack">
+                  <input type="file" id="screenEditDniBackFile" class="file-input-hidden" accept="image/*" />
+                  <div class="file-upload-content">
+                    <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <rect x="3" y="4" width="18" height="16" rx="2"/>
+                      <line x1="7" y1="8" x2="17" y2="8"/>
+                    </svg>
+                    <div class="file-upload-info">
+                      <span class="file-upload-title">Subir Imagen Dorso DNI</span>
+                      <span class="file-upload-hint">Foto legible del dorso</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Footer de la pantalla de edición -->
+            <div class="screen-foot-actions">
+              <button type="button" class="btn-cancel-screen" id="btnCancelEditScreen">Cancelar</button>
+              <button type="submit" class="btn-submit-screen" id="btnSubmitEditScreen">Guardar Cambios</button>
+            </div>
+
+          </div>
+
+        </form>
 
       </div>
     </section>

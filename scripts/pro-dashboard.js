@@ -316,66 +316,188 @@ function cardHTML(r, i){
   `;
 }
 
-/* ── Modal Editar Perfil ────────────────────────────────── */
+/* ── Pantalla y Modal Editar Perfil ────────────────────────── */
 function initEditProfileModal(){
   const btnEdit = document.getElementById('btnEditProfile');
+  const dashboardView = document.getElementById('dashboardView');
+  const editProfileScreen = document.getElementById('editProfileScreen');
+  const btnBack = document.getElementById('btnBackToDashboard');
+  const btnCancelScreen = document.getElementById('btnCancelEditScreen');
+  const formScreen = document.getElementById('formEditProfileScreen');
+
+  // Modal legacy (fallback if present)
   const modal = document.getElementById('modalEditProfile');
-  const btnClose = document.getElementById('btnCloseEditModal');
-  const btnCancel = document.getElementById('btnCancelEditModal');
-  const form = document.getElementById('formEditProfile');
+  const btnCloseModal = document.getElementById('btnCloseEditModal');
+  const btnCancelModal = document.getElementById('btnCancelEditModal');
+  const formModal = document.getElementById('formEditProfile');
 
-  if (!btnEdit || !modal) return;
+  if (!btnEdit) return;
 
-  const openModal = () => {
+  const openEditScreen = () => {
     if (!PRO_PROFILE) return;
-    document.getElementById('editFirstName').value = PRO_PROFILE.firstName || '';
-    document.getElementById('editLastName').value = PRO_PROFILE.lastName || '';
-    document.getElementById('editUsername').value = PRO_PROFILE.username || '';
-    document.getElementById('editDniNumber').value = PRO_PROFILE.dniNumber || '';
-    document.getElementById('editAddress').value = PRO_PROFILE.address || '';
-    document.getElementById('editCity').value = PRO_PROFILE.city || '';
-    document.getElementById('editProvince').value = PRO_PROFILE.province || 'CABA';
 
-    // Checkboxes rubros
-    const cbs = document.querySelectorAll('#editRubrosSelect input[name="editRubro"]');
-    cbs.forEach(cb => {
-      cb.checked = PRO_PROFILE.rubros.includes(cb.value);
-    });
+    // Populating Readonly Preview Card
+    const fullName = `${PRO_PROFILE.firstName || ''} ${PRO_PROFILE.lastName || ''}`.trim() || 'Profesional';
+    const username = PRO_PROFILE.username ? `@${PRO_PROFILE.username}` : '@usuario';
+    const dni = PRO_PROFILE.dniNumber || '—';
 
-    modal.style.display = 'flex';
+    const fnEl = document.getElementById('screenViewFullName');
+    const unEl = document.getElementById('screenViewUsername');
+    const rFnEl = document.getElementById('screenReadonlyName');
+    const rUnEl = document.getElementById('screenReadonlyUsername');
+    const rDniEl = document.getElementById('screenReadonlyDni');
+    const rRubrosEl = document.getElementById('screenReadonlyRubros');
+    const initialsEl = document.getElementById('screenCardInitials');
+    const avatarImgEl = document.getElementById('screenCardAvatarImg');
+
+    if (fnEl) fnEl.textContent = fullName;
+    if (unEl) unEl.textContent = username;
+    if (rFnEl) rFnEl.textContent = fullName;
+    if (rUnEl) rUnEl.textContent = username;
+    if (rDniEl) rDniEl.textContent = dni;
+
+    if (initialsEl) initialsEl.textContent = PRO_PROFILE.initials || 'BR';
+    if (avatarImgEl) {
+      if (PRO_PROFILE.avatarUrl) {
+        avatarImgEl.src = PRO_PROFILE.avatarUrl;
+        avatarImgEl.style.display = 'block';
+        if (initialsEl) initialsEl.style.display = 'none';
+      } else {
+        avatarImgEl.style.display = 'none';
+        if (initialsEl) initialsEl.style.display = 'block';
+      }
+    }
+
+    if (rRubrosEl) {
+      if (PRO_PROFILE.rubros && PRO_PROFILE.rubros.length) {
+        rRubrosEl.innerHTML = PRO_PROFILE.rubros.map(r => 
+          `<span class="rubro-tag active">${r.charAt(0).toUpperCase() + r.slice(1)}</span>`
+        ).join('');
+      } else {
+        rRubrosEl.innerHTML = '<span class="rubro-tag">Sin rubros asignados</span>';
+      }
+    }
+
+    // Populating Editable Fields
+    const addrInput = document.getElementById('screenEditAddress');
+    const cityInput = document.getElementById('screenEditCity');
+    const provSelect = document.getElementById('screenEditProvince');
+
+    if (addrInput) addrInput.value = PRO_PROFILE.address || '';
+    if (cityInput) cityInput.value = PRO_PROFILE.city || '';
+    if (provSelect) provSelect.value = PRO_PROFILE.province || 'CABA';
+
+    // Switch view to screen
+    if (dashboardView && editProfileScreen) {
+      dashboardView.style.display = 'none';
+      editProfileScreen.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (modal) {
+      modal.style.display = 'flex';
+    }
   };
 
-  const closeModal = () => { modal.style.display = 'none'; };
+  const closeEditScreen = () => {
+    if (dashboardView && editProfileScreen) {
+      editProfileScreen.style.display = 'none';
+      dashboardView.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    if (modal) modal.style.display = 'none';
+  };
 
-  btnEdit.addEventListener('click', openModal);
-  btnClose?.addEventListener('click', closeModal);
-  btnCancel?.addEventListener('click', closeModal);
+  btnEdit.addEventListener('click', openEditScreen);
+  btnBack?.addEventListener('click', closeEditScreen);
+  btnCancelScreen?.addEventListener('click', closeEditScreen);
+  btnCloseModal?.addEventListener('click', closeEditScreen);
+  btnCancelModal?.addEventListener('click', closeEditScreen);
 
-  form?.addEventListener('submit', async (e) => {
+  // Submit Handler for Dedicated Screen
+  formScreen?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btnSubmit = form.querySelector('.btn-submit-edit');
-    btnSubmit.disabled = true;
-    btnSubmit.textContent = 'Guardando...';
+    const btnSubmit = document.getElementById('btnSubmitEditScreen');
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Guardando...';
+    }
 
     try {
-      const fn = document.getElementById('editFirstName').value.trim();
-      const ln = document.getElementById('editLastName').value.trim();
-      const un = document.getElementById('editUsername').value.trim().replace(/^@/, '');
-      const dni = document.getElementById('editDniNumber').value.trim();
-      const addr = document.getElementById('editAddress').value.trim();
-      const city = document.getElementById('editCity').value.trim();
-      const prov = document.getElementById('editProvince').value;
+      const addr = document.getElementById('screenEditAddress')?.value.trim() || '';
+      const city = document.getElementById('screenEditCity')?.value.trim() || '';
+      const prov = document.getElementById('screenEditProvince')?.value || 'CABA';
 
-      const selectedRubros = Array.from(document.querySelectorAll('#editRubrosSelect input[name="editRubro"]:checked')).map(cb => cb.value);
+      let avatarUrl = PRO_PROFILE.avatarUrl;
+      let dniFrontUrl = PRO_PROFILE.dniFrontUrl;
+      let dniBackUrl = PRO_PROFILE.dniBackUrl;
 
-      if (!selectedRubros.length) {
-        toast('err', 'Atención', 'Seleccioná al menos un rubro de trabajo.');
+      const avFile = document.getElementById('screenEditAvatarFile')?.files?.[0];
+      const dniFFile = document.getElementById('screenEditDniFrontFile')?.files?.[0];
+      const dniBFile = document.getElementById('screenEditDniBackFile')?.files?.[0];
+
+      if (avFile && Auth.uploadImage) avatarUrl = await Auth.uploadImage(avFile, 'avatars', 'avatar');
+      if (dniFFile && Auth.uploadImage) dniFrontUrl = await Auth.uploadImage(dniFFile, 'documents', 'dni_front');
+      if (dniBFile && Auth.uploadImage) dniBackUrl = await Auth.uploadImage(dniBFile, 'documents', 'dni_back');
+
+      // Update profiles in Supabase
+      const { error: pErr } = await sb.from('profiles').update({
+        address: addr,
+        city: city,
+        province: prov,
+        avatar_url: avatarUrl
+      }).eq('id', PRO_PROFILE.userId);
+
+      if (pErr) throw pErr;
+
+      // Update professionals in Supabase
+      const { error: proErr } = await sb.from('professionals').update({
+        dni_front_url: dniFrontUrl,
+        dni_back_url: dniBackUrl
+      }).eq('id', PRO_PROFILE.userId);
+
+      if (proErr) throw proErr;
+
+      // Update session locally
+      const updatedUser = {
+        ...getSession(),
+        address: addr,
+        city: city,
+        province: prov,
+        avatarUrl,
+        dniFrontUrl,
+        dniBackUrl
+      };
+      if (Auth._setSession) Auth._setSession(updatedUser);
+
+      await loadProFullProfile(getSession());
+      render();
+
+      closeEditScreen();
+      toast('ok', 'Perfil actualizado', 'Tus datos editables se guardaron correctamente.');
+    } catch(err) {
+      console.error('Error al actualizar perfil:', err);
+      toast('err', 'Error', err.message || 'No se pudo guardar la información.');
+    } finally {
+      if (btnSubmit) {
         btnSubmit.disabled = false;
         btnSubmit.textContent = 'Guardar Cambios';
-        return;
       }
+    }
+  });
 
-      // Archivos nuevos (si se subieron)
+  // Keep legacy modal form submit handler as secondary fallback if needed
+  formModal?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btnSubmit = formModal.querySelector('.btn-submit-edit');
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Guardando...';
+    }
+
+    try {
+      const addr = document.getElementById('editAddress')?.value.trim() || '';
+      const city = document.getElementById('editCity')?.value.trim() || '';
+      const prov = document.getElementById('editProvince')?.value || 'CABA';
+
       let avatarUrl = PRO_PROFILE.avatarUrl;
       let dniFrontUrl = PRO_PROFILE.dniFrontUrl;
       let dniBackUrl = PRO_PROFILE.dniBackUrl;
@@ -388,11 +510,7 @@ function initEditProfileModal(){
       if (dniFFile && Auth.uploadImage) dniFrontUrl = await Auth.uploadImage(dniFFile, 'documents', 'dni_front');
       if (dniBFile && Auth.uploadImage) dniBackUrl = await Auth.uploadImage(dniBFile, 'documents', 'dni_back');
 
-      // Update profiles in Supabase
       const { error: pErr } = await sb.from('profiles').update({
-        first_name: fn,
-        last_name: ln,
-        username: un,
         address: addr,
         city: city,
         province: prov,
@@ -401,31 +519,18 @@ function initEditProfileModal(){
 
       if (pErr) throw pErr;
 
-      // Update professionals in Supabase
       const { error: proErr } = await sb.from('professionals').update({
-        rubros: selectedRubros,
-        rubro: selectedRubros[0],
-        dni_number: dni,
         dni_front_url: dniFrontUrl,
         dni_back_url: dniBackUrl
       }).eq('id', PRO_PROFILE.userId);
 
       if (proErr) throw proErr;
 
-      // Update session locally
       const updatedUser = {
-        id: PRO_PROFILE.userId,
-        firstName: fn,
-        lastName: ln,
-        username: un,
-        email: session.email,
-        role: 'profesional',
-        oficio: selectedRubros[0],
-        rubros: selectedRubros,
+        ...getSession(),
         address: addr,
         city: city,
         province: prov,
-        dniNumber: dni,
         avatarUrl,
         dniFrontUrl,
         dniBackUrl
@@ -435,14 +540,16 @@ function initEditProfileModal(){
       await loadProFullProfile(getSession());
       render();
 
-      closeModal();
-      toast('ok', 'Perfil actualizado', 'Tus datos se guardaron correctamente.');
+      closeEditScreen();
+      toast('ok', 'Perfil actualizado', 'Tus datos editables se guardaron correctamente.');
     } catch(err) {
       console.error('Error al actualizar perfil:', err);
       toast('err', 'Error', err.message || 'No se pudo guardar la información.');
     } finally {
-      btnSubmit.disabled = false;
-      btnSubmit.textContent = 'Guardar Cambios';
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Guardar Cambios';
+      }
     }
   });
 }
