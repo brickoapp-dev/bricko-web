@@ -1586,14 +1586,50 @@ body.modal-lock { overflow: hidden; }
   display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0;
 }
 .rchip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 12px; background: var(--bg); border: 1px solid var(--line-strong);
-  border-radius: 2px; font-size: 12px; color: var(--muted); cursor: pointer;
-  transition: all .2s;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; background: var(--bg-2, #18181B); border: 1px solid var(--line-strong, #27272A);
+  border-radius: 6px; font-family: var(--body); font-size: 13px; font-weight: 500;
+  color: var(--muted); cursor: pointer; user-select: none; transition: all .22s ease;
 }
-.rchip input[type="checkbox"] { accent-color: var(--orange); }
+.rchip:hover {
+  border-color: var(--muted); color: var(--ink);
+}
+.rchip input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--line-strong, #3F3F46);
+  border-radius: 4px;
+  background: var(--bg, #09090B);
+  cursor: pointer;
+  position: relative;
+  outline: none;
+  flex-shrink: 0;
+  transition: all .2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.rchip input[type="checkbox"]:hover {
+  border-color: var(--orange, #F25C18);
+}
+.rchip input[type="checkbox"]:checked {
+  background: var(--orange, #F25C18);
+  border-color: var(--orange, #F25C18);
+}
+.rchip input[type="checkbox"]:checked::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 8px;
+  border-right: 1.8px solid #fff;
+  border-bottom: 1.8px solid #fff;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
 .rchip:has(input:checked) {
-  border-color: var(--orange); color: var(--orange); background: var(--orange-dim);
+  border-color: var(--orange, #F25C18); color: var(--ink, #FAFAFA); background: var(--orange-dim, rgba(242, 92, 24, 0.08));
 }
 
 .modal-foot {
