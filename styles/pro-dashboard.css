@@ -1364,3 +1364,181 @@ body.modal-lock { overflow: hidden; }
   .cotizar-layout { padding: 24px 0 60px; }
   .sol-title { font-size: 28px; }
 }
+
+/* ── Nav Center User (Nombre & Handle) ─────────────────── */
+.nav-center-user {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  gap: 2px;
+}
+.nav-center-user .greeting {
+  font-family: var(--display); font-size: 14px; font-weight: 700; color: var(--ink);
+}
+.nav-center-user .greeting strong { color: var(--orange); }
+.nav-center-user .nav-handle {
+  font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .05em;
+}
+
+/* ── Pro Profile Card (Hero Banner) ────────────────────── */
+.pro-profile-card {
+  background: var(--bg-1);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  padding: 32px 36px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 32px; flex-wrap: wrap;
+  position: relative; overflow: hidden;
+  box-shadow: 0 16px 40px -10px rgba(0,0,0,.5);
+}
+.pro-profile-card::before {
+  content: ""; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 4px;
+  background: var(--orange);
+}
+
+.pro-card-avatar {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.avatar-box {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: var(--bg-3); border: 2px solid var(--orange-line);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-weight: 800; font-size: 28px; color: var(--orange);
+  overflow: hidden; position: relative;
+}
+.avatar-box img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+
+.pro-status-badge {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.pro-status-badge.verified {
+  color: #3FB950; border: 1px solid rgba(63,185,80,.4); background: rgba(63,185,80,.1);
+}
+.pro-status-badge.pending {
+  color: #E08A2C; border: 1px solid rgba(224,138,44,.4); background: rgba(224,138,44,.1);
+}
+.pro-status-badge svg { width: 12px; height: 12px; }
+
+.pro-card-info { flex: 1; min-width: 260px; }
+.pro-card-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.pro-card-header h1 {
+  font-family: var(--display); font-weight: 800; font-size: 28px;
+  letter-spacing: -.02em; text-transform: uppercase; margin: 0; line-height: 1.1;
+}
+.pro-card-username {
+  font-family: var(--mono); font-size: 14px; color: var(--orange); font-weight: 600;
+}
+
+.pro-card-details {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.pro-detail-item {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase;
+}
+.pro-detail-item svg { width: 14px; height: 14px; stroke: var(--orange); }
+
+.pro-card-rubros { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rubro-tag {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink); background: var(--bg-2); border: 1px solid var(--line-strong);
+  padding: 4px 10px; border-radius: 2px;
+}
+.rubro-tag.active {
+  color: var(--orange); border-color: var(--orange-line); background: var(--orange-dim);
+}
+
+.pro-card-actions { flex-shrink: 0; }
+.btn-edit-profile {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 20px;
+  background: var(--bg-2); border: 1px solid var(--line-strong);
+  border-radius: 2px; font-family: var(--body); font-weight: 700;
+  font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink); transition: all .2s;
+}
+.btn-edit-profile svg { width: 15px; height: 15px; stroke: var(--orange); }
+.btn-edit-profile:hover {
+  background: var(--orange-dim); border-color: var(--orange-line); color: var(--orange);
+}
+
+/* ── Modal Editar Perfil ────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 250;
+  background: rgba(0,0,0,.75); backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-card {
+  background: var(--bg-1); border: 1px solid var(--line-strong);
+  border-radius: 4px; width: 100%; max-width: 620px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0,0,0,.8); position: relative;
+}
+.modal-head {
+  padding: 20px 24px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-head h3 {
+  font-family: var(--display); font-weight: 800; font-size: 20px;
+  text-transform: uppercase; letter-spacing: -.01em; margin: 0;
+}
+.modal-close {
+  background: none; border: none; font-size: 24px; color: var(--muted); cursor: pointer;
+}
+.modal-close:hover { color: var(--orange); }
+
+.modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+
+.field-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.field-row .field { flex: 1; min-width: 200px; }
+
+.field-label {
+  display: block; font-family: var(--mono); font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  margin-bottom: 6px;
+}
+.field-input, .field-input-file {
+  width: 100%; background: var(--bg); border: 1px solid var(--line-strong);
+  border-radius: 2px; padding: 10px 14px; font-family: var(--body);
+  font-size: 13px; color: var(--ink); outline: none; transition: border-color .2s;
+}
+.field-input:focus { border-color: var(--orange); }
+.field-input-file { padding: 8px 10px; font-size: 12px; color: var(--muted); cursor: pointer; }
+
+.rubro-chips-select {
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0;
+}
+.rchip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; background: var(--bg); border: 1px solid var(--line-strong);
+  border-radius: 2px; font-size: 12px; color: var(--muted); cursor: pointer;
+  transition: all .2s;
+}
+.rchip input[type="checkbox"] { accent-color: var(--orange); }
+.rchip:has(input:checked) {
+  border-color: var(--orange); color: var(--orange); background: var(--orange-dim);
+}
+
+.modal-foot {
+  display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  padding-top: 16px; border-top: 1px solid var(--line); margin-top: 10px;
+}
+.btn-cancel {
+  padding: 10px 18px; border: 1px solid var(--line-strong); border-radius: 2px;
+  font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.btn-cancel:hover { border-color: var(--muted); color: var(--ink); }
+
+.btn-submit-edit {
+  padding: 10px 24px; background: var(--orange); color: #000;
+  border: none; border-radius: 2px; font-family: var(--body);
+  font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  cursor: pointer; transition: background .2s;
+}
+.btn-submit-edit:hover { background: #FF6B2C; }
+

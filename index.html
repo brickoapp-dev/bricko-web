@@ -3246,20 +3246,82 @@
             <div class="field-msg">Ingresá un teléfono válido</div>
           </div>
 
-          <!-- Solo profesionales -->
-          <div class="field hidden" id="regOficioField">
-            <label class="field-label" for="regOficio"><span><span class="ix">/05</span> Oficio</span><span
-                class="req">*</span></label>
-            <select id="regOficio" class="field-input">
-              <option value="">Seleccionar oficio</option>
-              <option value="plomeria">Plomería</option>
-              <option value="gas">Gas</option>
-              <option value="electricidad">Electricidad</option>
-              <option value="albanileria">Albañilería</option>
-              <option value="pintura">Pintura</option>
-              <option value="varios">Varios oficios</option>
-            </select>
-            <div class="field-msg">Elegí tu oficio</div>
+          <!-- Campos para profesionales -->
+          <div class="pro-fields-wrapper hidden" id="regProFields">
+
+            <!-- Nombre de usuario -->
+            <div class="field">
+              <label class="field-label" for="regUsername"><span><span class="ix">/05</span> Nombre de usuario</span><span class="req">*</span></label>
+              <div class="field-wrap">
+                <span class="input-prefix" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--accent,#F25C18); font-weight:600;">@</span>
+                <input type="text" id="regUsername" class="field-input" placeholder="miusuario" style="padding-left:28px;" />
+              </div>
+              <div class="field-msg">Ingresá tu nombre de usuario</div>
+            </div>
+
+            <!-- Rubros de Trabajo (múltiples) -->
+            <div class="field">
+              <label class="field-label"><span><span class="ix">/06</span> Rubros de trabajo</span><span class="req">*</span></label>
+              <div class="rubro-chips-select" id="regRubrosSelect">
+                <label class="rchip"><input type="checkbox" name="regRubro" value="plomeria"> <span>Plomería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="gas"> <span>Gas</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="electricidad"> <span>Electricidad</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="albanileria" checked> <span>Albañilería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="pintura"> <span>Pintura</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="carpinteria"> <span>Carpintería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="herreria"> <span>Herrería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="jardineria"> <span>Jardinería</span></label>
+              </div>
+              <div class="field-msg">Seleccioná al menos un rubro</div>
+            </div>
+
+            <!-- DNI y Fotos -->
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label" for="regDni"><span><span class="ix">/07</span> Número de DNI</span><span class="req">*</span></label>
+                <input type="text" id="regDni" class="field-input" placeholder="12345678" maxlength="10" />
+                <div class="field-msg">Ingresá tu DNI</div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="regAvatar"><span><span class="ix">/08</span> Foto de perfil</span></label>
+                <input type="file" id="regAvatar" class="field-input-file" accept="image/*" />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label" for="regDniFront"><span><span class="ix">/09</span> DNI Frente</span><span class="req">*</span></label>
+                <input type="file" id="regDniFront" class="field-input-file" accept="image/*" />
+              </div>
+              <div class="field boundary">
+                <label class="field-label" for="regDniBack"><span><span class="ix">/10</span> DNI Dorso</span><span class="req">*</span></label>
+                <input type="file" id="regDniBack" class="field-input-file" accept="image/*" />
+              </div>
+            </div>
+
+            <!-- Dirección de Residencia -->
+            <div class="field">
+              <label class="field-label" for="regAddress"><span><span class="ix">/11</span> Dirección de residencia</span><span class="req">*</span></label>
+              <input type="text" id="regAddress" class="field-input" placeholder="Av. Corrientes 1234" />
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label" for="regCity"><span><span class="ix">/12</span> Localidad / Ciudad</span><span class="req">*</span></label>
+                <input type="text" id="regCity" class="field-input" placeholder="CABA / La Plata" />
+              </div>
+              <div class="field">
+                <label class="field-label" for="regProvince"><span><span class="ix">/13</span> Provincia</span><span class="req">*</span></label>
+                <select id="regProvince" class="field-input">
+                  <option value="Buenos Aires">Buenos Aires</option>
+                  <option value="CABA" selected>CABA</option>
+                  <option value="Córdoba">Córdoba</option>
+                  <option value="Santa Fe">Santa Fe</option>
+                  <option value="Mendoza">Mendoza</option>
+                  <option value="Otras">Otra Provincia</option>
+                </select>
+              </div>
+            </div>
+
           </div>
 
           <div class="field">
@@ -3502,8 +3564,10 @@
         $$('.role-tab', tabs).forEach(t => t.classList.toggle('active', t.dataset.role === role));
         if (form === 'register') {
           const isPro = role === 'profesional';
-          $('#regOficioField').classList.toggle('hidden', !isPro);
-          $('#regPwIx').textContent = isPro ? '/06' : '/05';
+          const proFields = $('#regProFields');
+          if (proFields) proFields.classList.toggle('hidden', !isPro);
+          const pwIx = $('#regPwIx');
+          if (pwIx) pwIx.textContent = isPro ? '/14' : '/05';
         }
       }
       $$('#loginRoleTabs .role-tab').forEach(t => t.addEventListener('click', () => setRole('login', t.dataset.role)));
@@ -3532,9 +3596,11 @@
       const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
       const isPhone = v => v.replace(/[^\d]/g, '').length >= 8;
       function fieldFail(input) {
+        if (!input) return;
         const field = input.closest('.field');
-        field.classList.add('invalid'); input.classList.add('bad');
-        input.addEventListener('input', () => { field.classList.remove('invalid'); input.classList.remove('bad'); }, { once: true });
+        if (field) field.classList.add('invalid');
+        input.classList.add('bad');
+        input.addEventListener('input', () => { if (field) field.classList.remove('invalid'); input.classList.remove('bad'); }, { once: true });
       }
       function clearForm(form) { $$('.field', form).forEach(f => f.classList.remove('invalid')); $$('.field-input', form).forEach(i => i.classList.remove('bad')); }
 
@@ -3558,7 +3624,6 @@
             remember: remember,
             role: roleState.login
           });
-          // Auth.login() redirige automáticamente al dashboard
         } catch (err) {
           btn.classList.remove('loading');
           toast('err', 'Error', err.message || 'No se pudo iniciar sesión.');
@@ -3575,12 +3640,59 @@
         if (ln.value.trim().length < 2) { fieldFail(ln); ok = false; }
         if (!isEmail(email.value)) { fieldFail(email); ok = false; }
         if (!isPhone(phone.value)) { fieldFail(phone); ok = false; }
-        let oficio = null;
+
+        let proData = {
+          username: '',
+          rubros: [],
+          dniNumber: '',
+          address: '',
+          city: '',
+          province: '',
+          avatarFile: null,
+          dniFrontFile: null,
+          dniBackFile: null
+        };
+
         if (roleState.register === 'profesional') {
-          const of$ = $('#regOficio');
-          if (!of$.value) { fieldFail(of$); ok = false; }
-          else oficio = of$.value;
+          const username$ = $('#regUsername');
+          const dni$ = $('#regDni');
+          const address$ = $('#regAddress');
+          const city$ = $('#regCity');
+          const province$ = $('#regProvince');
+
+          const selectedRubros = $$('#regRubrosSelect input[name="regRubro"]:checked').map(cb => cb.value);
+
+          if (username$ && !username$.value.trim()) { fieldFail(username$); ok = false; }
+          if (dni$ && !dni$.value.trim()) { fieldFail(dni$); ok = false; }
+          if (address$ && !address$.value.trim()) { fieldFail(address$); ok = false; }
+          if (city$ && !city$.value.trim()) { fieldFail(city$); ok = false; }
+
+          if (!selectedRubros.length) {
+            toast('err', 'Rubro requerido', 'Seleccioná al menos un rubro de trabajo.');
+            ok = false;
+          }
+
+          const dniFrontFile = $('#regDniFront')?.files?.[0];
+          const dniBackFile = $('#regDniBack')?.files?.[0];
+
+          if (!dniFrontFile || !dniBackFile) {
+            toast('err', 'DNI requerido', 'Tenés que adjuntar foto del DNI (frente y dorso).');
+            ok = false;
+          }
+
+          proData = {
+            username: username$?.value.trim().replace(/^@/, '') || '',
+            rubros: selectedRubros,
+            dniNumber: dni$?.value.trim() || '',
+            address: address$?.value.trim() || '',
+            city: city$?.value.trim() || '',
+            province: province$?.value || 'CABA',
+            avatarFile: $('#regAvatar')?.files?.[0] || null,
+            dniFrontFile: dniFrontFile || null,
+            dniBackFile: dniBackFile || null
+          };
         }
+
         if (pass.value.length < 8) { fieldFail(pass); ok = false; }
         if (!terms.checked) { toast('err', 'Falta un paso', 'Tenés que aceptar los términos para crear la cuenta.'); ok = false; }
         if (!ok) return;
@@ -3595,9 +3707,17 @@
             phone: phone.value.trim(),
             password: pass.value,
             role: roleState.register,
-            oficio: oficio
+            username: proData.username,
+            rubros: proData.rubros,
+            oficio: proData.rubros[0] || null,
+            dniNumber: proData.dniNumber,
+            address: proData.address,
+            city: proData.city,
+            province: proData.province,
+            avatarFile: proData.avatarFile,
+            dniFrontFile: proData.dniFrontFile,
+            dniBackFile: proData.dniBackFile
           });
-          // Auth.register() redirige automáticamente al dashboard
         } catch (err) {
           btn.classList.remove('loading');
           toast('err', 'Error', err.message || 'No se pudo crear la cuenta.');

@@ -11,12 +11,13 @@
         document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <title>Brickø Profesional</title>
+  <title>Brickø Profesional — Panel de Trabajos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
+  <link rel="stylesheet" href="styles/client-dashboard.css" />
   <link rel="stylesheet" href="styles/pro-dashboard.css" />
 </head>
 
@@ -25,7 +26,7 @@
   <div class="blueprint-grid"></div>
   <div class="bg-spot"></div>
 
-  <!-- NAV -->
+  <!-- NAV (Estructura espejo de client.html) -->
   <header class="nav">
     <div class="nav-inner">
       <a href="index.html" class="brand">
@@ -38,36 +39,42 @@
         <span class="pro-tag">PROFESIONAL</span>
       </a>
 
-      <div class="nav-stats">
-        <div class="nav-stat">
-          <span class="n" id="statNew">0</span>
-          <span class="l">NUEVAS</span>
-        </div>
-        <div class="nav-stat-sep"></div>
-        <div class="nav-stat">
-          <span class="n" id="statActive">0</span>
-          <span class="l">ACTIVAS</span>
-        </div>
-        <div class="nav-stat-sep"></div>
-        <div class="nav-stat">
-          <span class="n" id="statRating">—</span>
-          <span class="l">RATING</span>
-        </div>
+      <!-- Centro: saludo e identificación -->
+      <div class="nav-center-user" id="navCenterUser">
+        <span class="greeting">Hola, <strong id="navUserName">Profesional</strong></span>
+        <span class="nav-handle" id="navUserHandle">@usuario</span>
       </div>
 
       <div class="nav-right">
-        <div class="live-dot">
-          <span class="dot"></span>
-          EN LÍNEA
-        </div>
-        <div class="user-chip">
-          <div class="av" id="proAv">P</div>
-          <div class="user-info">
-            <span id="proNm">Profesional</span>
-            <span class="user-trade" id="proTrade">Oficio</span>
+        <div class="nav-stats">
+          <div class="nav-stat">
+            <span class="n" id="statNew">0</span>
+            <span class="l">NUEVAS</span>
+          </div>
+          <div class="nav-stat-sep"></div>
+          <div class="nav-stat">
+            <span class="n" id="statActive">0</span>
+            <span class="l">ACTIVAS</span>
+          </div>
+          <div class="nav-stat-sep"></div>
+          <div class="nav-stat">
+            <span class="n" id="statRating">5.0</span>
+            <span class="l">RATING</span>
           </div>
         </div>
-        <button class="btn-logout" id="btnLogout">
+
+        <div class="user-chip" id="userChip">
+          <div class="av" id="proAv">
+            <span id="proInitials">BR</span>
+            <img id="proNavAvatarImg" src="" alt="Perfil" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+          </div>
+          <div class="user-info">
+            <span id="proNm">Cargando...</span>
+            <span class="user-trade" id="proTrade">Rubros</span>
+          </div>
+        </div>
+
+        <button class="btn-logout" id="btnLogout" title="Cerrar sesión">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
             <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
           </svg>
@@ -78,10 +85,66 @@
 
   <main>
 
+    <!-- HERO PROFILE CARD (Inspirado en hero-action de client.html) -->
+    <section class="hero-action">
+      <div class="wrap">
+        <div class="pro-profile-card">
+          <div class="pro-card-avatar">
+            <div class="avatar-box">
+              <span id="proCardInitials">BR</span>
+              <img id="proCardAvatarImg" src="" alt="Foto Perfil" style="display:none;" />
+            </div>
+            <span class="pro-status-badge verified" id="proVerificationBadge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              Verificado
+            </span>
+          </div>
+
+          <div class="pro-card-info">
+            <div class="pro-card-header">
+              <h1 id="proCardName">Cargando Nombre...</h1>
+              <span class="pro-card-username" id="proCardUsername">@usuario</span>
+            </div>
+
+            <div class="pro-card-details">
+              <div class="pro-detail-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span id="proCardLocation">Ubicación no especificada</span>
+              </div>
+              <div class="pro-detail-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                <span id="proCardDni">DNI: —</span>
+              </div>
+            </div>
+
+            <!-- Rubros activos -->
+            <div class="pro-card-rubros" id="proCardRubros">
+              <span class="rubro-tag">Cargando rubros...</span>
+            </div>
+          </div>
+
+          <div class="pro-card-actions">
+            <button class="btn-edit-profile" id="btnEditProfile">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Editar mi perfil
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- TOOLBAR: FILTROS -->
     <div class="toolbar">
       <div class="wrap">
         <div class="toolbar-inner">
+
+          <div class="filter-group">
+            <span class="filter-label">UBICACIÓN</span>
+            <div class="filter-tabs" id="filterZone">
+              <button class="ftab active" data-filter="myzone" id="tabMyZone">Mi zona</button>
+              <button class="ftab" data-filter="all">Todas las zonas</button>
+            </div>
+          </div>
 
           <div class="filter-group">
             <span class="filter-label">RUBRO</span>
@@ -127,8 +190,8 @@
 
         <div class="feed-head">
           <div>
-            <span class="eyebrow">SOLICITUDES EN TU ZONA</span>
-            <h2>Nuevas <em>oportunidades</em>.</h2>
+            <span class="eyebrow" id="feedEyebrow">OPORTUNIDADES DE TRABAJO</span>
+            <h2>Obras y refacciones <em>disponibles</em>.</h2>
           </div>
           <div class="feed-meta">
             <span class="live-badge"><span class="dot"></span> EN VIVO</span>
@@ -149,8 +212,8 @@
               <path d="M21 21l-5-5" />
             </svg>
           </div>
-          <h4>Sin solicitudes para este filtro.</h4>
-          <p>Probá cambiar el rubro o el tipo de trabajo.</p>
+          <h4>Sin solicitudes para los filtros seleccionados.</h4>
+          <p>Probá cambiar el rubro, la zona o la urgencia.</p>
         </div>
 
       </div>
@@ -158,12 +221,106 @@
 
   </main>
 
+  <!-- MODAL EDITAR PERFIL -->
+  <div class="modal-overlay" id="modalEditProfile" style="display:none;">
+    <div class="modal-card">
+      <header class="modal-head">
+        <h3>Editar Perfil Profesional</h3>
+        <button class="modal-close" id="btnCloseEditModal">&times;</button>
+      </header>
+
+      <form id="formEditProfile" class="modal-body">
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Nombre</label>
+            <input type="text" id="editFirstName" class="field-input" required />
+          </div>
+          <div class="field">
+            <label class="field-label">Apellido</label>
+            <input type="text" id="editLastName" class="field-input" required />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Nombre de usuario (@username)</label>
+            <input type="text" id="editUsername" class="field-input" required />
+          </div>
+          <div class="field">
+            <label class="field-label">Número de DNI</label>
+            <input type="text" id="editDniNumber" class="field-input" required />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Dirección de residencia</label>
+          <input type="text" id="editAddress" class="field-input" placeholder="Ej. Calle 123" />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Localidad / Ciudad</label>
+            <input type="text" id="editCity" class="field-input" placeholder="Ej. CABA / La Plata" />
+          </div>
+          <div class="field">
+            <label class="field-label">Provincia</label>
+            <select id="editProvince" class="field-input">
+              <option value="Buenos Aires">Buenos Aires</option>
+              <option value="CABA">CABA</option>
+              <option value="Córdoba">Córdoba</option>
+              <option value="Santa Fe">Santa Fe</option>
+              <option value="Mendoza">Mendoza</option>
+              <option value="Otras">Otra Provincia</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Rubros de Trabajo</label>
+          <div class="rubro-chips-select" id="editRubrosSelect">
+            <label class="rchip"><input type="checkbox" name="editRubro" value="plomeria"> <span>Plomería</span></label>
+            <label class="rchip"><input type="checkbox" name="editRubro" value="gas"> <span>Gas</span></label>
+            <label class="rchip"><input type="checkbox" name="editRubro" value="electricidad"> <span>Electricidad</span></label>
+            <label class="rchip"><input type="checkbox" name="editRubro" value="albanileria"> <span>Albañilería</span></label>
+            <label class="rchip"><input type="checkbox" name="editRubro" value="pintura"> <span>Pintura</span></label>
+            <label class="rchip"><input type="checkbox" name="editRubro" value="carpinteria"> <span>Carpintería</span></label>
+            <label class="rchip"><input type="checkbox" name="editRubro" value="herreria"> <span>Herrería</span></label>
+            <label class="rchip"><input type="checkbox" name="editRubro" value="jardineria"> <span>Jardinería</span></label>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Cambiar Foto de Perfil</label>
+            <input type="file" id="editAvatarFile" class="field-input-file" accept="image/*" />
+          </div>
+          <div class="field">
+            <label class="field-label">DNI Frente</label>
+            <input type="file" id="editDniFrontFile" class="field-input-file" accept="image/*" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">DNI Dorso</label>
+            <input type="file" id="editDniBackFile" class="field-input-file" accept="image/*" />
+          </div>
+        </div>
+
+        <div class="modal-foot">
+          <button type="button" class="btn-cancel" id="btnCancelEditModal">Cancelar</button>
+          <button type="submit" class="btn-submit-edit">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="toast-stack" id="toastStack"></div>
 
   <script src="scripts/supabase.min.js"></script>
   <script src="scripts/00-supabase.js"></script>
   <script src="scripts/01-auth.js" defer></script>
-  <script src="scripts/pro-dashboard.js"></script>
+  <script src="scripts/pro-dashboard.js" defer></script>
 </body>
 
 </html>
