@@ -1,0 +1,1175 @@
+{
+  "nodes": [
+    {
+      "id": "readme_bricko",
+      "label": "Brickø — construction services marketplace (Argentina)",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_stack",
+      "label": "Stack: vanilla HTML/CSS/JS + Supabase (Auth+Postgres+RLS) + GitHub Pages + Hostinger DNS",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_architecture",
+      "label": "Page-per-view architecture: independent HTML pages, no overlays/wizard, real page navigation",
+      "file_type": "rationale",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_flujo_principal",
+      "label": "Main flow: client registers → picks Refacción/Obra → request pending → pro quotes → client accepts (active)",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_status_convention",
+      "label": "Request status convention: pending/quoted/active/done/cancelled (English in DB, Spanish in UI)",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_session_storage",
+      "label": "Session storage convention: bricko-session (full) and bricko-user (simple), set/cleared by 01-auth.js",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_roadmap",
+      "label": "Roadmap: connect pro-presupuesto.html, Supabase Storage photo upload, Mercado Pago integration, bricko.com fallback domain, revive legacy landing features",
+      "file_type": "document",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_historia",
+      "label": "History: monolithic ~4400-line index.html (wizard+dashboard overlays, localStorage demo mode) fully replaced by separate pages + real Supabase in June 2026; old files (04-wizard.js, 05-dashboard.js, per-section CSS) deleted",
+      "file_type": "rationale",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_table_profiles",
+      "label": "profiles table (id, first_name, last_name, phone, role, city)",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_table_professionals",
+      "label": "professionals table (id, rubro, years_experience, verified, rating, jobs_completed, bio)",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_table_requests",
+      "label": "requests table (id, user_id, ticket_id, tipo, rubros[], titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at)",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_table_quotes",
+      "label": "quotes table (id, request_id, pro_id, amount, description, features[], status, created_at)",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme_pro_presupuesto_prototype",
+      "label": "pro-presupuesto.html — standalone demo prototype with hardcoded data, not connected to Supabase",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "supabase_readme_project",
+      "label": "Supabase production project wkyqetwyswocrohayiss",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "supabase_readme_fix_requests_rls",
+      "label": "fix_requests_rls migration — privacy fix: SELECT on requests restricted to owner + authenticated pros (open requests only), previously any anon key could read all requests with address",
+      "file_type": "rationale",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "supabase_readme_dedupe_rls_policies",
+      "label": "dedupe_rls_policies migration — removes duplicate EN/ES RLS policies on profiles/professionals/quotes, unifies on (select auth.uid()), restricts professionals reads to authenticated users",
+      "file_type": "rationale",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "supabase_readme_protect_columns",
+      "label": "protect_columns migration — triggers block pro self-verification (verified/rating/jobs_completed) and client tampering with quote amount; unique index enforces one accepted quote per request",
+      "file_type": "rationale",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "supabase_readme_quote_flow",
+      "label": "quote_flow migration — trigger moves request pending→quoted on quote insert (RLS was silently blocking it before); adds atomic accept_quote() RPC; backfills inconsistent requests",
+      "file_type": "rationale",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "supabase_readme_ticket_and_new_user",
+      "label": "ticket_and_new_user migration — ticket_id now assigned uniquely server-side (was a random 4-digit client-side value causing collisions); handle_new_user trigger creates profile row on signup, avoiding orphan users",
+      "file_type": "rationale",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "supabase_readme_perf_and_updated_at",
+      "label": "perf_and_updated_at migration — indexes for uncovered FKs, automatic updated_at maintenance",
+      "file_type": "rationale",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "supabase_readme_harden_functions_and_merge_policy",
+      "label": "harden_functions_and_merge_policy migration — revokes EXECUTE on trigger functions (should not be callable as RPC), unifies requests SELECT policies",
+      "file_type": "rationale",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "supabase_readme_leaked_password_protection",
+      "label": "Leaked password protection — pending manual dashboard step (Authentication → Policies/Password), checks against HaveIBeenPwned, flagged by Supabase security linter",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "android_readme_assets",
+      "label": "Mobile app icon/splash assets generated from the Brickø isometric cube logo",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/android/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "android_readme_capacitor_assets_tool",
+      "label": "@capacitor/assets — generates native iOS/Android icon and splash sizes from source PNGs via `npx capacitor-assets generate` + `npx cap sync`",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/android/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "android_readme_gen_app_icons_script",
+      "label": "scripts/gen-app-icons.cjs — Node+Playwright/Chromium script that rasterizes source PNGs from the cube SVG",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/android/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ios_app_capapp_spm_readme_package",
+      "label": "CapApp-SPM — Swift Package Manager dependency host package for the Capacitor iOS project (do not modify)",
+      "file_type": "concept",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/ios/App/CapApp-SPM/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "index_page",
+      "label": "index.html — Brickø landing page (marketing sections + auth modals + theme toggle)",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "index_authlogin",
+      "label": "#authLogin login modal / #loginForm (role tabs cliente/profesional, email+password)",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "index_authregister",
+      "label": "#authRegister register modal / #registerForm (role tabs, pro-only fields: username, rubros, DNI, avatar, DNI photos, address)",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "index_authreset",
+      "label": "#authReset password reset modal / #resetForm",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "index_reg_rubros_taxonomy",
+      "label": "#regRubrosSelect — 8-value rubro checkbox taxonomy (plomeria, gas, electricidad, albanileria, pintura, carpinteria, herreria, jardineria) for professional signup",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "client_page",
+      "label": "client.html — client dashboard hub with two action cards: Mis Obras / Obra Nueva",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/client.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "client_solicitud_page",
+      "label": "client-solicitud.html — single request detail view for a client, shows request info + received quotes list",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/client-solicitud.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "mis_obras_page",
+      "label": "mis-obras.html — client's list of requests/obras with search, status filters, sort",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/mis-obras.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pro_page",
+      "label": "pro.html — professional dashboard: feed of open requests filtered by rubro/tipo/urgencia",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pro_page_rubro_filter",
+      "label": "#filterRubro — professional feed rubro filter tabs (same 8-value trade taxonomy)",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pro_cotizar_page",
+      "label": "pro-cotizar.html — single request detail + quote submission form (monto, descripción, plazo) for a professional",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro-cotizar.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "properfil_page",
+      "label": "properfil.html — professional profile edit page (public data: avatar, rubros, localidad; private: dirección, DNI front/back)",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/properfil.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "properfil_rubros_chips",
+      "label": "#rubrosChips — professional profile rubro chip selector (same 8-value trade taxonomy)",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/properfil.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "solicitud_obra_page",
+      "label": "solicitud-obra.html — Obra Nueva request form (upload plans/photos, broader category chips, superficie, urgencia, address, modo de pago)",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/solicitud-obra.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "solicitud_obra_rubro_chips",
+      "label": "data-field=rubro chip-grid on solicitud-obra.html — 'Rubros afectados' category taxonomy (albanileria, plomeria, electricidad, gas, terminaciones, exteriores, limpieza-transporte, diseno-planificacion)",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/solicitud-obra.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "solicitud_refaccion_page",
+      "label": "solicitud-refaccion.html — Refacción request form (single trade rubro, description, photos, urgencia, address)",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/solicitud-refaccion.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "solicitud_refaccion_rubro_chips",
+      "label": "data-field=rubro chip-grid on solicitud-refaccion.html — same 8-value trade taxonomy",
+      "file_type": "code",
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/solicitud-refaccion.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "readme_bricko",
+      "target": "readme_stack",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme_historia",
+      "target": "readme_architecture",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme_flujo_principal",
+      "target": "readme_status_convention",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme_flujo_principal",
+      "target": "readme_table_requests",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme_flujo_principal",
+      "target": "readme_table_quotes",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme_table_quotes",
+      "target": "readme_table_requests",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme_table_professionals",
+      "target": "readme_table_profiles",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "readme_roadmap",
+      "target": "readme_pro_presupuesto_prototype",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme_session_storage",
+      "target": "readme_flujo_principal",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": null,
+      "weight": 0.65
+    },
+    {
+      "source": "supabase_readme_fix_requests_rls",
+      "target": "readme_table_requests",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_dedupe_rls_policies",
+      "target": "readme_table_profiles",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_dedupe_rls_policies",
+      "target": "readme_table_professionals",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_dedupe_rls_policies",
+      "target": "readme_table_quotes",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_protect_columns",
+      "target": "readme_table_professionals",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_protect_columns",
+      "target": "readme_table_quotes",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_quote_flow",
+      "target": "readme_status_convention",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_quote_flow",
+      "target": "readme_table_quotes",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_ticket_and_new_user",
+      "target": "readme_table_requests",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_ticket_and_new_user",
+      "target": "readme_table_profiles",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_harden_functions_and_merge_policy",
+      "target": "supabase_readme_quote_flow",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_harden_functions_and_merge_policy",
+      "target": "supabase_readme_fix_requests_rls",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "supabase_readme_project",
+      "target": "readme_bricko",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "supabase_readme_protect_columns",
+      "target": "supabase_readme_fix_requests_rls",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md",
+      "source_location": null,
+      "weight": 0.75
+    },
+    {
+      "source": "android_readme_assets",
+      "target": "android_readme_capacitor_assets_tool",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/android/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "android_readme_capacitor_assets_tool",
+      "target": "android_readme_gen_app_icons_script",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/android/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ios_app_capapp_spm_readme_package",
+      "target": "android_readme_capacitor_assets_tool",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/ios/App/CapApp-SPM/README.md",
+      "source_location": null,
+      "weight": 0.75
+    },
+    {
+      "source": "index_page",
+      "target": "index_authlogin",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "index_page",
+      "target": "index_authregister",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "index_page",
+      "target": "index_authreset",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "index_authregister",
+      "target": "index_reg_rubros_taxonomy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "index_authlogin",
+      "target": "scripts_01_auth_auth",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": "index.html:3814 await Auth.login({...})",
+      "weight": 1.0
+    },
+    {
+      "source": "index_authregister",
+      "target": "scripts_01_auth_auth",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": "index.html:3896 await Auth.register({...})",
+      "weight": 1.0
+    },
+    {
+      "source": "index_page",
+      "target": "scripts_01_auth_auth",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/index.html",
+      "source_location": "index.html:3966 await Auth.logout()",
+      "weight": 1.0
+    },
+    {
+      "source": "client_page",
+      "target": "index_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/client.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "client_page",
+      "target": "mis_obras_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/client.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "client_page",
+      "target": "solicitud_obra_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/client.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "mis_obras_page",
+      "target": "index_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/mis-obras.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "mis_obras_page",
+      "target": "client_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/mis-obras.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "mis_obras_page",
+      "target": "solicitud_obra_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/mis-obras.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "client_solicitud_page",
+      "target": "client_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/client-solicitud.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "client_solicitud_page",
+      "target": "index_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/client-solicitud.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "pro_cotizar_page",
+      "target": "pro_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro-cotizar.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "pro_cotizar_page",
+      "target": "index_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro-cotizar.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "pro_page",
+      "target": "index_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "pro_page",
+      "target": "properfil_page",
+      "relation": "references",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.3,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro.html",
+      "source_location": "pro.html:63 href=\"pro-perfil.html\" — filename mismatch: actual file is properfil.html, link likely broken",
+      "weight": 0.3
+    },
+    {
+      "source": "properfil_page",
+      "target": "pro_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/properfil.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "solicitud_obra_page",
+      "target": "index_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/solicitud-obra.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "solicitud_obra_page",
+      "target": "client_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/solicitud-obra.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "solicitud_refaccion_page",
+      "target": "index_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/solicitud-refaccion.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "solicitud_refaccion_page",
+      "target": "client_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/solicitud-refaccion.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "solicitud_obra_page",
+      "target": "solicitud_refaccion_page",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/README.md",
+      "source_location": "README.md:54 request-form.js — Lógica compartida de los dos formularios de solicitud",
+      "weight": 1.0
+    },
+    {
+      "source": "client_page",
+      "target": "mis_obras_page",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/mis-obras.html",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "client_page",
+      "target": "client_solicitud_page",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/client-solicitud.html",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "mis_obras_page",
+      "target": "client_solicitud_page",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/mis-obras.html",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "pro_page",
+      "target": "pro_cotizar_page",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro.html",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "pro_page",
+      "target": "properfil_page",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro.html",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "pro_cotizar_page",
+      "target": "properfil_page",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro-cotizar.html",
+      "source_location": null,
+      "weight": 0.75
+    },
+    {
+      "source": "pro_page_rubro_filter",
+      "target": "properfil_rubros_chips",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro.html",
+      "source_location": null,
+      "weight": 0.95
+    },
+    {
+      "source": "pro_page_rubro_filter",
+      "target": "solicitud_refaccion_rubro_chips",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro.html",
+      "source_location": null,
+      "weight": 0.95
+    },
+    {
+      "source": "pro_page_rubro_filter",
+      "target": "index_reg_rubros_taxonomy",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro.html",
+      "source_location": null,
+      "weight": 0.95
+    },
+    {
+      "source": "properfil_rubros_chips",
+      "target": "solicitud_refaccion_rubro_chips",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/properfil.html",
+      "source_location": null,
+      "weight": 0.95
+    },
+    {
+      "source": "properfil_rubros_chips",
+      "target": "index_reg_rubros_taxonomy",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/properfil.html",
+      "source_location": null,
+      "weight": 0.95
+    },
+    {
+      "source": "solicitud_refaccion_rubro_chips",
+      "target": "index_reg_rubros_taxonomy",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/solicitud-refaccion.html",
+      "source_location": null,
+      "weight": 0.95
+    },
+    {
+      "source": "solicitud_obra_rubro_chips",
+      "target": "solicitud_refaccion_rubro_chips",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/solicitud-obra.html",
+      "source_location": null,
+      "weight": 0.65
+    },
+    {
+      "source": "client_solicitud_page",
+      "target": "pro_cotizar_page",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/client-solicitud.html",
+      "source_location": "both use #solicitudDetail + .sol-skeleton pattern to render a single request detail fetched from Supabase",
+      "weight": 0.95
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "rubro_taxonomy_hyperedge",
+      "label": "Shared 8-value trade rubro taxonomy (plomeria/gas/electricidad/albanileria/pintura/carpinteria/herreria/jardineria)",
+      "nodes": [
+        "pro_page_rubro_filter",
+        "properfil_rubros_chips",
+        "solicitud_refaccion_rubro_chips",
+        "index_reg_rubros_taxonomy"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/pro.html"
+    },
+    {
+      "id": "supabase_rls_hardening_series",
+      "label": "Sequential Supabase RLS/security hardening migration series (documented in order in SupaBase/README.md)",
+      "nodes": [
+        "supabase_readme_fix_requests_rls",
+        "supabase_readme_dedupe_rls_policies",
+        "supabase_readme_protect_columns",
+        "supabase_readme_harden_functions_and_merge_policy"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/SupaBase/README.md"
+    },
+    {
+      "id": "client_request_lifecycle_flow",
+      "label": "Client-side request lifecycle flow: dashboard hub → list of obras → obra detail/quotes → new obra request",
+      "nodes": [
+        "client_page",
+        "mis_obras_page",
+        "client_solicitud_page",
+        "solicitud_obra_page"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/alangurfinkel/Documentos/bricko-web/client.html"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
