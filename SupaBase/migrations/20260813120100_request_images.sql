@@ -1,27 +1,40 @@
--- Fotos/planos adjuntos a una solicitud de trabajo.
+-- NOTA: reescrita después de inspeccionar producción por SQL editor. La
+-- versión original de este archivo asumía que no existía nada para fotos de
+-- solicitudes y planeaba crear una columna `imagenes` + bucket `solicitudes`
+-- desde cero. En los hechos ya existían DOS intentos previos incompletos,
+-- hechos a mano por fuera de este directorio de migraciones:
 --
--- Antes, request-form.js comprimía las imágenes a base64 en el navegador y
--- las insertaba como texto (`[ArchivosJSON: ...]`) dentro de requests.descripcion.
--- No había bucket, no había columna dedicada, y la regex que intentaba volver
--- a extraer ese JSON en mis-obras.js se rompía con el primer archivo (cortaba
--- en el primer ']', que es el cierre del propio array), así que las fotos
--- nunca se recuperaban. Esta migración agrega almacenamiento real.
+--   - requests.fotos (text[])  -- la columna ya existe, no hace falta crearla.
+--   - bucket 'request-photos' (privado) con policies que solo dejan ver la
+--     foto a quien la subió (carpeta = auth.uid()) -- un profesional nunca
+--     podría ver las fotos de una solicitud ajena, que es el caso de uso real.
+--   - bucket 'solicitudes' (público=true) con policy de SELECT
+--     `USING (bucket_id = 'solicitudes')` sin ninguna otra condición --
+--     cualquiera, autenticado o no, podía ver la foto de cualquier
+--     solicitud de cualquier persona.
 --
--- Convención de rutas: '<request_id>/<archivo>' — el mismo criterio de
--- visibilidad que ya usa la tabla requests (dueño, o profesional mientras la
--- solicitud está abierta) se aplica acá vía policy con EXISTS.
+-- Ambos buckets estaban vacíos (storage.objects sin filas) al momento de
+-- esta migración, así que no hay archivos que migrar. Se consolida todo en
+-- 'solicitudes', con las mismas reglas de visibilidad que ya tiene la fila
+-- de requests (dueño, o profesional mientras la solicitud sigue abierta --
+-- ver policy "requests_select"), y se elimina el bucket 'request-photos'.
 
-ALTER TABLE public.requests
-  ADD COLUMN IF NOT EXISTS imagenes text[] NOT NULL DEFAULT '{}';
+DELETE FROM storage.objects WHERE bucket_id = 'request-photos';
+DELETE FROM storage.buckets WHERE id = 'request-photos';
 
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('solicitudes', 'solicitudes', false)
-ON CONFLICT (id) DO NOTHING;
+DROP POLICY IF EXISTS "Usuarios leen sus propias fotos"  ON storage.objects;
+DROP POLICY IF EXISTS "Usuarios suben sus propias fotos" ON storage.objects;
 
-DROP POLICY IF EXISTS "solicitudes_select" ON storage.objects;
-DROP POLICY IF EXISTS "solicitudes_insert_owner" ON storage.objects;
-DROP POLICY IF EXISTS "solicitudes_update_owner" ON storage.objects;
-DROP POLICY IF EXISTS "solicitudes_delete_owner" ON storage.objects;
+UPDATE storage.buckets SET public = false WHERE id = 'solicitudes';
+
+DROP POLICY IF EXISTS "solicitudes_read_all"   ON storage.objects;
+DROP POLICY IF EXISTS "solicitudes_insert_own" ON storage.objects;
+DROP POLICY IF EXISTS "solicitudes_update_own" ON storage.objects;
+DROP POLICY IF EXISTS "solicitudes_delete_own" ON storage.objects;
+DROP POLICY IF EXISTS "solicitudes_select"        ON storage.objects;
+DROP POLICY IF EXISTS "solicitudes_insert_owner"  ON storage.objects;
+DROP POLICY IF EXISTS "solicitudes_update_owner"  ON storage.objects;
+DROP POLICY IF EXISTS "solicitudes_delete_owner"  ON storage.objects;
 
 -- Lectura: dueño de la solicitud, o profesional mientras esté abierta
 -- (mismo criterio que la policy "requests_select").

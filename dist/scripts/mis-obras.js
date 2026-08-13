@@ -103,7 +103,7 @@ async function fetchClientObras(userId){
     // 1. Obtener solicitudes del usuario
     const { data: requests, error: reqErr } = await sb
       .from('requests')
-      .select('id, ticket_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, imagenes')
+      .select('id, ticket_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, fotos')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -169,7 +169,7 @@ function normalizeObra(r, quotesList){
 
   // Compat: solicitudes viejas (antes de que las fotos se subieran a
   // Storage) guardaban un JSON de archivos embebido en la descripción.
-  // Ya no se parsea (ver imagenes[] / attachSignedImageUrls), solo se
+  // Ya no se parsea (ver fotos[] / attachSignedImageUrls), solo se
   // oculta de la vista.
   if (cleanDesc.includes('[ArchivosJSON:')){
     cleanDesc = cleanDesc.split('[ArchivosJSON:')[0].trim();
@@ -191,7 +191,7 @@ function normalizeObra(r, quotesList){
     direccion: r.direccion || 'No especificada',
     superficie: r.superficie ? `${r.superficie} m²` : 'No especificada',
     modoPago: modoPagoText,
-    imagenesPaths: r.imagenes || [],
+    fotosPaths: r.fotos || [],
     files: [],
     statusKey: stInfo.key,
     statusLabel: stInfo.label,
@@ -204,7 +204,7 @@ function normalizeObra(r, quotesList){
 /* ── Resolver URLs firmadas para las fotos/planos (bucket privado) ──── */
 async function attachSignedImageUrls(obras){
   for (const o of obras){
-    const paths = o.imagenesPaths || [];
+    const paths = o.fotosPaths || [];
     if (!paths.length) continue;
     const resolved = await Promise.all(paths.map(async (path) => {
       try {

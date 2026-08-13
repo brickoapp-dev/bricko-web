@@ -59,7 +59,7 @@ async function loadRequest(reqId){
   try {
     const { data, error } = await sb
       .from('requests')
-      .select('id, ticket_id, user_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, imagenes, profiles!requests_user_id_fkey(first_name, last_name, city)')
+      .select('id, ticket_id, user_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, fotos, profiles!requests_user_id_fkey(first_name, last_name, city)')
       .eq('id', reqId)
       .single();
     if (error || !data) return null;
@@ -85,7 +85,7 @@ function normalize(row){
     tipoConstruccion: row.tipo_construccion,
     status: row.status,
     createdAt: row.created_at,
-    imagenesPaths: row.imagenes || [],
+    fotosPaths: row.fotos || [],
     clientName,
     clientCity: row.profiles?.city || '',
     primaryRubro: row.rubros?.[0] || 'multi-gremio'
@@ -162,7 +162,7 @@ function renderDetail(r){
       <p class="sol-desc">${escapeHTML(r.descripcion || '—')}</p>
     </div>
 
-    ${r.imagenesPaths?.length ? `
+    ${r.fotosPaths?.length ? `
     <hr class="sol-divider" />
     <div class="sol-section">
       <div class="sol-section-label">FOTOS / PLANOS</div>
@@ -212,9 +212,9 @@ function renderDetail(r){
 /* ── Fotos/planos adjuntos (bucket privado -> signed URLs) ─────── */
 async function renderPhotos(r){
   const box = document.getElementById('solPhotos');
-  if (!box || !r.imagenesPaths?.length) return;
+  if (!box || !r.fotosPaths?.length) return;
 
-  const resolved = await Promise.all(r.imagenesPaths.map(async (path) => {
+  const resolved = await Promise.all(r.fotosPaths.map(async (path) => {
     try {
       const { data } = await sb.storage.from('solicitudes').createSignedUrl(path, 3600);
       if (!data?.signedUrl) return null;

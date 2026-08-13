@@ -1,36 +1,32 @@
--- public.professionals es legible por CUALQUIER usuario autenticado (es el
--- directorio, policy "professionals_select" USING (true), ver
--- dedupe_rls_policies.sql). Las columnas dni_number/dni_front_url/dni_back_url
--- quedaron ahí desde pro_profile_fields.sql aunque professional_profile_fields.sql
--- ya había creado professional_verification (tabla privada) justamente para
--- estos datos. El código de la app nunca llegó a escribir/leer de la tabla
--- correcta (bug de nombre de archivo en properfil.html: cargaba
--- 'pro-perfil.js', que no existe, en vez de 'properfil.js'), así que en la
--- práctica el número de DNI y las fotos de cada profesional quedaban
--- expuestos a cualquier usuario logueado. Esta migración cierra el agujero.
+-- NOTA: esta migración se reescribió después de inspeccionar el esquema
+-- real en producción vía el SQL editor -- el archivo original asumía que
+-- pro_profile_fields.sql (20260807120000) se había aplicado, pero en los
+-- hechos public.profiles NUNCA tuvo username/address/province, y
+-- public.professionals NUNCA tuvo dni_number/dni_front_url/dni_back_url.
+-- Esas columnas simplemente no existen en producción: no hay nada que
+-- migrar/backfillear ni columnas que borrar de professionals. Lo único que
+-- falta de verdad es lo de abajo.
 
+-- profiles: username/address/province los pide el formulario de registro y
+-- el dashboard (01-auth.js, properfil.js) pero la tabla real nunca los tuvo
+-- -- el upsert del cliente fallaba en silencio (columna inexistente) y solo
+-- quedaba lo que el trigger alcanzaba a insertar (first_name/last_name/
+-- phone/role/city).
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS username text UNIQUE,
+  ADD COLUMN IF NOT EXISTS address  text,
+  ADD COLUMN IF NOT EXISTS province text;
+
+-- professional_verification: el número de DNI es un dato tan sensible como
+-- las fotos (que ya vivían acá) y no debe terminar en professionals, que
+-- cualquier autenticado puede leer vía la policy "professionals_select"
+-- (USING (true) -- es el directorio).
 ALTER TABLE public.professional_verification
   ADD COLUMN IF NOT EXISTS dni_number text;
 
--- 1) Backfill: llevar lo que haya en professionals a professional_verification.
-INSERT INTO public.professional_verification (id, dni_number, dni_front_url, dni_back_url)
-SELECT p.id, p.dni_number, p.dni_front_url, p.dni_back_url
-FROM public.professionals p
-WHERE (p.dni_number IS NOT NULL OR p.dni_front_url IS NOT NULL OR p.dni_back_url IS NOT NULL)
-ON CONFLICT (id) DO UPDATE SET
-  dni_number    = COALESCE(public.professional_verification.dni_number, EXCLUDED.dni_number),
-  dni_front_url = COALESCE(public.professional_verification.dni_front_url, EXCLUDED.dni_front_url),
-  dni_back_url  = COALESCE(public.professional_verification.dni_back_url, EXCLUDED.dni_back_url);
-
--- 2) Eliminar las columnas sensibles de la tabla pública.
-ALTER TABLE public.professionals
-  DROP COLUMN IF EXISTS dni_number,
-  DROP COLUMN IF EXISTS dni_front_url,
-  DROP COLUMN IF EXISTS dni_back_url;
-
--- 3) handle_new_user ya no debe insertar DNI en professionals (las columnas
---    no existen más). Los datos de verificación los sube el cliente después
---    del alta, directo contra professional_verification (RLS: solo el dueño).
+-- handle_new_user: crea el perfil (con los campos nuevos) al registrarse.
+-- El DNI (número + fotos) NO se toca acá -- lo sube el cliente ya
+-- autenticado, directo contra professional_verification (RLS: solo dueño).
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql

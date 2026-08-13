@@ -458,7 +458,7 @@ async function handleConfirmPublish(){
       }
     }
     if (paths.length > 0){
-      const { error: imgErr } = await sb.from('requests').update({ imagenes: paths }).eq('id', requestId);
+      const { error: imgErr } = await sb.from('requests').update({ fotos: paths }).eq('id', requestId);
       if (imgErr) console.warn('Error guardando referencias de imágenes:', imgErr.message);
     }
   }
