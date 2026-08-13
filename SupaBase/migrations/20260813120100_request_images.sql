@@ -19,6 +19,11 @@
 -- de requests (dueño, o profesional mientras la solicitud sigue abierta --
 -- ver policy "requests_select"), y se elimina el bucket 'request-photos'.
 
+-- NOTA: esto documenta la intención pero falla si se corre por el SQL
+-- editor -- Supabase bloquea el DELETE directo sobre storage.objects/
+-- storage.buckets (trigger storage.protect_delete()). Hay que borrar el
+-- bucket desde Storage → Buckets en el dashboard (o la Storage API), que
+-- sí limpia los objetos del backend además de las filas. Ya se hizo.
 DELETE FROM storage.objects WHERE bucket_id = 'request-photos';
 DELETE FROM storage.buckets WHERE id = 'request-photos';
 
