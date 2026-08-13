@@ -403,3 +403,15 @@ document.addEventListener('change', (e) => {
 
 Auth.init();
 
+// Botón/gesto "atrás" nativo de Android: navega el historial de la WebView
+// en vez de cerrar la app (Capacitor no lo maneja por defecto).
+if (window.Capacitor?.isNativePlatform?.()) {
+  window.Capacitor.Plugins.App.addListener('backButton', ({ canGoBack }) => {
+    if (canGoBack) {
+      window.history.back();
+    } else {
+      window.Capacitor.Plugins.App.exitApp();
+    }
+  });
+}
+

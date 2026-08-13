@@ -20,6 +20,7 @@
   "homepage": "https://github.com/brickoapp-dev/bricko-web#readme",
   "dependencies": {
     "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.0",
     "@capacitor/ios": "^8.5.0",
     "graphify": "^1.0.0"
