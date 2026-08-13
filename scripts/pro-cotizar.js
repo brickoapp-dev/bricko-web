@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   renderDetail(req);
+  renderPhotos(req);
   loadQuoteCount(req.id);
 
   const panelId = document.getElementById('panelId');
@@ -58,7 +59,7 @@ async function loadRequest(reqId){
   try {
     const { data, error } = await sb
       .from('requests')
-      .select('id, ticket_id, user_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, profiles!requests_user_id_fkey(first_name, last_name, city)')
+      .select('id, ticket_id, user_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, imagenes, profiles!requests_user_id_fkey(first_name, last_name, city)')
       .eq('id', reqId)
       .single();
     if (error || !data) return null;
@@ -84,6 +85,7 @@ function normalize(row){
     tipoConstruccion: row.tipo_construccion,
     status: row.status,
     createdAt: row.created_at,
+    imagenesPaths: row.imagenes || [],
     clientName,
     clientCity: row.profiles?.city || '',
     primaryRubro: row.rubros?.[0] || 'multi-gremio'
@@ -160,6 +162,13 @@ function renderDetail(r){
       <p class="sol-desc">${escapeHTML(r.descripcion || '—')}</p>
     </div>
 
+    ${r.imagenesPaths?.length ? `
+    <hr class="sol-divider" />
+    <div class="sol-section">
+      <div class="sol-section-label">FOTOS / PLANOS</div>
+      <div class="sol-photos" id="solPhotos">Cargando…</div>
+    </div>` : ''}
+
     <hr class="sol-divider" />
 
     <div class="sol-section">
@@ -198,6 +207,33 @@ function renderDetail(r){
     </div>
     ${extraSections}
   `;
+}
+
+/* ── Fotos/planos adjuntos (bucket privado -> signed URLs) ─────── */
+async function renderPhotos(r){
+  const box = document.getElementById('solPhotos');
+  if (!box || !r.imagenesPaths?.length) return;
+
+  const resolved = await Promise.all(r.imagenesPaths.map(async (path) => {
+    try {
+      const { data } = await sb.storage.from('solicitudes').createSignedUrl(path, 3600);
+      if (!data?.signedUrl) return null;
+      return { url: data.signedUrl, isPdf: /\.pdf$/i.test(path), name: path.split('/').pop() || 'Archivo' };
+    } catch(e){ return null; }
+  }));
+
+  const files = resolved.filter(Boolean);
+  if (!files.length){ box.textContent = 'No se pudieron cargar los archivos.'; return; }
+
+  box.innerHTML = files.map(f => f.isPdf
+    ? `<a href="${escapeHTML(f.url)}" target="_blank" class="file-thumb-pdf" title="${escapeHTML(f.name)}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>${escapeHTML(f.name)}</span>
+      </a>`
+    : `<a href="${escapeHTML(f.url)}" target="_blank" class="file-thumb-item" title="Ver imagen ampliada">
+        <img src="${escapeHTML(f.url)}" alt="${escapeHTML(f.name)}" />
+      </a>`
+  ).join('');
 }
 
 /* ── Render: ya cotizaste ────────────────────────── */

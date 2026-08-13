@@ -24,21 +24,32 @@ const Auth = {
     });
   },
 
-  // Subir archivo a Supabase Storage con fallback a DataURL
-  async uploadImage(file, bucket, fileName) {
+  _fileExt(file){
+    return (file?.name ? file.name.split('.').pop() : 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+  },
+
+  // Subir archivo a Supabase Storage, con fallback a DataURL si falla (ej. sin
+  // conexión). bucket público -> devuelve la url pública; bucket privado
+  // (ej. 'dni') -> devuelve el path guardado, para pedir una signed URL al
+  // mostrarlo (nadie más puede leer ese path por RLS).
+  async uploadImage(file, bucket, path, isPublic = true) {
     if (!file) return null;
     const sb = window.supabase_client;
     if (sb && sb.storage) {
       try {
-        const fileExt = file.name ? file.name.split('.').pop() : 'jpg';
-        const filePath = `${fileName}_${Date.now()}.${fileExt}`;
-        const { data, error } = await sb.storage.from(bucket).upload(filePath, file, { upsert: true });
-        if (!error && data) {
-          const { data: publicUrlData } = sb.storage.from(bucket).getPublicUrl(filePath);
+        const { error } = await sb.storage.from(bucket).upload(path, file, {
+          upsert: true,
+          contentType: file.type
+        });
+        if (!error) {
+          if (!isPublic) return path;
+          const { data: publicUrlData } = sb.storage.from(bucket).getPublicUrl(path);
           if (publicUrlData?.publicUrl) return publicUrlData.publicUrl;
+        } else {
+          console.warn(`Error subiendo ${bucket}/${path}:`, error.message);
         }
       } catch(e) {
-        console.warn(`Fallback DataURL para ${bucket}/${fileName}:`, e.message);
+        console.warn(`Error subiendo ${bucket}/${path}:`, e.message);
       }
     }
     return await this.fileToDataURL(file);
@@ -65,15 +76,6 @@ const Auth = {
   }) {
     const sb = window.supabase_client;
 
-    // Generar o subir URLs de imágenes
-    let avatarUrl = null;
-    let dniFrontUrl = null;
-    let dniBackUrl = null;
-
-    if (avatarFile) avatarUrl = await this.uploadImage(avatarFile, 'avatars', 'avatar');
-    if (dniFrontFile) dniFrontUrl = await this.uploadImage(dniFrontFile, 'documents', 'dni_front');
-    if (dniBackFile) dniBackUrl = await this.uploadImage(dniBackFile, 'documents', 'dni_back');
-
     const selectedRubros = rubros && rubros.length ? rubros : (oficio ? [oficio] : []);
     const primaryRubro = selectedRubros[0] || oficio || 'albanileria';
 
@@ -91,11 +93,7 @@ const Auth = {
           city: city,
           province: province,
           oficio: primaryRubro,
-          rubros: selectedRubros,
-          dni_number: dniNumber,
-          avatar_url: avatarUrl,
-          dni_front_url: dniFrontUrl,
-          dni_back_url: dniBackUrl
+          rubros: selectedRubros
         }
       }
     });
@@ -103,6 +101,17 @@ const Auth = {
     if (error) throw new Error(error.message);
 
     const userId = data.user.id;
+
+    // Las imágenes se suben recién acá: hasta que exista la sesión creada
+    // por signUp(), las policies de storage.objects no pueden evaluar
+    // auth.uid() y cualquier subida sería rechazada por RLS.
+    let avatarUrl = null;
+    let dniFrontPath = null;
+    let dniBackPath = null;
+
+    if (avatarFile) avatarUrl = await this.uploadImage(avatarFile, 'avatars', `${userId}/avatar.${this._fileExt(avatarFile)}`, true);
+    if (dniFrontFile) dniFrontPath = await this.uploadImage(dniFrontFile, 'dni', `${userId}/dni-front.${this._fileExt(dniFrontFile)}`, false);
+    if (dniBackFile) dniBackPath = await this.uploadImage(dniBackFile, 'dni', `${userId}/dni-back.${this._fileExt(dniBackFile)}`, false);
 
     // Profiles upsert
     const { error: profileError } = await sb.from('profiles').upsert({
@@ -119,17 +128,25 @@ const Auth = {
     }, { onConflict: 'id' });
     if (profileError) console.warn('Error creando perfil:', profileError.message);
 
-    // If professional, upsert professionals table
+    // If professional, upsert professionals (directorio público) y
+    // professional_verification (DNI: tabla privada, solo el dueño la lee)
     if (role === 'profesional') {
       const { error: proError } = await sb.from('professionals').upsert({
         id: userId,
         rubro: primaryRubro,
-        rubros: selectedRubros,
-        dni_number: dniNumber,
-        dni_front_url: dniFrontUrl,
-        dni_back_url: dniBackUrl
+        rubros: selectedRubros
       }, { onConflict: 'id' });
       if (proError) console.warn('Error creando perfil profesional:', proError.message);
+
+      if (dniNumber || dniFrontPath || dniBackPath) {
+        const { error: verifError } = await sb.from('professional_verification').upsert({
+          id: userId,
+          dni_number: dniNumber || null,
+          dni_front_url: dniFrontPath,
+          dni_back_url: dniBackPath
+        }, { onConflict: 'id' });
+        if (verifError) console.warn('Error guardando verificación de DNI:', verifError.message);
+      }
     }
 
     const user = {
@@ -147,8 +164,8 @@ const Auth = {
       province,
       dniNumber,
       avatarUrl,
-      dniFrontUrl,
-      dniBackUrl
+      dniFrontUrl: dniFrontPath,
+      dniBackUrl: dniBackPath
     };
     this._setSession(user);
 
@@ -170,12 +187,18 @@ const Auth = {
       .single();
 
     let proData = null;
+    let verifData = null;
     if ((profile?.role || data.user.user_metadata?.role) === 'profesional') {
       const { data: pro } = await sb.from('professionals')
         .select('*')
         .eq('id', data.user.id)
         .single();
       proData = pro;
+      const { data: verif } = await sb.from('professional_verification')
+        .select('dni_number, dni_front_url, dni_back_url')
+        .eq('id', data.user.id)
+        .maybeSingle();
+      verifData = verif;
     }
 
     const user = {
@@ -192,9 +215,9 @@ const Auth = {
       avatarUrl: profile?.avatar_url || data.user.user_metadata?.avatar_url || null,
       oficio: proData?.rubro || data.user.user_metadata?.oficio || null,
       rubros: proData?.rubros || data.user.user_metadata?.rubros || (proData?.rubro ? [proData.rubro] : []),
-      dniNumber: proData?.dni_number || data.user.user_metadata?.dni_number || '',
-      dniFrontUrl: proData?.dni_front_url || data.user.user_metadata?.dni_front_url || null,
-      dniBackUrl: proData?.dni_back_url || data.user.user_metadata?.dni_back_url || null
+      dniNumber: verifData?.dni_number || '',
+      dniFrontUrl: verifData?.dni_front_url || null,
+      dniBackUrl: verifData?.dni_back_url || null
     };
     this._setSession(user, remember);
 
@@ -335,9 +358,15 @@ const Auth = {
         .single();
 
       let proData = null;
+      let verifData = null;
       if ((profile?.role || session.user.user_metadata?.role) === 'profesional') {
         const { data: pro } = await sb.from('professionals').select('*').eq('id', session.user.id).single();
         proData = pro;
+        const { data: verif } = await sb.from('professional_verification')
+          .select('dni_number, dni_front_url, dni_back_url')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        verifData = verif;
       }
 
       const user = {
@@ -354,9 +383,9 @@ const Auth = {
         avatarUrl: profile?.avatar_url || null,
         oficio: proData?.rubro || session.user.user_metadata?.oficio || null,
         rubros: proData?.rubros || session.user.user_metadata?.rubros || [],
-        dniNumber: proData?.dni_number || '',
-        dniFrontUrl: proData?.dni_front_url || null,
-        dniBackUrl: proData?.dni_back_url || null
+        dniNumber: verifData?.dni_number || '',
+        dniFrontUrl: verifData?.dni_front_url || null,
+        dniBackUrl: verifData?.dni_back_url || null
       };
       this._setSession(user);
     }

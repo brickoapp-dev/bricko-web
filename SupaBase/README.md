@@ -16,6 +16,12 @@ Aplicadas en orden. Cada archivo es idempotente en lo posible.
 | `…_ticket_and_new_user.sql` | `ticket_id` asignado server-side de forma única (antes random de 4 dígitos en el cliente → colisiones). Trigger `handle_new_user` que crea el perfil al registrarse (evita usuarios huérfanos). |
 | `…_perf_and_updated_at.sql` | Índices para FKs sin cubrir. Auto-actualización de `updated_at`. |
 | `…_harden_functions_and_merge_policy.sql` | Revoca `EXECUTE` de las funciones de trigger (no deben ser RPC). Unifica las policies de SELECT de `requests`. |
+| `…_accept_cascade_compat.sql` | Compatibilidad de `accept_quote()` con el borrado en cascada de solicitudes/presupuestos. |
+| `…_pro_profile_fields.sql` | Campos extendidos de registro (`profiles`: username/avatar/address/province; `professionals`: rubros/DNI). `handle_new_user` empieza a leer esos campos de la metadata del signup. |
+| `…_professional_profile_fields.sql` | Agrega `avatar_url/rubros/localidad/residencia` a `professionals` (directorio). Crea `professional_verification` (tabla privada, solo el dueño) para DNI y dirección exacta — `professionals` es legible por cualquier autenticado, esos datos no pueden vivir ahí. |
+| `…_storage_buckets.sql` | Buckets `avatars` (público) y `dni` (privado, solo el dueño), con policies por carpeta `<user_id>/…`. |
+| `…_move_dni_to_private_table.sql` | **Fix crítico de privacidad.** `pro_profile_fields.sql` había dejado `dni_number/dni_front_url/dni_back_url` en `professionals` (legible por cualquier autenticado) a pesar de que ya existía `professional_verification`. Migra los datos existentes y elimina esas columnas de la tabla pública; `handle_new_user` deja de escribirlas ahí. |
+| `…_request_images.sql` | Columna `imagenes text[]` en `requests` + bucket privado `solicitudes` (antes las fotos se comprimían a base64 y se pegaban como texto dentro de `descripcion`, sin bucket real). Policies de lectura calcadas de `requests_select` (dueño o profesional mientras está abierta), escritura solo del dueño. |
 
 ## Paso manual pendiente (no se puede hacer por SQL)
 

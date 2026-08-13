@@ -329,18 +329,9 @@ function handleFormSubmit(e){
 
   const modoPagoLabel = MODO_PAGO_LABELS[modoPagoKey] || modoPagoKey;
 
-  // Preparar lista de archivos/imágenes subidas
-  const filesData = uploadedFiles.map(f => ({
-    url: f.url,
-    isPdf: f.isPdf || false,
-    name: f.file ? f.file.name : (f.name || 'Archivo')
-  })).filter(f => f.url || f.isPdf);
-
-  // Descripción formateada para almacenar transparente el modo de pago y archivos
+  // Descripción formateada para almacenar transparente el modo de pago.
+  // Las fotos/planos van aparte, subidas a Storage (ver handleConfirmPublish).
   let fullDesc = desc;
-  if (filesData.length > 0) {
-    fullDesc += `\n\n[ArchivosJSON: ${JSON.stringify(filesData)}]`;
-  }
   fullDesc += `\n\n[Modo de pago: ${modoPagoLabel}]`;
 
   pendingPayload = {
@@ -427,8 +418,9 @@ async function handleConfirmPublish(){
   const { _meta, ...dbPayload } = pendingPayload;
 
   let savedTicketId = '';
+  let requestId = '';
   try {
-    const { data, error } = await sb.from('requests').insert(dbPayload).select('ticket_id').single();
+    const { data, error } = await sb.from('requests').insert(dbPayload).select('id, ticket_id').single();
     if (error){
       console.error('Error al guardar en Supabase:', error);
       alert('No pudimos publicar la solicitud. Revisá tu conexión e intentá de nuevo.\n\nDetalle: ' + error.message);
@@ -436,11 +428,39 @@ async function handleConfirmPublish(){
       return;
     }
     savedTicketId = data?.ticket_id || '';
+    requestId = data?.id || '';
   } catch(err){
     console.error('Excepción al guardar:', err);
     alert('No pudimos guardar la solicitud. Intentá de nuevo.');
     if (btnConfirm) btnConfirm.disabled = false;
     return;
+  }
+
+  // Subir fotos/planos a Storage (best-effort: si una falla, la solicitud
+  // ya quedó guardada, no bloqueamos la publicación por esto).
+  if (requestId && uploadedFiles.length > 0){
+    const paths = [];
+    for (let i = 0; i < uploadedFiles.length; i++){
+      const item = uploadedFiles[i];
+      const file = item.file;
+      if (!file) continue;
+      const ext = (file.name ? file.name.split('.').pop() : (item.isPdf ? 'pdf' : 'jpg')).toLowerCase().replace(/[^a-z0-9]/g, '') || (item.isPdf ? 'pdf' : 'jpg');
+      const path = `${requestId}/${i}_${Date.now()}.${ext}`;
+      try {
+        const { error: upErr } = await sb.storage.from('solicitudes').upload(path, file, {
+          contentType: file.type,
+          upsert: true
+        });
+        if (upErr) { console.warn('Error subiendo archivo de solicitud:', upErr.message); continue; }
+        paths.push(path);
+      } catch(e){
+        console.warn('Error subiendo archivo de solicitud:', e.message);
+      }
+    }
+    if (paths.length > 0){
+      const { error: imgErr } = await sb.from('requests').update({ imagenes: paths }).eq('id', requestId);
+      if (imgErr) console.warn('Error guardando referencias de imágenes:', imgErr.message);
+    }
   }
 
   // Ocultar modal de resumen
