@@ -105,7 +105,9 @@ function normalize(row){
     tipo: row.tipo,
     rubros: row.rubros || [],
     titulo: row.titulo || generateTitle(row),
-    descripcion: row.descripcion,
+    // Compat: solicitudes viejas guardaban un JSON de archivos embebido acá
+    // (bug ya corregido, ver fotos[] en el detalle). Se oculta de la vista.
+    descripcion: (row.descripcion || '').split('[ArchivosJSON:')[0].trim(),
     urgencia: row.urgencia,
     direccion: row.direccion,
     etapa: row.etapa,

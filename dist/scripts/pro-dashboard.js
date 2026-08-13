@@ -54,6 +54,15 @@ async function loadProFullProfile(session){
     proData = pro;
   } catch(e){ console.warn('Error leyendo professionals:', e); }
 
+  let verifData = null;
+  try {
+    const { data: verif } = await sb.from('professional_verification')
+      .select('dni_number, dni_front_url, dni_back_url')
+      .eq('id', userId)
+      .maybeSingle();
+    verifData = verif;
+  } catch(e){ console.warn('Error leyendo professional_verification:', e); }
+
   const firstName = profileData?.first_name || session.firstName || '';
   const lastName = profileData?.last_name || session.lastName || '';
   const fullName = (firstName + ' ' + lastName).trim() || session.email?.split('@')[0] || 'Profesional';
@@ -66,7 +75,7 @@ async function loadProFullProfile(session){
 
   const rubros = proData?.rubros?.length ? proData.rubros : (session.rubros?.length ? session.rubros : (proData?.rubro ? [proData.rubro] : ['albanileria']));
   const primaryRubro = rubros[0] || 'albanileria';
-  const dniNumber = proData?.dni_number || session.dniNumber || '—';
+  const dniNumber = verifData?.dni_number || session.dniNumber || '—';
   const isVerified = proData?.verified !== false;
 
   PRO_PROFILE = {
@@ -86,8 +95,8 @@ async function loadProFullProfile(session){
     isVerified,
     rating: proData?.rating || 5.0,
     jobsCompleted: proData?.jobs_completed || 0,
-    dniFrontUrl: proData?.dni_front_url || session.dniFrontUrl || null,
-    dniBackUrl: proData?.dni_back_url || session.dniBackUrl || null
+    dniFrontUrl: verifData?.dni_front_url || session.dniFrontUrl || null,
+    dniBackUrl: verifData?.dni_back_url || session.dniBackUrl || null
   };
 
   renderProfileUI();
@@ -183,7 +192,7 @@ function normalize(row){
     tipo: row.tipo,
     rubros: row.rubros || [],
     titulo: row.titulo || generateTitle(row),
-    descripcion: row.descripcion,
+    descripcion: (row.descripcion || '').split('[ArchivosJSON:')[0].trim(),
     urgencia: row.urgencia,
     direccion: row.direccion,
     superficie: row.superficie,
@@ -434,9 +443,9 @@ function initEditProfileModal(){
       const dniFFile = document.getElementById('screenEditDniFrontFile')?.files?.[0];
       const dniBFile = document.getElementById('screenEditDniBackFile')?.files?.[0];
 
-      if (avFile && Auth.uploadImage) avatarUrl = await Auth.uploadImage(avFile, 'avatars', 'avatar');
-      if (dniFFile && Auth.uploadImage) dniFrontUrl = await Auth.uploadImage(dniFFile, 'documents', 'dni_front');
-      if (dniBFile && Auth.uploadImage) dniBackUrl = await Auth.uploadImage(dniBFile, 'documents', 'dni_back');
+      if (avFile && Auth.uploadImage) avatarUrl = await Auth.uploadImage(avFile, 'avatars', `${PRO_PROFILE.userId}/avatar.${Auth._fileExt(avFile)}`, true);
+      if (dniFFile && Auth.uploadImage) dniFrontUrl = await Auth.uploadImage(dniFFile, 'dni', `${PRO_PROFILE.userId}/dni-front.${Auth._fileExt(dniFFile)}`, false);
+      if (dniBFile && Auth.uploadImage) dniBackUrl = await Auth.uploadImage(dniBFile, 'dni', `${PRO_PROFILE.userId}/dni-back.${Auth._fileExt(dniBFile)}`, false);
 
       // Update profiles in Supabase
       const { error: pErr } = await sb.from('profiles').update({
@@ -448,11 +457,12 @@ function initEditProfileModal(){
 
       if (pErr) throw pErr;
 
-      // Update professionals in Supabase
-      const { error: proErr } = await sb.from('professionals').update({
+      // Update professional_verification (tabla privada) en Supabase
+      const { error: proErr } = await sb.from('professional_verification').upsert({
+        id: PRO_PROFILE.userId,
         dni_front_url: dniFrontUrl,
         dni_back_url: dniBackUrl
-      }).eq('id', PRO_PROFILE.userId);
+      }, { onConflict: 'id' });
 
       if (proErr) throw proErr;
 
@@ -506,9 +516,9 @@ function initEditProfileModal(){
       const dniFFile = document.getElementById('editDniFrontFile')?.files?.[0];
       const dniBFile = document.getElementById('editDniBackFile')?.files?.[0];
 
-      if (avFile && Auth.uploadImage) avatarUrl = await Auth.uploadImage(avFile, 'avatars', 'avatar');
-      if (dniFFile && Auth.uploadImage) dniFrontUrl = await Auth.uploadImage(dniFFile, 'documents', 'dni_front');
-      if (dniBFile && Auth.uploadImage) dniBackUrl = await Auth.uploadImage(dniBFile, 'documents', 'dni_back');
+      if (avFile && Auth.uploadImage) avatarUrl = await Auth.uploadImage(avFile, 'avatars', `${PRO_PROFILE.userId}/avatar.${Auth._fileExt(avFile)}`, true);
+      if (dniFFile && Auth.uploadImage) dniFrontUrl = await Auth.uploadImage(dniFFile, 'dni', `${PRO_PROFILE.userId}/dni-front.${Auth._fileExt(dniFFile)}`, false);
+      if (dniBFile && Auth.uploadImage) dniBackUrl = await Auth.uploadImage(dniBFile, 'dni', `${PRO_PROFILE.userId}/dni-back.${Auth._fileExt(dniBFile)}`, false);
 
       const { error: pErr } = await sb.from('profiles').update({
         address: addr,
@@ -519,10 +529,11 @@ function initEditProfileModal(){
 
       if (pErr) throw pErr;
 
-      const { error: proErr } = await sb.from('professionals').update({
+      const { error: proErr } = await sb.from('professional_verification').upsert({
+        id: PRO_PROFILE.userId,
         dni_front_url: dniFrontUrl,
         dni_back_url: dniBackUrl
-      }).eq('id', PRO_PROFILE.userId);
+      }, { onConflict: 'id' });
 
       if (proErr) throw proErr;
 

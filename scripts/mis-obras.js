@@ -103,7 +103,7 @@ async function fetchClientObras(userId){
     // 1. Obtener solicitudes del usuario
     const { data: requests, error: reqErr } = await sb
       .from('requests')
-      .select('id, ticket_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at')
+      .select('id, ticket_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, fotos')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -136,6 +136,7 @@ async function fetchClientObras(userId){
 
     // Construir estructura unificada
     OBRAS_DATA = requests.map(r => normalizeObra(r, quotesByReq[r.id] || []));
+    await attachSignedImageUrls(OBRAS_DATA);
 
     updateCounters();
     renderObras();
@@ -153,21 +154,9 @@ async function fetchClientObras(userId){
 
 function normalizeObra(r, quotesList){
   const stInfo = STATUS_MAP[r.status] || { key: r.status, label: r.status, class: 'st-pending' };
-  
-  let filesList = [];
+
   let modoPagoText = 'No especificado';
   let cleanDesc = r.descripcion || '';
-
-  // Extraer JSON de archivos/imágenes si existe
-  if (cleanDesc.includes('[ArchivosJSON:')){
-    const match = cleanDesc.match(/\[ArchivosJSON:\s*([^\]]+)\]/);
-    if (match && match[1]){
-      try {
-        filesList = JSON.parse(match[1]);
-      } catch(e){}
-    }
-    cleanDesc = cleanDesc.replace(/\[ArchivosJSON:\s*[^\]]+\]/, '').trim();
-  }
 
   // Extraer modo de pago si está guardado en la descripción
   if (cleanDesc.includes('[Modo de pago:')){
@@ -176,6 +165,14 @@ function normalizeObra(r, quotesList){
       modoPagoText = match[1];
     }
     cleanDesc = cleanDesc.replace(/\[Modo de pago:\s*[^\]]+\]/, '').trim();
+  }
+
+  // Compat: solicitudes viejas (antes de que las fotos se subieran a
+  // Storage) guardaban un JSON de archivos embebido en la descripción.
+  // Ya no se parsea (ver fotos[] / attachSignedImageUrls), solo se
+  // oculta de la vista.
+  if (cleanDesc.includes('[ArchivosJSON:')){
+    cleanDesc = cleanDesc.split('[ArchivosJSON:')[0].trim();
   }
 
   const rubrosArr = (r.rubros || []).map(rub => RUBRO_LABELS[rub] || rub);
@@ -194,13 +191,34 @@ function normalizeObra(r, quotesList){
     direccion: r.direccion || 'No especificada',
     superficie: r.superficie ? `${r.superficie} m²` : 'No especificada',
     modoPago: modoPagoText,
-    files: filesList,
+    fotosPaths: r.fotos || [],
+    files: [],
     statusKey: stInfo.key,
     statusLabel: stInfo.label,
     statusClass: stInfo.class,
     createdAt: r.created_at,
     quotes: quotesList
   };
+}
+
+/* ── Resolver URLs firmadas para las fotos/planos (bucket privado) ──── */
+async function attachSignedImageUrls(obras){
+  for (const o of obras){
+    const paths = o.fotosPaths || [];
+    if (!paths.length) continue;
+    const resolved = await Promise.all(paths.map(async (path) => {
+      try {
+        const { data } = await sb.storage.from('solicitudes').createSignedUrl(path, 3600);
+        if (!data?.signedUrl) return null;
+        return {
+          url: data.signedUrl,
+          isPdf: /\.pdf$/i.test(path),
+          name: path.split('/').pop() || 'Archivo'
+        };
+      } catch(e){ return null; }
+    }));
+    o.files = resolved.filter(Boolean);
+  }
 }
 
 /* ── Actualizar contadores del toolbar ───────────────── */

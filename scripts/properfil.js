@@ -1,4 +1,4 @@
-/* pro-perfil.js — Perfil del profesional: foto, rubros, localidad, residencia,
+/* properfil.js — Perfil del profesional: foto, rubros, localidad, residencia,
    dirección y DNI (frente/dorso). Sube archivos a Supabase Storage y guarda
    los datos en professionals + professional_verification. */
 
