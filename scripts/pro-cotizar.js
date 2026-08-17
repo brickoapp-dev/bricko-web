@@ -274,10 +274,47 @@ async function renderPhotos(r){
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span>${escapeHTML(f.name)}</span>
       </a>`
-    : `<a href="${escapeHTML(f.url)}" target="_blank" class="file-thumb-item" title="Ver imagen ampliada">
+    : `<div class="file-thumb-item" data-img-src="${escapeHTML(f.url)}" title="Ver imagen ampliada">
         <img src="${escapeHTML(f.url)}" alt="${escapeHTML(f.name)}" />
-      </a>`
+        <div class="file-thumb-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+        </div>
+      </div>`
   ).join('');
+
+  box.querySelectorAll('.file-thumb-item').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      const src = thumb.dataset.imgSrc;
+      if (src) openImageModal(src);
+    });
+  });
+}
+
+/* ── Lightbox: ver imagen ampliada sin salir de la pantalla ── */
+function openImageModal(src){
+  let modal = document.getElementById('imageModalOverlay');
+  if (!modal){
+    modal = document.createElement('div');
+    modal.id = 'imageModalOverlay';
+    modal.className = 'img-modal-overlay';
+    modal.innerHTML = `
+      <div class="img-modal-content">
+        <button class="img-modal-close" id="btnImgModalClose" aria-label="Cerrar">&times;</button>
+        <img id="imgModalSrc" src="" alt="Imagen ampliada" />
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || e.target.id === 'btnImgModalClose'){
+        modal.classList.remove('open');
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') modal.classList.remove('open');
+    });
+  }
+  document.getElementById('imgModalSrc').src = src;
+  modal.classList.add('open');
 }
 
 /* ── Render: ya cotizaste ────────────────────────── */
