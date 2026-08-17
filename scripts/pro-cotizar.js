@@ -67,17 +67,49 @@ async function loadRequest(reqId){
   } catch(e){ return null; }
 }
 
+// Las solicitudes viejas guardaban un JSON de archivos adjuntos y el modo
+// de pago embebidos como marcadores de texto dentro de la descripción
+// (p.ej. "...texto... [ArchivosJSON: [{...}]] [Modo de pago: Contado]").
+// Acá los separamos para no mostrarlos como texto crudo.
+function parseDescripcion(raw){
+  let text = (raw || '').trim();
+  let modoPago = null;
+  let embeddedFiles = [];
+
+  const modoPagoMatch = text.match(/\[Modo de pago:\s*([^\]]+)\]/);
+  if (modoPagoMatch){
+    modoPago = modoPagoMatch[1].trim();
+    text = text.replace(modoPagoMatch[0], '').trim();
+  }
+
+  const idx = text.indexOf('[ArchivosJSON:');
+  if (idx !== -1){
+    let jsonPart = text.slice(idx + '[ArchivosJSON:'.length).trim();
+    if (jsonPart.endsWith(']')) jsonPart = jsonPart.slice(0, -1);
+    try {
+      const parsed = JSON.parse(jsonPart);
+      if (Array.isArray(parsed)) embeddedFiles = parsed;
+    } catch(e){ /* JSON corrupto o formato viejo distinto, ignorar */ }
+    text = text.slice(0, idx).trim();
+  }
+
+  return { text, modoPago, embeddedFiles };
+}
+
 function normalize(row){
   const fn = row.profiles?.first_name || '';
   const ln = row.profiles?.last_name?.[0] ? row.profiles.last_name[0] + '.' : '';
   const clientName = (fn + ' ' + ln).trim() || 'Cliente';
+  const { text: descripcion, modoPago, embeddedFiles } = parseDescripcion(row.descripcion);
   return {
     id: row.id,
     ticketId: row.ticket_id || ('SOL-' + row.id?.slice(0,4)),
     tipo: row.tipo,
     rubros: row.rubros || [],
     titulo: row.titulo || generateTitle(row),
-    descripcion: row.descripcion,
+    descripcion,
+    modoPago,
+    embeddedFiles,
     urgencia: row.urgencia,
     direccion: row.direccion,
     superficie: row.superficie,
@@ -162,7 +194,7 @@ function renderDetail(r){
       <p class="sol-desc">${escapeHTML(r.descripcion || '—')}</p>
     </div>
 
-    ${r.fotosPaths?.length ? `
+    ${(r.fotosPaths?.length || r.embeddedFiles?.length) ? `
     <hr class="sol-divider" />
     <div class="sol-section">
       <div class="sol-section-label">FOTOS / PLANOS</div>
@@ -203,6 +235,11 @@ function renderDetail(r){
           <span class="dk">Presupuestos</span>
           <span class="dv" id="detailQuotes">cargando…</span>
         </div>
+        ${r.modoPago ? `
+        <div class="detail-row">
+          <span class="dk">Modo de pago</span>
+          <span class="dv">${escapeHTML(r.modoPago)}</span>
+        </div>` : ''}
       </div>
     </div>
     ${extraSections}
@@ -212,9 +249,10 @@ function renderDetail(r){
 /* ── Fotos/planos adjuntos (bucket privado -> signed URLs) ─────── */
 async function renderPhotos(r){
   const box = document.getElementById('solPhotos');
-  if (!box || !r.fotosPaths?.length) return;
+  if (!box) return;
+  if (!r.fotosPaths?.length && !r.embeddedFiles?.length) return;
 
-  const resolved = await Promise.all(r.fotosPaths.map(async (path) => {
+  const resolved = await Promise.all((r.fotosPaths || []).map(async (path) => {
     try {
       const { data } = await sb.storage.from('solicitudes').createSignedUrl(path, 3600);
       if (!data?.signedUrl) return null;
@@ -222,7 +260,13 @@ async function renderPhotos(r){
     } catch(e){ return null; }
   }));
 
-  const files = resolved.filter(Boolean);
+  // Solicitudes viejas: archivos embebidos como data URI en la descripción,
+  // no requieren firma (ya son la URL final).
+  const embedded = (r.embeddedFiles || [])
+    .filter(f => f && typeof f.url === 'string')
+    .map(f => ({ url: f.url, isPdf: !!f.isPdf, name: f.name || 'Archivo' }));
+
+  const files = [...resolved.filter(Boolean), ...embedded];
   if (!files.length){ box.textContent = 'No se pudieron cargar los archivos.'; return; }
 
   box.innerHTML = files.map(f => f.isPdf

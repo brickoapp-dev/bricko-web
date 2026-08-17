@@ -144,7 +144,7 @@ function normalize(row){
     tipo: row.tipo,
     rubros: row.rubros || [],
     titulo: row.titulo || generateTitle(row),
-    descripcion: (row.descripcion || '').split('[ArchivosJSON:')[0].trim(),
+    descripcion: (row.descripcion || '').split('[ArchivosJSON:')[0].replace(/\[Modo de pago:\s*[^\]]+\]/, '').trim(),
     urgencia: row.urgencia,
     direccion: row.direccion,
     superficie: row.superficie,
