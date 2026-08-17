@@ -17,12 +17,6 @@ const URG_LABELS = {
   alta: 'Urgente'
 };
 
-const MODO_PAGO_LABELS = {
-  hitos: 'Pago por hitos',
-  finalizar: 'Pago al finalizar',
-  contratista: 'A elección del contratista'
-};
-
 const RUBRO_LABELS = {
   albanileria: 'Albañilería',
   plomeria: 'Plomería',
@@ -326,19 +320,11 @@ function renderObras(){
 
   // Vincular eventos de los botones de presupuestos
   container.querySelectorAll('[data-accept-quote]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const qId = btn.dataset.acceptQuote;
-      const rId = btn.dataset.reqId;
-      handleAcceptQuote(qId, rId);
-    });
+    btn.addEventListener('click', () => handleAcceptQuote(btn.dataset.acceptQuote));
   });
 
   container.querySelectorAll('[data-reject-quote]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const qId = btn.dataset.rejectQuote;
-      const rId = btn.dataset.reqId;
-      handleRejectQuote(qId, rId);
-    });
+    btn.addEventListener('click', () => handleRejectQuote(btn.dataset.rejectQuote));
   });
 
   // Vincular apertura de imagen al hacer clic
@@ -421,7 +407,7 @@ function obraCardHTML(o){
     const hasAccepted = o.quotes.some(q => q.status === 'accepted');
     quotesContentHTML = `
       <div class="quotes-grid">
-        ${o.quotes.map(q => quoteItemHTML(q, o.id, hasAccepted)).join('')}
+        ${o.quotes.map(q => quoteItemHTML(q, hasAccepted)).join('')}
       </div>
     `;
   }
@@ -497,7 +483,7 @@ function obraCardHTML(o){
 }
 
 /* ── HTML de cada Presupuesto de Contratista ─────────── */
-function quoteItemHTML(q, reqId, hasAccepted){
+function quoteItemHTML(q, hasAccepted){
   const proFirst = q.profiles?.first_name || '';
   const proLast = q.profiles?.last_name ? q.profiles.last_name[0] + '.' : '';
   const proName = (proFirst + ' ' + proLast).trim() || 'Contratista Profesional';
@@ -522,8 +508,8 @@ function quoteItemHTML(q, reqId, hasAccepted){
   if (!isAccepted && !isRejected && !hasAccepted){
     actionBtns = `
       <div class="qitem-actions">
-        <button class="btn-accept-quote" data-accept-quote="${q.id}" data-req-id="${reqId}">Aceptar Presupuesto</button>
-        <button class="btn-reject-quote" data-reject-quote="${q.id}" data-req-id="${reqId}">Rechazar</button>
+        <button class="btn-accept-quote" data-accept-quote="${q.id}">Aceptar Presupuesto</button>
+        <button class="btn-reject-quote" data-reject-quote="${q.id}">Rechazar</button>
       </div>
     `;
   } else if (!isAccepted && hasAccepted){
@@ -553,7 +539,7 @@ function quoteItemHTML(q, reqId, hasAccepted){
 }
 
 /* ── Acciones: Aceptar y Rechazar Presupuesto ────────── */
-async function handleAcceptQuote(quoteId, reqId){
+async function handleAcceptQuote(quoteId){
   if (!confirm('¿Estás seguro de que querés aceptar este presupuesto? El profesional será notificado.')) return;
 
   try {
@@ -574,7 +560,7 @@ async function handleAcceptQuote(quoteId, reqId){
   }
 }
 
-async function handleRejectQuote(quoteId, reqId){
+async function handleRejectQuote(quoteId){
   try {
     const { error } = await sb
       .from('quotes')
