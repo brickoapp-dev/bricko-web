@@ -243,6 +243,32 @@ form { padding: 32px; }
 .form-label .lx { color: var(--orange); margin-right: 6px; }
 .label-opt { opacity: .5; font-size: 9px; margin-left: 4px; }
 
+.form-label-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px;
+}
+.form-label-row .form-label { margin-bottom: 0; }
+
+.btn-geoloc {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; background: var(--bg);
+  border: 1px solid var(--line-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted);
+  transition: all .2s; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+.btn-geoloc svg { width: 13px; height: 13px; stroke: currentColor; flex-shrink: 0; }
+.btn-geoloc:hover { border-color: var(--orange); color: var(--orange); }
+.btn-geoloc:disabled { opacity: .55; cursor: wait; }
+.btn-geoloc.is-loading svg { animation: geolocSpin 1s linear infinite; }
+@keyframes geolocSpin { to { transform: rotate(360deg); } }
+
+@media (max-width: 480px) {
+  .form-label-row { flex-wrap: wrap; }
+  .btn-geoloc span { display: none; }
+  .btn-geoloc { padding: 6px 8px; }
+}
+
 .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
   display: flex; align-items: center; gap: 8px;
