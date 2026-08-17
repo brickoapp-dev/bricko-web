@@ -115,11 +115,25 @@ async function fetchClientObras(userId){
     // 2. Obtener presupuestos de estas solicitudes
     const { data: quotes, error: quotesErr } = await sb
       .from('quotes')
-      .select('id, request_id, pro_id, amount, description, features, status, created_at, profiles!quotes_pro_id_fkey(first_name, last_name, email), professionals!quotes_pro_id_fkey(rubro)')
+      .select('id, request_id, pro_id, amount, description, features, status, created_at, professionals!quotes_pro_id_fkey(rubro)')
       .in('request_id', reqIds)
       .order('created_at', { ascending: false });
 
     if (quotesErr) console.warn('Aviso cargando presupuestos:', quotesErr);
+
+    // 3. Obtener nombre/apellido de los profesionales que cotizaron
+    //    (profiles tiene RLS "solo propio perfil": se usa una función
+    //    SECURITY DEFINER que solo expone estos datos de pros que cotizaron
+    //    en solicitudes del usuario actual — ver migración
+    //    20260817120000_fix_client_quote_visibility.sql)
+    if (quotes && quotes.length){
+      const { data: proProfiles, error: profErr } = await sb
+        .rpc('get_quote_professionals', { p_request_ids: reqIds });
+      if (profErr) console.warn('Aviso cargando perfiles de profesionales:', profErr);
+      const profileById = {};
+      (proProfiles || []).forEach(p => { profileById[p.pro_id] = p; });
+      quotes.forEach(q => { q.profiles = profileById[q.pro_id] || null; });
+    }
 
     // Mapear presupuestos por request_id
     const quotesByReq = {};
