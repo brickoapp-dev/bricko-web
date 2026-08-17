@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Lightbox test</title>
+<link rel="stylesheet" href="styles/pro-dashboard.css" />
+<style>
+  body { padding: 24px; }
+  .sol-photos { max-width: 400px; }
+</style>
+</head>
+<body>
+  <h1 style="font-family:var(--mono);font-size:14px;color:#fff">Lightbox test</h1>
+  <div class="sol-section">
+    <div class="sol-section-label">FOTOS / PLANOS</div>
+    <div class="sol-photos" id="solPhotos"></div>
+  </div>
+
+  <script>
+    // Imagen de muestra generada con canvas (rectángulos de color + texto),
+    // simula una "foto" para poder ver el zoom con detalle.
+    function makeSampleImage(){
+      const c = document.createElement('canvas');
+      c.width = 800; c.height = 600;
+      const ctx = c.getContext('2d');
+      const colors = ['#F25C18','#1C1C1C','#2A2A2A','#F2B518','#18A0F2'];
+      const cell = 100;
+      for (let y = 0; y < c.height; y += cell){
+        for (let x = 0; x < c.width; x += cell){
+          ctx.fillStyle = colors[((x/cell)+(y/cell)) % colors.length];
+          ctx.fillRect(x, y, cell, cell);
+        }
+      }
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 40px monospace';
+      ctx.fillText('ZOOM TEST', 40, 320);
+      return c.toDataURL('image/jpeg', 0.9);
+    }
+
+    const box = document.getElementById('solPhotos');
+    const sampleUrl = makeSampleImage();
+    box.innerHTML = `
+      <div class="file-thumb-item" data-img-src="${sampleUrl}" title="Ver imagen ampliada">
+        <img src="${sampleUrl}" alt="Foto de prueba" />
+        <div class="file-thumb-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+        </div>
+      </div>
+    `;
+    box.querySelectorAll('.file-thumb-item').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        const src = thumb.dataset.imgSrc;
+        if (src) openImageModal(src);
+      });
+    });
+
+    /* ── Copia fiel de scripts/pro-cotizar.js (lightbox) ── */
+    let modalZoom = { scale: 1, tx: 0, ty: 0 };
+
+    function applyModalZoom(img){
+      img.style.transform = `translate(${modalZoom.tx}px, ${modalZoom.ty}px) scale(${modalZoom.scale})`;
+    }
+
+    function resetModalZoom(img){
+      modalZoom = { scale: 1, tx: 0, ty: 0 };
+      img.style.transition = '';
+      applyModalZoom(img);
+    }
+
+    function bindImageZoomHandlers(img){
+      const MAX_SCALE = 4;
+      const dist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      const clampScale = (s) => Math.min(MAX_SCALE, Math.max(1, s));
+
+      let pinchStartDist = 0;
+      let pinchStartScale = 1;
+      let panStart = null;
+      let lastTapTime = 0;
+      let lastTapPos = null;
+
+      function toggleZoom(){
+        img.style.transition = 'transform .2s ease';
+        modalZoom = modalZoom.scale > 1
+          ? { scale: 1, tx: 0, ty: 0 }
+          : { scale: 2.5, tx: 0, ty: 0 };
+        applyModalZoom(img);
+        setTimeout(() => { img.style.transition = ''; }, 220);
+      }
+      window.__toggleZoom = toggleZoom; // expuesto para el harness de test
+
+      img.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2){
+          pinchStartDist = dist(e.touches[0], e.touches[1]);
+          pinchStartScale = modalZoom.scale;
+          panStart = null;
+          return;
+        }
+        if (e.touches.length === 1){
+          if (modalZoom.scale > 1){
+            panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx: modalZoom.tx, ty: modalZoom.ty };
+          }
+          const now = Date.now();
+          const t = e.touches[0];
+          const isDoubleTap = lastTapPos && (now - lastTapTime) < 300 &&
+            Math.hypot(t.clientX - lastTapPos.x, t.clientY - lastTapPos.y) < 30;
+          if (isDoubleTap){
+            toggleZoom();
+            lastTapTime = 0; lastTapPos = null;
+          } else {
+            lastTapTime = now; lastTapPos = { x: t.clientX, y: t.clientY };
+          }
+        }
+      }, { passive: true });
+
+      img.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && pinchStartDist){
+          e.preventDefault();
+          const newDist = dist(e.touches[0], e.touches[1]);
+          modalZoom.scale = clampScale(pinchStartScale * (newDist / pinchStartDist));
+          if (modalZoom.scale === 1){ modalZoom.tx = 0; modalZoom.ty = 0; }
+          applyModalZoom(img);
+        } else if (e.touches.length === 1 && panStart){
+          e.preventDefault();
+          modalZoom.tx = panStart.tx + (e.touches[0].clientX - panStart.x);
+          modalZoom.ty = panStart.ty + (e.touches[0].clientY - panStart.y);
+          applyModalZoom(img);
+        }
+      }, { passive: false });
+
+      img.addEventListener('touchend', (e) => {
+        if (e.touches.length === 0){ pinchStartDist = 0; panStart = null; }
+      });
+
+      img.addEventListener('dblclick', toggleZoom);
+    }
+
+    function closeImageModal(modal){
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function openImageModal(src){
+      let modal = document.getElementById('imageModalOverlay');
+      if (!modal){
+        modal = document.createElement('div');
+        modal.id = 'imageModalOverlay';
+        modal.className = 'img-modal-overlay';
+        modal.innerHTML = `
+          <div class="img-modal-content">
+            <button class="img-modal-close" id="btnImgModalClose" aria-label="Cerrar">&times;</button>
+            <img id="imgModalSrc" src="" alt="Imagen ampliada" />
+          </div>
+        `;
+        document.body.appendChild(modal);
+        bindImageZoomHandlers(document.getElementById('imgModalSrc'));
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal || e.target.id === 'btnImgModalClose') closeImageModal(modal);
+        });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeImageModal(modal);
+        });
+      }
+      const img = document.getElementById('imgModalSrc');
+      img.src = src;
+      resetModalZoom(img);
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+  </script>
+</body>
+</html>
