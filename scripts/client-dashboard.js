@@ -1,6 +1,8 @@
 /* client-dashboard.js — Dashboard del cliente
    Panel de acceso a Mis Obras y Obra Nueva. */
 
+const sb = window.supabase_client;
+
 function getSession(){
   try {
     const s = localStorage.getItem('bricko-session') || sessionStorage.getItem('bricko-session');
@@ -16,7 +18,31 @@ function initDashboard() {
   loadUserUI(session);
   initActionCards();
   initLogout();
+  initThemeToggle();
   initCursorGlow();
+  loadClientMetrics(session.userId);
+}
+
+/* ── Métricas (Activas / Ofertas nuevas / Finalizadas) ── */
+async function loadClientMetrics(uid){
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  try {
+    const { data: reqs, error: e1 } = await sb.from('requests').select('id, status').eq('user_id', uid);
+    if (e1) throw e1;
+    const activas = (reqs || []).filter(r => r.status === 'active').length;
+    const finalizadas = (reqs || []).filter(r => r.status === 'done').length;
+    set('kpiActivas', activas);
+    set('kpiFinalizadas', finalizadas);
+
+    const { data: quotes, error: e2 } = await sb.from('quotes')
+      .select('id, status, requests!quotes_request_id_fkey!inner(user_id)')
+      .eq('requests.user_id', uid)
+      .eq('status', 'pending');
+    if (e2) throw e2;
+    set('kpiOfertas', (quotes || []).length);
+  } catch(e){
+    console.warn('Error cargando métricas del cliente:', e);
+  }
 }
 
 if (document.readyState === 'loading') {
@@ -54,6 +80,19 @@ function initLogout(){
       localStorage.removeItem('bricko-user');
       window.location.replace('index.html');
     }
+  });
+}
+
+/* ── Theme toggle ────────────────────────────────────── */
+function initThemeToggle(){
+  const THEMES = ['dark', 'light', 'blueprint'];
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    html.classList.add('theme-anim');
+    const next = THEMES[(THEMES.indexOf(html.getAttribute('data-theme') || 'dark') + 1) % THEMES.length];
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('bricko-theme', next);
+    setTimeout(() => html.classList.remove('theme-anim'), 450);
   });
 }
 

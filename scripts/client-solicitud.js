@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadUserUI(session);
   initLogout();
+  initThemeToggle();
   initCursorGlow();
 
   const req = await loadRequest(REQ_ID, session.userId);
@@ -291,6 +292,18 @@ function loadUserUI(session) {
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   set('userAv', initials);
   set('userNm', session.firstName || name);
+}
+
+function initThemeToggle(){
+  const THEMES = ['dark', 'light', 'blueprint'];
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    html.classList.add('theme-anim');
+    const next = THEMES[(THEMES.indexOf(html.getAttribute('data-theme') || 'dark') + 1) % THEMES.length];
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('bricko-theme', next);
+    setTimeout(() => html.classList.remove('theme-anim'), 450);
+  });
 }
 
 function initLogout() {

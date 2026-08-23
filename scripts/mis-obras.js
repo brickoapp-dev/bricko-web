@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadUserNav(session);
   initLogout();
+  initThemeToggle();
   initToolbarEvents();
   initCursorGlow();
 
@@ -607,6 +608,19 @@ function initLogout(){
       localStorage.removeItem('bricko-user');
       window.location.replace('index.html');
     }
+  });
+}
+
+/* ── Theme toggle ────────────────────────────────────── */
+function initThemeToggle(){
+  const THEMES = ['dark', 'light', 'blueprint'];
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    html.classList.add('theme-anim');
+    const next = THEMES[(THEMES.indexOf(html.getAttribute('data-theme') || 'dark') + 1) % THEMES.length];
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('bricko-theme', next);
+    setTimeout(() => html.classList.remove('theme-anim'), 450);
   });
 }
 

@@ -25,22 +25,22 @@
   --gutter: 32px;
 }
 [data-theme="light"] {
-  --bg: #C4C7CC;
-  --bg-1: #CDD0D5;
-  --bg-2: #D8DADD;
-  --bg-3: #B8BBC0;
+  --bg: #EDECE9;
+  --bg-1: #F5F4F2;
+  --bg-2: #FFFFFF;
+  --bg-3: #E2E1DD;
   --line: rgba(10,10,10,.10);
-  --line-strong: rgba(10,10,10,.22);
+  --line-strong: rgba(10,10,10,.20);
   --ink: #0A0A0A;
-  --ink-2: #1C1C1C;
-  --muted: #5A5A5A;
-  --muted-2: #8A8A8A;
-  --orange: #D9430A;
-  --orange-dim: rgba(217,67,10,.10);
-  --orange-line: rgba(217,67,10,.36);
-  --nav-bg: rgba(196,199,204,.92);
-  --grid: rgba(10,10,10,.045);
-  --grid-strong: rgba(10,10,10,.10);
+  --ink-2: #232327;
+  --muted: #5A5A61;
+  --muted-2: #97979D;
+  --orange: #DC4A0C;
+  --orange-dim: rgba(242,92,24,.11);
+  --orange-line: rgba(220,74,12,.36);
+  --nav-bg: rgba(237,236,233,.78);
+  --grid: rgba(10,10,10,.05);
+  --grid-strong: rgba(10,10,10,.11);
   --map-filter: none;
 }
 [data-theme="blueprint"] {
@@ -150,6 +150,30 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .btn-logout:hover { border-color: #E54E10; }
 .btn-logout svg { width: 15px; height: 15px; stroke: var(--muted); }
 .btn-logout:hover svg { stroke: #E54E10; }
+
+/* THEME TOGGLE */
+.theme-toggle {
+  width: 36px; height: 36px;
+  border: 1px solid var(--line-strong); border-radius: 2px;
+  display: inline-flex; align-items: center; justify-content: center;
+  position: relative; flex-shrink: 0;
+  transition: all .25s ease;
+}
+.theme-toggle:hover { border-color: var(--orange); background: var(--orange-dim); }
+.theme-toggle svg {
+  width: 15px; height: 15px; stroke: var(--ink); fill: none;
+  stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  position: absolute; transition: opacity .3s ease, transform .4s cubic-bezier(.2,.7,.2,1);
+}
+.theme-toggle:hover svg { stroke: var(--orange); }
+.theme-toggle .icon-sun, .theme-toggle .icon-plan { opacity: 0; transform: rotate(-90deg) scale(.5); }
+.theme-toggle .icon-moon { opacity: 1; }
+[data-theme="light"] .theme-toggle .icon-sun { opacity: 1; transform: none; }
+[data-theme="light"] .theme-toggle .icon-moon { opacity: 0; transform: rotate(90deg) scale(.5); }
+[data-theme="blueprint"] .theme-toggle .icon-sun,
+[data-theme="blueprint"] .theme-toggle .icon-moon { opacity: 0; transform: rotate(90deg) scale(.5); }
+[data-theme="blueprint"] .theme-toggle .icon-plan { opacity: 1; transform: none; }
+html.theme-anim * { transition: background-color .4s ease, border-color .4s ease, color .4s ease, fill .4s ease, stroke .4s ease !important; }
 
 /* ─── PAGE ─────────────────────────────────────────── */
 .req-page { padding: 96px 0 100px; position: relative; z-index: 1; }
