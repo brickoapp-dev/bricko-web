@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadProUI(session);
   initLogout();
+  initThemeToggle();
   initCursorGlow();
 
   const [req, existingQuote] = await Promise.all([
@@ -67,17 +68,49 @@ async function loadRequest(reqId){
   } catch(e){ return null; }
 }
 
+// Las solicitudes viejas guardaban un JSON de archivos adjuntos y el modo
+// de pago embebidos como marcadores de texto dentro de la descripción
+// (p.ej. "...texto... [ArchivosJSON: [{...}]] [Modo de pago: Contado]").
+// Acá los separamos para no mostrarlos como texto crudo.
+function parseDescripcion(raw){
+  let text = (raw || '').trim();
+  let modoPago = null;
+  let embeddedFiles = [];
+
+  const modoPagoMatch = text.match(/\[Modo de pago:\s*([^\]]+)\]/);
+  if (modoPagoMatch){
+    modoPago = modoPagoMatch[1].trim();
+    text = text.replace(modoPagoMatch[0], '').trim();
+  }
+
+  const idx = text.indexOf('[ArchivosJSON:');
+  if (idx !== -1){
+    let jsonPart = text.slice(idx + '[ArchivosJSON:'.length).trim();
+    if (jsonPart.endsWith(']')) jsonPart = jsonPart.slice(0, -1);
+    try {
+      const parsed = JSON.parse(jsonPart);
+      if (Array.isArray(parsed)) embeddedFiles = parsed;
+    } catch(e){ /* JSON corrupto o formato viejo distinto, ignorar */ }
+    text = text.slice(0, idx).trim();
+  }
+
+  return { text, modoPago, embeddedFiles };
+}
+
 function normalize(row){
   const fn = row.profiles?.first_name || '';
   const ln = row.profiles?.last_name?.[0] ? row.profiles.last_name[0] + '.' : '';
   const clientName = (fn + ' ' + ln).trim() || 'Cliente';
+  const { text: descripcion, modoPago, embeddedFiles } = parseDescripcion(row.descripcion);
   return {
     id: row.id,
     ticketId: row.ticket_id || ('SOL-' + row.id?.slice(0,4)),
     tipo: row.tipo,
     rubros: row.rubros || [],
     titulo: row.titulo || generateTitle(row),
-    descripcion: row.descripcion,
+    descripcion,
+    modoPago,
+    embeddedFiles,
     urgencia: row.urgencia,
     direccion: row.direccion,
     superficie: row.superficie,
@@ -162,7 +195,7 @@ function renderDetail(r){
       <p class="sol-desc">${escapeHTML(r.descripcion || '—')}</p>
     </div>
 
-    ${r.fotosPaths?.length ? `
+    ${(r.fotosPaths?.length || r.embeddedFiles?.length) ? `
     <hr class="sol-divider" />
     <div class="sol-section">
       <div class="sol-section-label">FOTOS / PLANOS</div>
@@ -203,6 +236,11 @@ function renderDetail(r){
           <span class="dk">Presupuestos</span>
           <span class="dv" id="detailQuotes">cargando…</span>
         </div>
+        ${r.modoPago ? `
+        <div class="detail-row">
+          <span class="dk">Modo de pago</span>
+          <span class="dv">${escapeHTML(r.modoPago)}</span>
+        </div>` : ''}
       </div>
     </div>
     ${extraSections}
@@ -212,9 +250,10 @@ function renderDetail(r){
 /* ── Fotos/planos adjuntos (bucket privado -> signed URLs) ─────── */
 async function renderPhotos(r){
   const box = document.getElementById('solPhotos');
-  if (!box || !r.fotosPaths?.length) return;
+  if (!box) return;
+  if (!r.fotosPaths?.length && !r.embeddedFiles?.length) return;
 
-  const resolved = await Promise.all(r.fotosPaths.map(async (path) => {
+  const resolved = await Promise.all((r.fotosPaths || []).map(async (path) => {
     try {
       const { data } = await sb.storage.from('solicitudes').createSignedUrl(path, 3600);
       if (!data?.signedUrl) return null;
@@ -222,7 +261,13 @@ async function renderPhotos(r){
     } catch(e){ return null; }
   }));
 
-  const files = resolved.filter(Boolean);
+  // Solicitudes viejas: archivos embebidos como data URI en la descripción,
+  // no requieren firma (ya son la URL final).
+  const embedded = (r.embeddedFiles || [])
+    .filter(f => f && typeof f.url === 'string')
+    .map(f => ({ url: f.url, isPdf: !!f.isPdf, name: f.name || 'Archivo' }));
+
+  const files = [...resolved.filter(Boolean), ...embedded];
   if (!files.length){ box.textContent = 'No se pudieron cargar los archivos.'; return; }
 
   box.innerHTML = files.map(f => f.isPdf
@@ -230,10 +275,133 @@ async function renderPhotos(r){
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span>${escapeHTML(f.name)}</span>
       </a>`
-    : `<a href="${escapeHTML(f.url)}" target="_blank" class="file-thumb-item" title="Ver imagen ampliada">
+    : `<div class="file-thumb-item" data-img-src="${escapeHTML(f.url)}" title="Ver imagen ampliada">
         <img src="${escapeHTML(f.url)}" alt="${escapeHTML(f.name)}" />
-      </a>`
+        <div class="file-thumb-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+        </div>
+      </div>`
   ).join('');
+
+  box.querySelectorAll('.file-thumb-item').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      const src = thumb.dataset.imgSrc;
+      if (src) openImageModal(src);
+    });
+  });
+}
+
+/* ── Lightbox: ver imagen ampliada sin salir de la pantalla ──────
+   Soporta pinch-to-zoom y doble-tap en mobile, y doble click en desktop. */
+let modalZoom = { scale: 1, tx: 0, ty: 0 };
+
+function applyModalZoom(img){
+  img.style.transform = `translate(${modalZoom.tx}px, ${modalZoom.ty}px) scale(${modalZoom.scale})`;
+}
+
+function resetModalZoom(img){
+  modalZoom = { scale: 1, tx: 0, ty: 0 };
+  img.style.transition = '';
+  applyModalZoom(img);
+}
+
+function bindImageZoomHandlers(img){
+  const MAX_SCALE = 4;
+  const dist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  const clampScale = (s) => Math.min(MAX_SCALE, Math.max(1, s));
+
+  let pinchStartDist = 0;
+  let pinchStartScale = 1;
+  let panStart = null;
+  let lastTapTime = 0;
+  let lastTapPos = null;
+
+  function toggleZoom(){
+    img.style.transition = 'transform .2s ease';
+    modalZoom = modalZoom.scale > 1
+      ? { scale: 1, tx: 0, ty: 0 }
+      : { scale: 2.5, tx: 0, ty: 0 };
+    applyModalZoom(img);
+    setTimeout(() => { img.style.transition = ''; }, 220);
+  }
+
+  img.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2){
+      pinchStartDist = dist(e.touches[0], e.touches[1]);
+      pinchStartScale = modalZoom.scale;
+      panStart = null;
+      return;
+    }
+    if (e.touches.length === 1){
+      if (modalZoom.scale > 1){
+        panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx: modalZoom.tx, ty: modalZoom.ty };
+      }
+      const now = Date.now();
+      const t = e.touches[0];
+      const isDoubleTap = lastTapPos && (now - lastTapTime) < 300 &&
+        Math.hypot(t.clientX - lastTapPos.x, t.clientY - lastTapPos.y) < 30;
+      if (isDoubleTap){
+        toggleZoom();
+        lastTapTime = 0; lastTapPos = null;
+      } else {
+        lastTapTime = now; lastTapPos = { x: t.clientX, y: t.clientY };
+      }
+    }
+  }, { passive: true });
+
+  img.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchStartDist){
+      e.preventDefault();
+      const newDist = dist(e.touches[0], e.touches[1]);
+      modalZoom.scale = clampScale(pinchStartScale * (newDist / pinchStartDist));
+      if (modalZoom.scale === 1){ modalZoom.tx = 0; modalZoom.ty = 0; }
+      applyModalZoom(img);
+    } else if (e.touches.length === 1 && panStart){
+      e.preventDefault();
+      modalZoom.tx = panStart.tx + (e.touches[0].clientX - panStart.x);
+      modalZoom.ty = panStart.ty + (e.touches[0].clientY - panStart.y);
+      applyModalZoom(img);
+    }
+  }, { passive: false });
+
+  img.addEventListener('touchend', (e) => {
+    if (e.touches.length === 0){ pinchStartDist = 0; panStart = null; }
+  });
+
+  img.addEventListener('dblclick', toggleZoom);
+}
+
+function closeImageModal(modal){
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function openImageModal(src){
+  let modal = document.getElementById('imageModalOverlay');
+  if (!modal){
+    modal = document.createElement('div');
+    modal.id = 'imageModalOverlay';
+    modal.className = 'img-modal-overlay';
+    modal.innerHTML = `
+      <div class="img-modal-content">
+        <button class="img-modal-close" id="btnImgModalClose" aria-label="Cerrar">&times;</button>
+        <img id="imgModalSrc" src="" alt="Imagen ampliada" />
+      </div>
+    `;
+    document.body.appendChild(modal);
+    bindImageZoomHandlers(document.getElementById('imgModalSrc'));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || e.target.id === 'btnImgModalClose') closeImageModal(modal);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeImageModal(modal);
+    });
+  }
+  const img = document.getElementById('imgModalSrc');
+  img.src = src;
+  resetModalZoom(img);
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
 /* ── Render: ya cotizaste ────────────────────────── */
@@ -330,6 +498,19 @@ function initLogout(){
       localStorage.removeItem('bricko-user');
       window.location.replace('index.html');
     }
+  });
+}
+
+/* ── Theme toggle ────────────────────────────────────── */
+function initThemeToggle(){
+  const THEMES = ['dark', 'light', 'blueprint'];
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    html.classList.add('theme-anim');
+    const next = THEMES[(THEMES.indexOf(html.getAttribute('data-theme') || 'dark') + 1) % THEMES.length];
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('bricko-theme', next);
+    setTimeout(() => html.classList.remove('theme-anim'), 450);
   });
 }
 

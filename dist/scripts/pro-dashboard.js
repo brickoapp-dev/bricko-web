@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadProFullProfile(session);
   initFilters();
   initLogout();
+  initThemeToggle();
   initCursorGlow();
 
   await loadMyQuotes(session.userId);
@@ -144,7 +145,7 @@ function normalize(row){
     tipo: row.tipo,
     rubros: row.rubros || [],
     titulo: row.titulo || generateTitle(row),
-    descripcion: (row.descripcion || '').split('[ArchivosJSON:')[0].trim(),
+    descripcion: (row.descripcion || '').split('[ArchivosJSON:')[0].replace(/\[Modo de pago:\s*[^\]]+\]/, '').trim(),
     urgencia: row.urgencia,
     direccion: row.direccion,
     superficie: row.superficie,
@@ -281,9 +282,13 @@ function cardHTML(r, i){
 function updateStats(){
   const newCount = ALL_REQUESTS.filter(r => !MY_QUOTES.has(r.id)).length;
   const myAccepted = [...MY_QUOTES.values()].filter(q => q.status === 'accepted').length;
+  const myPending = [...MY_QUOTES.values()].filter(q => q.status === 'pending').length;
   const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
   set('statNew', newCount);
   set('statActive', myAccepted);
+  set('kpiOportunidades', ALL_REQUESTS.length);
+  set('kpiEvaluacion', myPending);
+  set('kpiAdjudicadas', myAccepted);
 }
 
 /* ── Logout ─────────────────────────────────────────── */
@@ -295,6 +300,19 @@ function initLogout(){
       localStorage.removeItem('bricko-user');
       window.location.replace('index.html');
     }
+  });
+}
+
+/* ── Theme toggle ────────────────────────────────────── */
+function initThemeToggle(){
+  const THEMES = ['dark', 'light', 'blueprint'];
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    html.classList.add('theme-anim');
+    const next = THEMES[(THEMES.indexOf(html.getAttribute('data-theme') || 'dark') + 1) % THEMES.length];
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('bricko-theme', next);
+    setTimeout(() => html.classList.remove('theme-anim'), 450);
   });
 }
 

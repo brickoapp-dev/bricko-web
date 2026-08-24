@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadUserUI(session);
   initLogout();
+  initThemeToggle();
   initCursorGlow();
 
   const req = await loadRequest(REQ_ID, session.userId);
@@ -75,12 +76,27 @@ async function loadRequest(reqId, userId) {
 /* ── Cargar presupuestos con info del profesional ──────── */
 async function loadQuotes(reqId) {
   try {
-    const { data } = await sb
+    const { data, error } = await sb
       .from('quotes')
-      .select('id, request_id, pro_id, amount, description, features, status, created_at, profiles!quotes_pro_id_fkey(first_name, last_name), professionals!quotes_pro_id_fkey(rubro)')
+      .select('id, request_id, pro_id, amount, description, features, status, created_at, professionals!quotes_pro_id_fkey(rubro)')
       .eq('request_id', reqId)
       .order('created_at', { ascending: false });
-    return data || [];
+    if (error) { console.warn('Aviso cargando presupuestos:', error); return []; }
+
+    const quotes = data || [];
+    if (quotes.length) {
+      // profiles tiene RLS "solo propio perfil": se usa una función
+      // SECURITY DEFINER que solo expone estos datos de pros que cotizaron
+      // en solicitudes del usuario actual — ver migración
+      // 20260817120000_fix_client_quote_visibility.sql
+      const { data: proProfiles, error: profErr } = await sb
+        .rpc('get_quote_professionals', { p_request_ids: [reqId] });
+      if (profErr) console.warn('Aviso cargando perfiles de profesionales:', profErr);
+      const profileById = {};
+      (proProfiles || []).forEach(p => { profileById[p.pro_id] = p; });
+      quotes.forEach(q => { q.profiles = profileById[q.pro_id] || null; });
+    }
+    return quotes;
   } catch (e) { return []; }
 }
 
@@ -291,6 +307,18 @@ function loadUserUI(session) {
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   set('userAv', initials);
   set('userNm', session.firstName || name);
+}
+
+function initThemeToggle(){
+  const THEMES = ['dark', 'light', 'blueprint'];
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    html.classList.add('theme-anim');
+    const next = THEMES[(THEMES.indexOf(html.getAttribute('data-theme') || 'dark') + 1) % THEMES.length];
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('bricko-theme', next);
+    setTimeout(() => html.classList.remove('theme-anim'), 450);
+  });
 }
 
 function initLogout() {
