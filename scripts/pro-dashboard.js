@@ -36,7 +36,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadMyQuotes(session.userId);
   await loadRequests();
   updateStats();
+  await loadMisObras();
 });
+
+/* ── Mis obras: preparación / ejecución (hitos) ─────────── */
+async function loadMisObras(){
+  const wrap = document.getElementById('misObrasWrap');
+  const list = document.getElementById('misObrasList');
+  if (!wrap || !list) return;
+
+  const { data: preps, error } = await sb
+    .from('obra_preparacion')
+    .select('request_id, gate_habilitada, requests(ticket_id, titulo, status)')
+    .order('created_at', { ascending: false });
+
+  if (error || !preps || !preps.length){ wrap.style.display = 'none'; return; }
+
+  wrap.style.display = '';
+  list.innerHTML = preps.map(p => {
+    const req = p.requests;
+    const enCurso = p.gate_habilitada && req?.status !== 'done';
+    const label = !p.gate_habilitada ? 'Preparar obra adjudicada' : (req?.status === 'done' ? 'Obra finalizada' : 'Obra en ejecución');
+    const href = !p.gate_habilitada ? `pro-preobra.html?req=${p.request_id}` : `pro-ejecucion.html?req=${p.request_id}`;
+    const statusClass = !p.gate_habilitada ? 'warn' : (req?.status === 'done' ? 'ok' : 'orange');
+    const statusLabel = !p.gate_habilitada ? 'En preparación' : (req?.status === 'done' ? 'Finalizada' : 'En curso');
+    return `
+      <div class="pj-list-row">
+        <div><h3>${escapeHTML(label)}</h3><div class="pj-meta"><span>${escapeHTML(req?.ticket_id || '')}</span><span>${escapeHTML(req?.titulo || '')}</span></div></div>
+        <div class="pj-actions"><span class="pj-status ${statusClass}">${statusLabel}</span><a class="pj-btn primary" href="${href}">${!p.gate_habilitada ? 'Continuar' : 'Abrir'}</a></div>
+      </div>
+    `;
+  }).join('');
+}
 
 /* ── Cargar Perfil Profesional Completo ─────────────────── */
 async function loadProFullProfile(session){

@@ -146,6 +146,7 @@ async function fetchClientObras(userId){
     // Construir estructura unificada
     OBRAS_DATA = requests.map(r => normalizeObra(r, quotesByReq[r.id] || []));
     await attachSignedImageUrls(OBRAS_DATA);
+    await attachAvance(OBRAS_DATA);
 
     updateCounters();
     renderObras();
@@ -159,6 +160,23 @@ async function fetchClientObras(userId){
       document.getElementById('emptyMsg').textContent = 'Ocurrió un problema al conectar con el servidor.';
     }
   }
+}
+
+/* ── % de avance para obras en curso (hitos) ─────────── */
+async function attachAvance(obras){
+  const activeIds = obras.filter(o => o.statusKey === 'active').map(o => o.id);
+  if (!activeIds.length) return;
+
+  const { data: hitos, error } = await sb.from('hitos').select('request_id, avance_pct').in('request_id', activeIds);
+  if (error || !hitos) return;
+
+  const byReq = {};
+  hitos.forEach(h => { (byReq[h.request_id] = byReq[h.request_id] || []).push(h.avance_pct); });
+
+  obras.forEach(o => {
+    const list = byReq[o.id];
+    o.avancePct = list && list.length ? Math.round(list.reduce((a,b) => a+b, 0) / list.length) : null;
+  });
 }
 
 function normalizeObra(r, quotesList){
@@ -435,11 +453,16 @@ function obraCardHTML(o){
           <span class="pub-time">Publicado ${timeAgo(o.createdAt)}</span>
         </div>
         <div class="och-right">
+          ${o.statusKey === 'active' && o.avancePct != null ? `<span class="obra-status-pill" style="margin-right:6px">${o.avancePct}% de avance</span>` : ''}
           <span class="obra-status-pill ${o.statusClass}">${escapeHTML(o.statusLabel)}</span>
         </div>
       </div>
 
       <h2 class="obra-title">${escapeHTML(o.titulo)}</h2>
+
+      ${o.statusKey === 'active' || o.statusKey === 'done' ? `
+        <a href="client-solicitud.html?req=${escapeHTML(o.id)}" class="btn-new-obra" style="display:inline-flex;margin-bottom:16px">Ver hitos y pagos →</a>
+      ` : ''}
 
       <!-- DETALLES DE LA OBRA -->
       <div class="obra-details-grid">

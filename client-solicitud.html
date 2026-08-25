@@ -20,6 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="styles/client-dashboard.css" />
+  <link rel="stylesheet" href="styles/hitos.css" />
 </head>
 
 <body>
@@ -100,6 +101,20 @@
             <span class="quotes-count" id="quotesCount">0 presupuestos</span>
           </div>
           <div class="quotes-list" id="quotesList"></div>
+        </div>
+
+        <!-- Obra en curso: hitos / equipo / pagos / documentos (llenada por JS) -->
+        <div id="obraSection" style="display:none;margin-top:32px">
+          <div class="pj-tabs" id="obraTabs">
+            <button class="pj-tab active" data-obra-tab="hitos">Hitos</button>
+            <button class="pj-tab" data-obra-tab="equipo">Equipo asignado</button>
+            <button class="pj-tab" data-obra-tab="pagos">Pagos</button>
+            <button class="pj-tab" data-obra-tab="documentos">Documentos</button>
+          </div>
+          <div class="pj-tab-body" data-obra-panel="hitos" id="obraHitos"></div>
+          <div class="pj-tab-body" data-obra-panel="equipo" id="obraEquipo" hidden></div>
+          <div class="pj-tab-body" data-obra-panel="pagos" id="obraPagos" hidden></div>
+          <div class="pj-tab-body" data-obra-panel="documentos" id="obraDocumentos" hidden></div>
         </div>
 
       </div>

@@ -57,6 +57,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const quotes = await loadQuotes(REQ_ID);
   renderQuotes(quotes, req, session);
+
+  if (req.status === 'active' || req.status === 'done') {
+    initObraSection();
+    await loadObraSection();
+  }
 });
 
 /* ── Cargar solicitud (verificando propiedad) ──────────── */
@@ -381,3 +386,195 @@ function escapeHTML(s) {
   if (s == null) return '';
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 }
+
+/* ── Obra en curso: hitos / equipo / pagos / documentos ─── */
+const MILESTONE_STATUS_LABEL = { pending: 'Pendiente', in_progress: 'En curso', review: 'A revisar', done: 'Finalizado' };
+const MILESTONE_STATUS_CLASS = { pending: '', in_progress: 'orange', review: 'warn', done: 'ok' };
+const PAGO_LABEL = { pending: 'Pendiente', approved: 'Aprobado', paid: 'Pagado' };
+const PAGO_CLASS = { pending: '', approved: 'warn', paid: 'ok' };
+const MODALIDAD_LABEL = {
+  contratista: 'Contratista', colaborador_independiente: 'Colaborador independiente',
+  dependiente: 'Dependiente', subcontratista: 'Subcontratista', profesional: 'Profesional'
+};
+const MODALIDAD_ROLE_CLASS = {
+  contratista: 'contratista', colaborador_independiente: 'padic',
+  dependiente: 'dep', subcontratista: 'sub', profesional: 'pro'
+};
+const DOC_TIPO_LABEL = { contrato: 'Contrato marco de obra', anexo: 'Anexo', evidencia: 'Evidencia de avance', factura: 'Factura' };
+
+const OBRA = { hitos: [], participantes: [], documentos: [], prep: null };
+
+function initObraSection() {
+  document.getElementById('obraTabs')?.addEventListener('click', (e) => {
+    const tab = e.target.closest('[data-obra-tab]');
+    if (!tab) return;
+    const name = tab.dataset.obraTab;
+    document.querySelectorAll('[data-obra-tab]').forEach(b => b.classList.toggle('active', b === tab));
+    document.querySelectorAll('[data-obra-panel]').forEach(p => { p.hidden = p.dataset.obraPanel !== name; });
+  });
+
+  document.getElementById('obraHitos')?.addEventListener('click', async (e) => {
+    const approve = e.target.closest('[data-approve-hito]');
+    if (approve) {
+      const { error } = await sb.rpc('approve_milestone', { p_hito_id: approve.dataset.approveHito });
+      if (error) { toast('err', 'No se pudo aprobar', error.message); return; }
+      toast('ok', 'Avance aprobado', 'El profesional ya puede facturar este hito.');
+      await loadObraSection();
+      return;
+    }
+    const markPaid = e.target.closest('[data-mark-paid]');
+    if (markPaid) {
+      const { error } = await sb.rpc('mark_milestone_paid', { p_hito_id: markPaid.dataset.markPaid });
+      if (error) { toast('err', 'No se pudo marcar como pagado', error.message); return; }
+      toast('ok', 'Hito marcado como pagado', '');
+      await loadObraSection();
+      return;
+    }
+  });
+
+  document.getElementById('obraDocumentos')?.addEventListener('click', (e) => {
+    if (e.target.closest('#btnCopyObraLink')) {
+      const input = document.getElementById('obraShareLink');
+      input.select();
+      navigator.clipboard?.writeText(input.value).then(() => toast('ok', 'Copiado', 'Link de la obra copiado.')).catch(() => {});
+    }
+  });
+}
+
+async function loadObraSection() {
+  const section = document.getElementById('obraSection');
+  if (!section) return;
+  section.style.display = '';
+
+  const { data: hitos } = await sb.from('hitos').select('*').eq('request_id', REQ_ID).order('numero', { ascending: true });
+  OBRA.hitos = hitos || [];
+
+  let participantes = [];
+  if (OBRA.hitos.length) {
+    const { data: parts } = await sb.from('hito_participantes').select('*').in('hito_id', OBRA.hitos.map(h => h.id)).order('created_at', { ascending: true });
+    participantes = parts || [];
+  }
+  OBRA.participantes = participantes;
+
+  const { data: documentos } = await sb.from('obra_documentos').select('*').eq('request_id', REQ_ID).order('created_at', { ascending: false });
+  OBRA.documentos = documentos || [];
+
+  const { data: prep } = await sb.from('obra_preparacion').select('gate_habilitada').eq('request_id', REQ_ID).maybeSingle();
+  OBRA.prep = prep;
+
+  renderObraHitos();
+  renderObraEquipo();
+  renderObraPagos();
+  renderObraDocumentos();
+}
+
+function renderObraHitos() {
+  const el = document.getElementById('obraHitos');
+  if (!el) return;
+
+  if (OBRA.prep && !OBRA.prep.gate_habilitada) {
+    el.innerHTML = '<p class="pj-small">El profesional todavía está preparando la obra (definiendo hitos y equipo). Vas a poder seguir el avance apenas la habilite.</p>';
+    return;
+  }
+  if (!OBRA.hitos.length) {
+    el.innerHTML = '<p class="pj-small">Todavía no hay hitos definidos.</p>';
+    return;
+  }
+
+  el.innerHTML = `<div class="pj-milestones">${OBRA.hitos.map(h => `
+    <article class="pj-milestone">
+      <div class="pj-milestone-head">
+        <div class="pj-milestone-num">${String(h.numero).padStart(2, '0')}</div>
+        <div><h3>${escapeHTML(h.titulo)}</h3><div class="pj-small">${escapeHTML(h.descripcion || '')}</div></div>
+        <span class="pj-status ${MILESTONE_STATUS_CLASS[h.status] || ''}">${MILESTONE_STATUS_LABEL[h.status] || h.status}</span>
+      </div>
+      <div class="pj-milestone-body">
+        <div class="pj-milestone-meta">
+          <div><small>Monto</small><strong>$ ${money(h.monto)}</strong></div>
+          <div><small>Avance</small><strong>${h.avance_pct}%</strong></div>
+          <div><small>Pago</small><strong>${PAGO_LABEL[h.pago_estado] || h.pago_estado}</strong></div>
+          <div><small>Nota del profesional</small><strong>${escapeHTML(h.avance_nota || '—')}</strong></div>
+        </div>
+        <div class="pj-progress-track"><div class="pj-progress-fill" style="width:${h.avance_pct}%"></div></div>
+        <div class="pj-actions" style="justify-content:flex-start;margin-top:15px">
+          ${h.status === 'review' ? `<button class="pj-btn primary" data-approve-hito="${h.id}">Aprobar avance</button>` : ''}
+          ${h.status === 'done' && h.pago_estado === 'approved' ? `<button class="pj-btn primary" data-mark-paid="${h.id}">Marcar como pagado</button>` : ''}
+        </div>
+      </div>
+    </article>
+  `).join('')}</div>`;
+}
+
+function renderObraEquipo() {
+  const el = document.getElementById('obraEquipo');
+  if (!el) return;
+  if (!OBRA.participantes.length) {
+    el.innerHTML = '<p class="pj-small">Todavía no hay equipo asignado a los hitos.</p>';
+    return;
+  }
+  const hitoById = {};
+  OBRA.hitos.forEach(h => { hitoById[h.id] = h; });
+  el.innerHTML = `<div class="pj-table-wrap"><table class="pj-table">
+    <thead><tr><th>Hito</th><th>Responsable</th><th>Modalidad</th><th>Nota</th><th>Estado</th></tr></thead>
+    <tbody>${OBRA.participantes.map(p => {
+      const h = hitoById[p.hito_id];
+      return `<tr>
+        <td><strong>${h ? String(h.numero).padStart(2, '0') + ' · ' + escapeHTML(h.titulo) : '—'}</strong><small>${escapeHTML(p.especialidad || '')}</small></td>
+        <td>${escapeHTML(p.nombre)}</td>
+        <td><span class="pj-role ${MODALIDAD_ROLE_CLASS[p.modalidad] || ''}">${MODALIDAD_LABEL[p.modalidad] || p.modalidad}</span></td>
+        <td><small>${escapeHTML(p.documentacion_nota || '—')}</small></td>
+        <td><span class="pj-status ${p.estado === 'vigente' ? 'ok' : 'warn'}">${p.estado === 'vigente' ? 'Vigente' : 'A revisar'}</span></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function renderObraPagos() {
+  const el = document.getElementById('obraPagos');
+  if (!el) return;
+  if (!OBRA.hitos.length) {
+    el.innerHTML = '<p class="pj-small">Todavía no hay hitos definidos.</p>';
+    return;
+  }
+  el.innerHTML = `<div class="pj-table-wrap"><table class="pj-table">
+    <thead><tr><th>Hito</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead>
+    <tbody>${OBRA.hitos.map(h => `
+      <tr>
+        <td><strong>${String(h.numero).padStart(2, '0')} · ${escapeHTML(h.titulo)}</strong></td>
+        <td>$ ${money(h.monto)}</td>
+        <td><span class="pj-status ${PAGO_CLASS[h.pago_estado] || ''}">${PAGO_LABEL[h.pago_estado] || h.pago_estado}</span></td>
+        <td>${h.fecha_estimada ? new Date(h.fecha_estimada + 'T00:00:00').toLocaleDateString('es-AR') : '—'}</td>
+      </tr>
+    `).join('')}</tbody>
+  </table></div>`;
+}
+
+function renderObraDocumentos() {
+  const el = document.getElementById('obraDocumentos');
+  if (!el) return;
+
+  const docsHTML = OBRA.documentos.length
+    ? OBRA.documentos.map(d => `
+        <div class="pj-doc-row">
+          <div><strong>${escapeHTML(d.nombre || DOC_TIPO_LABEL[d.tipo] || d.tipo)}</strong><small>${DOC_TIPO_LABEL[d.tipo] || d.tipo}</small></div>
+          <span class="pj-status ${d.estado === 'firmado' || d.estado === 'vigente' ? 'ok' : d.estado === 'borrador' ? 'warn' : ''}">${d.estado}</span>
+        </div>
+      `).join('')
+    : '<p class="pj-small">Todavía no hay documentos cargados.</p>';
+
+  el.innerHTML = `
+    <div class="pj-doc-grid">
+      <section class="pj-panel pj-panel-pad">
+        <div class="pj-kicker">Documentos de la obra</div>
+        <div style="margin-top:8px">${docsHTML}</div>
+      </section>
+      <aside class="pj-panel pj-panel-pad">
+        <div class="pj-kicker">Acceso a la obra</div>
+        <p class="pj-small" style="margin-top:10px">Compartí este link para que cualquiera con acceso siga hitos, avance y pagos.</p>
+        <div class="pj-share-box"><input type="text" id="obraShareLink" readonly value="${escapeHTML(window.location.origin + '/client-solicitud.html?req=' + REQ_ID)}" /><button class="pj-btn" id="btnCopyObraLink">Copiar</button></div>
+      </aside>
+    </div>
+  `;
+}
+
+function money(n) { return Number(n || 0).toLocaleString('es-AR'); }
