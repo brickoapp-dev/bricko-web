@@ -439,6 +439,15 @@ function initObraSection() {
       navigator.clipboard?.writeText(input.value).then(() => toast('ok', 'Copiado', 'Link de la obra copiado.')).catch(() => {});
     }
   });
+
+  document.getElementById('obraPagos')?.addEventListener('click', async (e) => {
+    if (!e.target.closest('#btnFinishObra')) return;
+    const { error } = await sb.rpc('finish_obra', { p_request_id: REQ_ID });
+    if (error) { toast('err', 'No se pudo finalizar', error.message); return; }
+    toast('ok', 'Obra finalizada', 'Quedó registrada como completada.');
+    if (MY_REQ) MY_REQ.status = 'done';
+    await loadObraSection();
+  });
 }
 
 async function loadObraSection() {
@@ -536,6 +545,9 @@ function renderObraPagos() {
     el.innerHTML = '<p class="pj-small">Todavía no hay hitos definidos.</p>';
     return;
   }
+  const allDonePaid = OBRA.hitos.every(h => h.status === 'done' && h.pago_estado === 'paid');
+  const obraDone = MY_REQ?.status === 'done';
+
   el.innerHTML = `<div class="pj-table-wrap"><table class="pj-table">
     <thead><tr><th>Hito</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead>
     <tbody>${OBRA.hitos.map(h => `
@@ -546,7 +558,12 @@ function renderObraPagos() {
         <td>${h.fecha_estimada ? new Date(h.fecha_estimada + 'T00:00:00').toLocaleDateString('es-AR') : '—'}</td>
       </tr>
     `).join('')}</tbody>
-  </table></div>`;
+  </table></div>
+  ${obraDone
+    ? `<div class="pj-notice-product" style="margin-top:16px"><h3>Obra finalizada.</h3><p>Todos los hitos fueron completados y pagados.</p></div>`
+    : allDonePaid
+      ? `<div class="pj-gate-footer" style="border:0;margin-top:16px;padding-top:0"><span class="pj-status ok">Todos los hitos pagados</span><button class="pj-btn primary" id="btnFinishObra">Dar por finalizada la obra</button></div>`
+      : ''}`;
 }
 
 function renderObraDocumentos() {

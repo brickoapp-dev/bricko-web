@@ -336,6 +336,29 @@
     </div>
   </main>
 
+  <!-- MODAL DE RESUMEN Y CONFIRMACIÓN -->
+  <div class="summary-overlay" id="summaryOverlay" style="display:none">
+    <div class="summary-box">
+      <div class="summary-head">
+        <span class="summary-tag">REVISIÓN DE SOLICITUD</span>
+        <button type="button" class="summary-close" id="summaryCloseBtn" aria-label="Cerrar"></button>
+      </div>
+      <h2>Confirmá tu <em>publicación</em></h2>
+      <p class="summary-sub">Verificá los datos antes de publicar tu solicitud en el Muro de trabajos.</p>
+
+      <div class="summary-body" id="summaryContent">
+        <!-- Renderizado dinámico desde JS -->
+      </div>
+
+      <div class="summary-actions">
+        <button type="button" class="btn-secondary" id="btnEditSummary">Modificar datos</button>
+        <button type="button" class="btn-submit" id="btnConfirmPublish">
+          Confirmar y publicar <span class="arrow"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- SUCCESS -->
   <div class="success-overlay" id="successOverlay" style="display:none">
     <div class="success-box">
