@@ -39,7 +39,7 @@
         <span class="pro-tag">PROFESIONAL</span>
       </a>
 
-      <div class="nav-stats">
+      <div class="nav-stats is-loading" id="navStats">
         <div class="nav-stat">
           <span class="n" id="statNew">0</span>
           <span class="l">NUEVAS</span>
@@ -89,10 +89,19 @@
 
     <!-- MÉTRICAS -->
     <div class="wrap" style="padding-top:24px">
-      <div class="kpi-strip" id="kpiStrip">
-        <div class="kpi"><div class="kpi-n" id="kpiOportunidades">0</div><div class="kpi-l">Oportunidades</div></div>
-        <div class="kpi"><div class="kpi-n" id="kpiEvaluacion">0</div><div class="kpi-l">En evaluación</div></div>
-        <div class="kpi"><div class="kpi-n" id="kpiAdjudicadas">0</div><div class="kpi-l">Adjudicadas</div></div>
+      <div class="kpi-strip kpi-strip-4 is-loading" id="kpiStrip">
+        <div class="kpi" data-kpi="oportunidades" role="button" tabindex="0" aria-label="Ver oportunidades">
+          <div class="kpi-n" id="kpiOportunidades">0</div><div class="kpi-l">Oportunidades</div>
+        </div>
+        <div class="kpi" data-kpi="ofertas" role="button" tabindex="0" aria-label="Ver mis ofertas">
+          <div class="kpi-n" id="kpiOfertas">0</div><div class="kpi-l">Ofertas</div>
+        </div>
+        <div class="kpi" data-kpi="preparacion" role="button" tabindex="0" aria-label="Ver obras adjudicadas en preparación">
+          <div class="kpi-n" id="kpiPreparacion">0</div><div class="kpi-l">Adjudicadas en preparación</div>
+        </div>
+        <div class="kpi" data-kpi="activas" role="button" tabindex="0" aria-label="Ver obras activas">
+          <div class="kpi-n" id="kpiActivas">0</div><div class="kpi-l">Obras activas</div>
+        </div>
       </div>
     </div>
 
@@ -100,6 +109,7 @@
     <div class="wrap" id="misObrasWrap" style="display:none;padding-top:20px">
       <section class="pj-panel pj-panel-pad">
         <div class="pj-kicker">Mis obras</div>
+        <div class="pj-filter-note" id="misObrasFilterNote" style="display:none"></div>
         <div class="pj-list" id="misObrasList"></div>
       </section>
     </div>
