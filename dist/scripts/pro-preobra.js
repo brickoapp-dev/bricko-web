@@ -26,7 +26,47 @@ let SESSION = null;
 let REQ_ID = null;
 let UI_GATE = 1;
 let GATE_FROM_URL = false;
+let GATE_LOCKED = {};
 const STATE = { request:null, prep:null, hitos:[], participantes:[], equipo:[] };
+
+// Un gate queda en solo lectura si algún gate anterior (en la secuencia
+// 1..6) todavía no está cumplido — cascada: una vez que falta uno, todos
+// los siguientes quedan bloqueados aunque el estado de un gate posterior
+// exista por otra vía (ej. se navegó directo con ?gate=N).
+function computeGateLocked(gateDone){
+  const locked = {};
+  let blocked = false;
+  [1,2,3,4,5,6].forEach(n => {
+    locked[n] = blocked;
+    if (!gateDone[n]) blocked = true;
+  });
+  return locked;
+}
+
+// Deshabilita los controles que mutan estado (marcados con
+// data-gate-action) dentro de un panel bloqueado, y muestra el aviso.
+// La navegación (data-goto-gate, el sidebar, #btnCopyLink) queda intacta.
+function applyGateLock(panel, locked){
+  const card = panel.querySelector('.pj-gate-card');
+  let note = card?.querySelector('.pj-gate-readonly-note');
+  if (locked){
+    if (card && !note){
+      note = document.createElement('div');
+      note.className = 'pj-gate-readonly-note';
+      card.insertBefore(note, card.firstChild);
+    }
+    if (note) note.textContent = 'Completá los pasos anteriores para poder editar este paso.';
+  } else if (note){
+    note.remove();
+  }
+  panel.querySelectorAll('[data-gate-action]').forEach(el => {
+    if (el.tagName === 'FORM'){
+      el.querySelectorAll('input,select,textarea,button').forEach(f => { f.disabled = locked; });
+    } else {
+      el.disabled = locked;
+    }
+  });
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   SESSION = getSession();
@@ -134,6 +174,7 @@ function render(){
   overall.className = 'pj-status ' + (prep.gate_habilitada ? 'ok' : 'warn');
 
   const gateDone = { 1:true, 2:prep.gate_comision, 3:prep.gate_contrato, 4:prep.gate_hitos, 5:prep.gate_participantes, 6:prep.gate_habilitada };
+  GATE_LOCKED = computeGateLocked(gateDone);
   document.querySelectorAll('[data-setup-gate]').forEach(btn => {
     const n = Number(btn.dataset.setupGate);
     btn.classList.toggle('active', n === UI_GATE);
@@ -162,6 +203,15 @@ function render(){
   const participantsStatus = document.getElementById('participantsStatus');
   participantsStatus.textContent = prep.gate_participantes ? 'Participantes validados' : 'Revisión pendiente';
   participantsStatus.className = 'pj-status ' + (prep.gate_participantes ? 'ok' : 'warn');
+
+  // Se aplica después de renderMilestones()/renderParticipants(): esos
+  // reemplazan su innerHTML (botones de eliminar incluidos), así que el
+  // lock tiene que pisar el DOM ya reconstruido, no el de la vuelta anterior.
+  document.querySelectorAll('[data-gate-panel]').forEach(p => {
+    const n = Number(p.dataset.gatePanel);
+    p.classList.toggle('pj-gate-readonly', !!GATE_LOCKED[n]);
+    applyGateLock(p, !!GATE_LOCKED[n]);
+  });
 
   setStatusPill('finalComision', prep.gate_comision, 'OK', 'Pendiente');
   setStatusPill('finalContrato', prep.gate_contrato, 'OK', 'Pendiente');
@@ -211,7 +261,7 @@ function renderMilestones(){
             <div><small>Avance</small><strong>${h.avance_pct}%</strong></div>
             <div><small>Pago</small><strong>${{pending:'Pendiente',approved:'Aprobado',paid:'Pagado'}[h.pago_estado] || h.pago_estado}</strong></div>
           </div>
-          ${h.status === 'pending' ? `<div class="pj-actions" style="margin-top:12px"><button class="pj-btn" data-delete-hito="${h.id}">Eliminar</button></div>` : ''}
+          ${h.status === 'pending' ? `<div class="pj-actions" style="margin-top:12px"><button class="pj-btn" data-delete-hito="${h.id}" data-gate-action>Eliminar</button></div>` : ''}
         </div>
       </article>
     `).join('');
@@ -250,7 +300,7 @@ function renderParticipants(){
         <td><strong>${escapeHTML(p.nombre)}</strong>${p.equipo_id ? '<small>Mi equipo</small>' : ''}</td>
         <td><span class="pj-role ${MODALIDAD_ROLE_CLASS[p.modalidad] || ''}">${MODALIDAD_LABEL[p.modalidad] || p.modalidad}</span></td>
         <td><small>${escapeHTML(p.documentacion_nota || '—')}</small></td>
-        <td><button class="pj-btn" data-delete-participant="${p.id}">Quitar</button></td>
+        <td><button class="pj-btn" data-delete-participant="${p.id}" data-gate-action>Quitar</button></td>
       </tr>
     `;
   }).join('');
@@ -266,18 +316,21 @@ function initEvents(){
     if (gotoBtn){ UI_GATE = Number(gotoBtn.dataset.gotoGate); render(); return; }
 
     if (e.target.closest('#btnToggleComision')){
+      if (GATE_LOCKED[2]) return;
       await sb.from('obra_preparacion').update({ gate_comision: !STATE.prep.gate_comision }).eq('request_id', REQ_ID);
       await loadAll();
       return;
     }
 
     if (e.target.closest('#btnToggleContrato')){
+      if (GATE_LOCKED[3]) return;
       await sb.from('obra_preparacion').update({ gate_contrato: !STATE.prep.gate_contrato }).eq('request_id', REQ_ID);
       await loadAll();
       return;
     }
 
     if (e.target.closest('#confirmMilestones')){
+      if (GATE_LOCKED[4]) return;
       const { error } = await sb.rpc('confirm_milestones_plan', { p_request_id: REQ_ID });
       if (error){ toast('err', 'No se pudo confirmar', error.message); return; }
       toast('ok', 'Plan por hitos confirmado', 'Ya podés pasar a participantes.');
@@ -286,6 +339,7 @@ function initEvents(){
     }
 
     if (e.target.closest('#confirmParticipants')){
+      if (GATE_LOCKED[5]) return;
       const { error } = await sb.rpc('confirm_participants', { p_request_id: REQ_ID });
       if (error){ toast('err', 'No se pudo confirmar', error.message); return; }
       toast('ok', 'Participantes validados', 'Ya podés pasar al control final.');
@@ -310,6 +364,7 @@ function initEvents(){
 
     const delHito = e.target.closest('[data-delete-hito]');
     if (delHito){
+      if (GATE_LOCKED[4]) return;
       const { error } = await sb.from('hitos').delete().eq('id', delHito.dataset.deleteHito);
       if (error){ toast('err', 'No se pudo eliminar', error.message); return; }
       await loadAll();
@@ -318,6 +373,7 @@ function initEvents(){
 
     const delPart = e.target.closest('[data-delete-participant]');
     if (delPart){
+      if (GATE_LOCKED[5]) return;
       const { error } = await sb.from('hito_participantes').delete().eq('id', delPart.dataset.deleteParticipant);
       if (error){ toast('err', 'No se pudo quitar', error.message); return; }
       await loadAll();
@@ -327,6 +383,7 @@ function initEvents(){
 
   document.getElementById('newMilestoneForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (GATE_LOCKED[4]) return;
     const titulo = document.getElementById('mTitulo').value.trim();
     const descripcion = document.getElementById('mDescripcion').value.trim();
     const monto = Number(document.getElementById('mMonto').value);
@@ -364,6 +421,7 @@ function initEvents(){
 
   document.getElementById('newParticipantForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (GATE_LOCKED[5]) return;
     const equipo_id = document.getElementById('pEquipo').value || null;
     const hito_id = document.getElementById('pHito').value;
     const nombre = document.getElementById('pNombre').value.trim();

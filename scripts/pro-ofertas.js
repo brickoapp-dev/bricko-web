@@ -72,15 +72,30 @@ async function loadOfertas(proId){
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    render(data || []);
+    const quotes = data || [];
+
+    // Para las adjudicadas necesitamos saber si la obra ya está habilitada
+    // (gate 6) o todavía en preparación, para linkear al destino correcto.
+    const acceptedIds = quotes.filter(q => q.status === 'accepted').map(q => q.request_id);
+    const prepByRequest = new Map();
+    if (acceptedIds.length){
+      const { data: preps, error: prepErr } = await sb
+        .from('obra_preparacion')
+        .select('request_id, gate_habilitada')
+        .in('request_id', acceptedIds);
+      if (prepErr) console.warn('Error cargando preparación de obra:', prepErr);
+      (preps || []).forEach(p => prepByRequest.set(p.request_id, p.gate_habilitada));
+    }
+
+    render(quotes, prepByRequest);
   } catch(e){
     console.error('Error cargando mis ofertas:', e);
     toast('err', 'No se pudieron cargar tus ofertas', 'Probá de nuevo en un momento.');
-    render([]);
+    render([], new Map());
   }
 }
 
-function render(quotes){
+function render(quotes, prepByRequest){
   updateStats(quotes);
 
   const body = document.getElementById('ofertasBody');
@@ -96,15 +111,23 @@ function render(quotes){
   wrap.style.display = '';
   empty.style.display = 'none';
 
-  body.innerHTML = quotes.map(rowHTML).join('');
+  body.innerHTML = quotes.map(q => rowHTML(q, prepByRequest)).join('');
 }
 
-function rowHTML(q){
+function rowHTML(q, prepByRequest){
   const req = q.requests;
   const title = req ? (req.titulo || generateTitle(req)) : 'Solicitud no disponible';
   const zona = req?.ciudad || '—';
   const st = STATUS_UI[q.status] || { label: q.status || 'Pendiente', cls: 'eval' };
   const monto = Number(q.amount || 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+
+  let accion = '';
+  if (q.status === 'accepted'){
+    const habilitada = prepByRequest.get(q.request_id) === true;
+    accion = habilitada
+      ? `<a class="pj-btn primary" href="pro-ejecucion.html?req=${q.request_id}">Abrir obra</a>`
+      : `<a class="pj-btn primary" href="pro-preobra.html?req=${q.request_id}">Abrir preparación</a>`;
+  }
 
   return `
     <tr>
@@ -113,6 +136,7 @@ function rowHTML(q){
       <td class="ot-amount">${monto}</td>
       <td><span class="ot-status ${st.cls}">${st.label}</span></td>
       <td>${timeAgo(q.created_at)}</td>
+      <td>${accion}</td>
     </tr>`;
 }
 

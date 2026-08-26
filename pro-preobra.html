@@ -98,6 +98,7 @@
               <div class="pj-kicker">01 · Aceptación</div>
               <h2>Adjudicación confirmada.</h2>
               <p class="lead">Aceptaste esta propuesta y asumís la coordinación integral del trabajo frente al cliente.</p>
+              <p class="pj-small" style="color:var(--muted);margin:-6px 0 4px">Este paso se completa solo al aceptar la cotización — por eso la preparación arranca directo en el paso 02.</p>
               <div class="pj-gate-footer"><span class="pj-status ok">Aceptada</span><button class="pj-btn" data-goto-gate="2">Siguiente</button></div>
             </div>
           </section>
@@ -114,7 +115,7 @@
               <div class="pj-gate-footer">
                 <span class="pj-status warn" id="comisionStatus">Pendiente</span>
                 <div style="display:flex;gap:8px">
-                  <button class="pj-btn" id="btnToggleComision">Marcar acreditada</button>
+                  <button class="pj-btn" id="btnToggleComision" data-gate-action>Marcar acreditada</button>
                   <button class="pj-btn primary" data-goto-gate="3">Siguiente</button>
                 </div>
               </div>
@@ -132,7 +133,7 @@
               <div class="pj-gate-footer">
                 <span class="pj-status warn" id="contratoStatus">Pendiente</span>
                 <div style="display:flex;gap:8px">
-                  <button class="pj-btn" id="btnToggleContrato">Marcar contrato firmado</button>
+                  <button class="pj-btn" id="btnToggleContrato" data-gate-action>Marcar contrato firmado</button>
                   <button class="pj-btn primary" data-goto-gate="4">Siguiente</button>
                 </div>
               </div>
@@ -148,7 +149,7 @@
 
               <div class="pj-milestones" id="milestonesList"></div>
 
-              <form id="newMilestoneForm" class="pj-panel pj-panel-pad" style="margin-top:16px;display:grid;gap:12px;grid-template-columns:1fr 1fr">
+              <form id="newMilestoneForm" data-gate-action class="pj-panel pj-panel-pad" style="margin-top:16px;display:grid;gap:12px;grid-template-columns:1fr 1fr">
                 <div style="grid-column:1/-1"><label class="pj-small">Título del hito</label><input class="form-input" id="mTitulo" required placeholder="Ej: Preparación y estructura" /></div>
                 <div style="grid-column:1/-1"><label class="pj-small">Resultado esperado</label><textarea class="form-input" id="mDescripcion" rows="2" placeholder="¿Qué queda terminado y verificable al cerrar este hito?"></textarea></div>
                 <div><label class="pj-small">Monto (ARS)</label><input class="form-input" id="mMonto" type="number" required placeholder="0" /></div>
@@ -158,7 +159,7 @@
 
               <div class="pj-gate-footer">
                 <span class="pj-status warn" id="hitosStatus">Pendiente</span>
-                <button class="pj-btn primary" id="confirmMilestones">Confirmar plan por hitos</button>
+                <button class="pj-btn primary" id="confirmMilestones" data-gate-action>Confirmar plan por hitos</button>
               </div>
             </div>
           </section>
@@ -190,7 +191,7 @@
                 </table>
               </div>
 
-              <form id="newParticipantForm" class="pj-panel pj-panel-pad" style="margin-top:16px;display:grid;gap:12px;grid-template-columns:1fr 1fr">
+              <form id="newParticipantForm" data-gate-action class="pj-panel pj-panel-pad" style="margin-top:16px;display:grid;gap:12px;grid-template-columns:1fr 1fr">
                 <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
                   <div style="flex:1"><label class="pj-small">Elegir de "Mi equipo"</label><select class="form-input" id="pEquipo"><option value="">— Cargar manualmente —</option></select></div>
                   <a class="pj-btn" href="pro-equipo.html" target="_blank" rel="noopener">+ Nuevo en Mi equipo ↗</a>
@@ -213,7 +214,7 @@
                 <div style="grid-column:1/-1"><button class="pj-btn primary" type="submit">+ Agregar participante</button></div>
               </form>
 
-              <div class="pj-gate-footer"><span class="pj-status warn" id="participantsStatus">Revisión pendiente</span><button class="pj-btn primary" id="confirmParticipants">Validar participantes y documentación</button></div>
+              <div class="pj-gate-footer"><span class="pj-status warn" id="participantsStatus">Revisión pendiente</span><button class="pj-btn primary" id="confirmParticipants" data-gate-action>Validar participantes y documentación</button></div>
             </div>
           </section>
 
