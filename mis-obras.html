@@ -136,6 +136,19 @@
     </div>
   </main>
 
+  <div class="modal-overlay" id="confirmAcceptModal">
+    <div class="modal">
+      <div class="modal-head"><span>Confirmar presupuesto</span><button class="modal-close" data-close-modal aria-label="Cerrar"></button></div>
+      <div class="modal-body">
+        <p class="modal-sub" id="confirmAcceptText" style="margin-bottom:24px">¿Estás seguro de que querés aceptar este presupuesto? El profesional será notificado.</p>
+        <div style="display:flex;gap:12px;justify-content:flex-end">
+          <button class="btn-ghost" id="btnCancelAccept" data-close-modal type="button">Cancelar</button>
+          <button class="btn-new-obra" id="btnConfirmAccept" type="button">Aceptar presupuesto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-stack" id="toastStack"></div>
 
   <script src="scripts/supabase.min.js"></script>

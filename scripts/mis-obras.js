@@ -576,9 +576,33 @@ function quoteItemHTML(q, hasAccepted){
   `;
 }
 
+/* ── Modal de confirmación (reemplaza confirm() nativo) ─ */
+function confirmModal(message){
+  const overlay = document.getElementById('confirmAcceptModal');
+  const text = document.getElementById('confirmAcceptText');
+  const btnConfirm = document.getElementById('btnConfirmAccept');
+  if (!overlay || !btnConfirm) return Promise.resolve(true); // fallback si el modal no está en la página
+  if (text) text.textContent = message;
+
+  overlay.classList.add('open');
+  return new Promise((resolve) => {
+    const cleanup = (result) => {
+      overlay.classList.remove('open');
+      btnConfirm.removeEventListener('click', onConfirm);
+      overlay.removeEventListener('click', onDismiss);
+      resolve(result);
+    };
+    const onConfirm = () => cleanup(true);
+    const onDismiss = (e) => { if (e.target === overlay || e.target.closest('[data-close-modal]')) cleanup(false); };
+    btnConfirm.addEventListener('click', onConfirm);
+    overlay.addEventListener('click', onDismiss);
+  });
+}
+
 /* ── Acciones: Aceptar y Rechazar Presupuesto ────────── */
 async function handleAcceptQuote(quoteId){
-  if (!confirm('¿Estás seguro de que querés aceptar este presupuesto? El profesional será notificado.')) return;
+  const confirmed = await confirmModal('¿Estás seguro de que querés aceptar este presupuesto? El profesional será notificado.');
+  if (!confirmed) return;
 
   try {
     // Aceptación atómica en el backend: marca este presupuesto como aceptado,
