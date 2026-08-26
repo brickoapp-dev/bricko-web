@@ -52,7 +52,7 @@ async function loadAll(){
   document.getElementById('obraTitulo').textContent = request.titulo || 'Hitos y avance.';
   document.getElementById('obraSub').textContent = 'Dirección: ' + (request.direccion || '—');
   const carpetaLink = document.getElementById('btnVerCarpeta');
-  if (carpetaLink) carpetaLink.href = 'client-solicitud.html?req=' + REQ_ID + '&tab=carpeta';
+  if (carpetaLink) carpetaLink.href = 'pro-preobra.html?req=' + REQ_ID + '&gate=6';
 
   const avgPct = HITOS.length ? Math.round(HITOS.reduce((s, h) => s + h.avance_pct, 0) / HITOS.length) : 0;
   const avg = document.getElementById('avanceGlobal');

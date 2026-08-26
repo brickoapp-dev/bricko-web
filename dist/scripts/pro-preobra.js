@@ -25,6 +25,7 @@ function getSession(){
 let SESSION = null;
 let REQ_ID = null;
 let UI_GATE = 1;
+let GATE_FROM_URL = false;
 const STATE = { request:null, prep:null, hitos:[], participantes:[], equipo:[] };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -32,8 +33,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!SESSION || !SESSION.userId){ window.location.replace('index.html'); return; }
   if (SESSION.role !== 'profesional'){ window.location.replace('client.html'); return; }
 
-  REQ_ID = new URLSearchParams(window.location.search).get('req');
+  const params = new URLSearchParams(window.location.search);
+  REQ_ID = params.get('req');
   if (!REQ_ID){ window.location.replace('pro.html'); return; }
+  const gateParam = Number(params.get('gate'));
+  if (gateParam >= 1 && gateParam <= 6){ UI_GATE = gateParam; GATE_FROM_URL = true; }
 
   loadProUI(SESSION);
   initLogout();
@@ -112,7 +116,7 @@ async function loadAll(){
   STATE.equipo = equipo || [];
   STATE.documentosCount = documentos?.length || 0;
 
-  if (firstLoad) UI_GATE = prep.current_gate || 2;
+  if (firstLoad && !GATE_FROM_URL) UI_GATE = prep.current_gate || 2;
   render();
 }
 
@@ -243,7 +247,7 @@ function renderParticipants(){
     return `
       <tr>
         <td><strong>${h ? String(h.numero).padStart(2,'0') + ' · ' + escapeHTML(h.titulo) : '—'}</strong><small>${escapeHTML(p.especialidad || '')}</small></td>
-        <td>${escapeHTML(p.nombre)}${p.equipo_id ? '<small>Mi equipo</small>' : ''}</td>
+        <td><strong>${escapeHTML(p.nombre)}</strong>${p.equipo_id ? '<small>Mi equipo</small>' : ''}</td>
         <td><span class="pj-role ${MODALIDAD_ROLE_CLASS[p.modalidad] || ''}">${MODALIDAD_LABEL[p.modalidad] || p.modalidad}</span></td>
         <td><small>${escapeHTML(p.documentacion_nota || '—')}</small></td>
         <td><button class="pj-btn" data-delete-participant="${p.id}">Quitar</button></td>
