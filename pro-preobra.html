@@ -191,6 +191,11 @@
               </div>
 
               <form id="newParticipantForm" class="pj-panel pj-panel-pad" style="margin-top:16px;display:grid;gap:12px;grid-template-columns:1fr 1fr">
+                <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+                  <div style="flex:1"><label class="pj-small">Elegir de "Mi equipo"</label><select class="form-input" id="pEquipo"><option value="">— Cargar manualmente —</option></select></div>
+                  <a class="pj-btn" href="pro-equipo.html" target="_blank" rel="noopener">+ Nuevo en Mi equipo ↗</a>
+                </div>
+                <div id="equipoEmptyHint" class="pj-small" style="grid-column:1/-1;display:none">Todavía no cargaste a nadie en "Mi equipo". Podés completar los datos manualmente acá abajo, o abrir "Mi equipo" para armar tu directorio y elegirlo la próxima vez.</div>
                 <div><label class="pj-small">Hito</label><select class="form-input" id="pHito" required></select></div>
                 <div><label class="pj-small">Nombre / razón social</label><input class="form-input" id="pNombre" required placeholder="Ej: Carlos Pérez" /></div>
                 <div><label class="pj-small">Especialidad</label><input class="form-input" id="pEspecialidad" placeholder="Ej: Albañilería" /></div>
@@ -217,7 +222,7 @@
             <div class="pj-gate-card">
               <div class="pj-kicker">06 · Control final</div>
               <h2>Habilitá la obra.</h2>
-              <p class="lead">Antes del inicio se consolida el estado de la contratación, el plan por hitos y los responsables.</p>
+              <p class="lead">Antes del inicio se consolida el estado de la contratación, el plan por hitos y los responsables en la carpeta de obra.</p>
 
               <div class="pj-doc-grid">
                 <section class="pj-panel pj-panel-pad">
@@ -228,8 +233,9 @@
                   <div class="pj-doc-row"><div><strong>Participantes documentados</strong></div><span class="pj-status" id="finalParticipants">Pendiente</span></div>
                 </section>
                 <section class="pj-panel pj-panel-pad">
-                  <div class="pj-kicker">Acceso a la obra</div>
-                  <p class="pj-small" style="margin-top:10px">Link para que el cliente siga hitos, avance y pagos.</p>
+                  <div class="pj-kicker">Carpeta de obra</div>
+                  <p class="pj-small" style="margin-top:10px" id="carpetaResumen">Cargando…</p>
+                  <p class="pj-small" style="margin-top:10px">Link para que el cliente (y vos, durante la ejecución) sigan hitos, equipo, pagos y documentos desde la carpeta de obra.</p>
                   <div class="pj-share-box"><input type="text" id="shareLink" readonly /><button class="pj-btn" id="btnCopyLink">Copiar</button></div>
                 </section>
               </div>

@@ -25,7 +25,7 @@ function getSession(){
 let SESSION = null;
 let REQ_ID = null;
 let UI_GATE = 1;
-const STATE = { request:null, prep:null, hitos:[], participantes:[] };
+const STATE = { request:null, prep:null, hitos:[], participantes:[], equipo:[] };
 
 document.addEventListener('DOMContentLoaded', async () => {
   SESSION = getSession();
@@ -92,6 +92,16 @@ async function loadAll(){
     participantes = parts || [];
   }
 
+  const { data: equipo } = await sb
+    .from('pro_equipo')
+    .select('*')
+    .order('nombre', { ascending: true });
+
+  const { data: documentos } = await sb
+    .from('obra_documentos')
+    .select('id')
+    .eq('request_id', REQ_ID);
+
   const firstLoad = STATE.prep == null;
 
   STATE.request = request;
@@ -99,6 +109,8 @@ async function loadAll(){
   STATE.montoAdjudicado = quote?.amount || 0;
   STATE.hitos = hitos || [];
   STATE.participantes = participantes;
+  STATE.equipo = equipo || [];
+  STATE.documentosCount = documentos?.length || 0;
 
   if (firstLoad) UI_GATE = prep.current_gate || 2;
   render();
@@ -141,6 +153,7 @@ function render(){
   renderMilestones();
   setStatusPill('hitosStatus', prep.gate_hitos, 'Plan confirmado', 'Pendiente');
 
+  renderEquipoSelect();
   renderParticipants();
   const participantsStatus = document.getElementById('participantsStatus');
   participantsStatus.textContent = prep.gate_participantes ? 'Participantes validados' : 'Revisión pendiente';
@@ -160,6 +173,12 @@ function render(){
   enableStatus.className = 'pj-status ' + (prep.gate_habilitada ? 'ok' : (ready ? 'orange' : 'warn'));
 
   document.getElementById('shareLink').value = window.location.origin + '/client-solicitud.html?req=' + REQ_ID;
+
+  const resumen = document.getElementById('carpetaResumen');
+  if (resumen){
+    const montoHitos = STATE.hitos.reduce((s, h) => s + Number(h.monto || 0), 0);
+    resumen.textContent = `${STATE.hitos.length} hitos ($ ${money(montoHitos)}) · ${STATE.participantes.length} participantes asignados · ${STATE.documentosCount} documentos.`;
+  }
 }
 
 function setStatusPill(id, done, okLabel, pendingLabel){
@@ -198,6 +217,19 @@ function renderMilestones(){
   select.innerHTML = STATE.hitos.map(h => `<option value="${h.id}">${String(h.numero).padStart(2,'0')} · ${escapeHTML(h.titulo)}</option>`).join('');
 }
 
+function renderEquipoSelect(){
+  const select = document.getElementById('pEquipo');
+  if (!select) return;
+  const current = select.value;
+  select.innerHTML = '<option value="">— Cargar manualmente —</option>' + STATE.equipo.map(p =>
+    `<option value="${p.id}">${escapeHTML(p.nombre)}${p.especialidad ? ' · ' + escapeHTML(p.especialidad) : ''} — ${MODALIDAD_LABEL[p.modalidad] || p.modalidad}</option>`
+  ).join('');
+  select.value = STATE.equipo.some(p => p.id === current) ? current : '';
+
+  const hint = document.getElementById('equipoEmptyHint');
+  if (hint) hint.style.display = STATE.equipo.length ? 'none' : '';
+}
+
 function renderParticipants(){
   const tbody = document.querySelector('#participantsTable tbody');
   if (!STATE.participantes.length){
@@ -211,7 +243,7 @@ function renderParticipants(){
     return `
       <tr>
         <td><strong>${h ? String(h.numero).padStart(2,'0') + ' · ' + escapeHTML(h.titulo) : '—'}</strong><small>${escapeHTML(p.especialidad || '')}</small></td>
-        <td>${escapeHTML(p.nombre)}</td>
+        <td>${escapeHTML(p.nombre)}${p.equipo_id ? '<small>Mi equipo</small>' : ''}</td>
         <td><span class="pj-role ${MODALIDAD_ROLE_CLASS[p.modalidad] || ''}">${MODALIDAD_LABEL[p.modalidad] || p.modalidad}</span></td>
         <td><small>${escapeHTML(p.documentacion_nota || '—')}</small></td>
         <td><button class="pj-btn" data-delete-participant="${p.id}">Quitar</button></td>
@@ -307,8 +339,28 @@ function initEvents(){
     await loadAll();
   });
 
+  document.getElementById('pEquipo').addEventListener('change', (e) => {
+    const equipoId = e.target.value;
+    const member = STATE.equipo.find(p => p.id === equipoId);
+    const nombreInput = document.getElementById('pNombre');
+    const espInput = document.getElementById('pEspecialidad');
+    const modInput = document.getElementById('pModalidad');
+    const notaInput = document.getElementById('pNota');
+    if (member){
+      nombreInput.value = member.nombre;
+      espInput.value = member.especialidad || '';
+      modInput.value = member.modalidad;
+      notaInput.value = member.documentacion_nota || '';
+      nombreInput.readOnly = true; espInput.readOnly = true; modInput.disabled = true;
+    } else {
+      nombreInput.value = ''; espInput.value = ''; notaInput.value = '';
+      nombreInput.readOnly = false; espInput.readOnly = false; modInput.disabled = false;
+    }
+  });
+
   document.getElementById('newParticipantForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const equipo_id = document.getElementById('pEquipo').value || null;
     const hito_id = document.getElementById('pHito').value;
     const nombre = document.getElementById('pNombre').value.trim();
     const especialidad = document.getElementById('pEspecialidad').value.trim();
@@ -318,10 +370,13 @@ function initEvents(){
     if (!nombre){ toast('err', 'Falta el nombre', ''); return; }
 
     const { error } = await sb.from('hito_participantes').insert({
-      hito_id, nombre, especialidad: especialidad || null, modalidad, documentacion_nota: documentacion_nota || null
+      hito_id, equipo_id, nombre, especialidad: especialidad || null, modalidad, documentacion_nota: documentacion_nota || null
     });
     if (error){ toast('err', 'No se pudo agregar', error.message); return; }
     e.target.reset();
+    document.getElementById('pNombre').readOnly = false;
+    document.getElementById('pEspecialidad').readOnly = false;
+    document.getElementById('pModalidad').disabled = false;
     toast('ok', 'Participante agregado', nombre);
     await loadAll();
   });

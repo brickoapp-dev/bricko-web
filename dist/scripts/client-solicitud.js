@@ -432,7 +432,7 @@ function initObraSection() {
     }
   });
 
-  document.getElementById('obraDocumentos')?.addEventListener('click', (e) => {
+  document.getElementById('obraCarpeta')?.addEventListener('click', (e) => {
     if (e.target.closest('#btnCopyObraLink')) {
       const input = document.getElementById('obraShareLink');
       input.select();
@@ -475,6 +475,14 @@ async function loadObraSection() {
   renderObraEquipo();
   renderObraPagos();
   renderObraDocumentos();
+  renderObraCarpeta();
+
+  if (!OBRA.initialTabApplied) {
+    OBRA.initialTabApplied = true;
+    const wantedTab = new URLSearchParams(window.location.search).get('tab');
+    const wantedBtn = wantedTab && document.querySelector(`[data-obra-tab="${wantedTab}"]`);
+    if (wantedBtn) wantedBtn.click();
+  }
 }
 
 function renderObraHitos() {
@@ -580,14 +588,37 @@ function renderObraDocumentos() {
     : '<p class="pj-small">Todavía no hay documentos cargados.</p>';
 
   el.innerHTML = `
+    <section class="pj-panel pj-panel-pad">
+      <div class="pj-kicker">Documentos de la obra</div>
+      <div style="margin-top:8px">${docsHTML}</div>
+    </section>
+  `;
+}
+
+function renderObraCarpeta() {
+  const el = document.getElementById('obraCarpeta');
+  if (!el) return;
+
+  const montoHitos = OBRA.hitos.reduce((s, h) => s + Number(h.monto || 0), 0);
+  const contrato = OBRA.documentos.find(d => d.tipo === 'contrato');
+  const anexos = OBRA.documentos.filter(d => d.tipo === 'anexo');
+  const evidencias = OBRA.documentos.filter(d => d.tipo === 'evidencia');
+  const facturas = OBRA.documentos.filter(d => d.tipo === 'factura');
+
+  el.innerHTML = `
     <div class="pj-doc-grid">
       <section class="pj-panel pj-panel-pad">
-        <div class="pj-kicker">Documentos de la obra</div>
-        <div style="margin-top:8px">${docsHTML}</div>
+        <div class="pj-kicker">Carpeta digital de obra</div>
+        <p class="pj-small" style="margin-top:8px">Reúne contrato, plan por hitos, equipo asignado y comprobantes de esta obra en un solo lugar.</p>
+        <div class="pj-doc-row"><div><strong>Contrato + anexos</strong><small>${anexos.length + (contrato ? 1 : 0)} documento(s)</small></div><span class="pj-status ${contrato ? 'ok' : 'warn'}">${contrato ? 'Cargado' : 'Pendiente'}</span></div>
+        <div class="pj-doc-row"><div><strong>Plan por hitos</strong><small>${OBRA.hitos.length} hitos · $ ${money(montoHitos)}</small></div><span class="pj-status ${OBRA.hitos.length ? 'ok' : 'warn'}">${OBRA.hitos.length ? 'Definido' : 'Pendiente'}</span></div>
+        <div class="pj-doc-row"><div><strong>Equipo asignado</strong><small>${OBRA.participantes.length} responsable(s)</small></div><span class="pj-status ${OBRA.participantes.length ? 'ok' : 'warn'}">${OBRA.participantes.length ? 'Asignado' : 'Pendiente'}</span></div>
+        <div class="pj-doc-row"><div><strong>Evidencias de avance</strong><small>${evidencias.length} archivo(s)</small></div><span class="pj-status ${evidencias.length ? 'ok' : ''}">${evidencias.length ? 'Cargadas' : 'Sin evidencias'}</span></div>
+        <div class="pj-doc-row"><div><strong>Facturas</strong><small>${facturas.length} archivo(s)</small></div><span class="pj-status ${facturas.length ? 'ok' : ''}">${facturas.length ? 'Cargadas' : 'Sin facturas'}</span></div>
       </section>
       <aside class="pj-panel pj-panel-pad">
         <div class="pj-kicker">Acceso a la obra</div>
-        <p class="pj-small" style="margin-top:10px">Compartí este link para que cualquiera con acceso siga hitos, avance y pagos.</p>
+        <p class="pj-small" style="margin-top:10px">Compartí este link para que cualquiera con acceso siga hitos, equipo, avance y pagos.</p>
         <div class="pj-share-box"><input type="text" id="obraShareLink" readonly value="${escapeHTML(window.location.origin + '/client-solicitud.html?req=' + REQ_ID)}" /><button class="pj-btn" id="btnCopyObraLink">Copiar</button></div>
       </aside>
     </div>
