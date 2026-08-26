@@ -90,6 +90,8 @@ label.pj-small { display: block; margin-bottom: 7px; font-weight: 600; }
 .pj-status.orange:before { background: var(--orange); }
 .pj-status.warn { color: #e7bd61; border-color: rgba(231,189,97,.35); }
 .pj-status.warn:before { background: #e7bd61; }
+.pj-status.err { color: #E54E10; border-color: rgba(229,78,16,.35); }
+.pj-status.err:before { background: #E54E10; }
 
 .pj-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;

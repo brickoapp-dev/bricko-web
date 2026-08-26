@@ -211,6 +211,17 @@
                   </select>
                 </div>
                 <div style="grid-column:1/-1"><label class="pj-small">Documentación / nota</label><input class="form-input" id="pNota" placeholder="Ej: PADIC aceptado, CUIT activo" /></div>
+                <div style="grid-column:1/-1"><label class="pj-small">Entregable</label><input class="form-input" id="pEntregable" placeholder="Ej: Mampostería completa y revocada" /></div>
+                <div><label class="pj-small">Monto pactado (ARS)</label><input class="form-input" id="pMonto" type="number" placeholder="0" /></div>
+                <div><label class="pj-small">Plazo</label><input class="form-input" id="pPlazo" type="date" /></div>
+                <div>
+                  <label class="pj-small">Aceptación</label>
+                  <select class="form-input" id="pAceptacion">
+                    <option value="pendiente">Pendiente</option>
+                    <option value="aceptado">Aceptado</option>
+                    <option value="rechazado">Rechazado</option>
+                  </select>
+                </div>
                 <div style="grid-column:1/-1"><button class="pj-btn primary" type="submit">+ Agregar participante</button></div>
               </form>
 

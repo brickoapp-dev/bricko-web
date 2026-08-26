@@ -428,11 +428,16 @@ function initEvents(){
     const especialidad = document.getElementById('pEspecialidad').value.trim();
     const modalidad = document.getElementById('pModalidad').value;
     const documentacion_nota = document.getElementById('pNota').value.trim();
+    const entregable = document.getElementById('pEntregable').value.trim();
+    const monto_pactado = document.getElementById('pMonto').value ? Number(document.getElementById('pMonto').value) : null;
+    const plazo = document.getElementById('pPlazo').value || null;
+    const aceptacion = document.getElementById('pAceptacion').value;
     if (!hito_id){ toast('err', 'Falta el hito', 'Agregá al menos un hito antes de asignar participantes.'); return; }
     if (!nombre){ toast('err', 'Falta el nombre', ''); return; }
 
     const { error } = await sb.from('hito_participantes').insert({
-      hito_id, equipo_id, nombre, especialidad: especialidad || null, modalidad, documentacion_nota: documentacion_nota || null
+      hito_id, equipo_id, nombre, especialidad: especialidad || null, modalidad, documentacion_nota: documentacion_nota || null,
+      entregable: entregable || null, monto_pactado, plazo, aceptacion
     });
     if (error){ toast('err', 'No se pudo agregar', error.message); return; }
     e.target.reset();
