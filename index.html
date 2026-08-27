@@ -1660,10 +1660,67 @@
     }
 
     /* ====== CÓMO COBRA BRICKØ ====== */
-    <section class="sec" id="comision"><div class="wrap"><div class="sec-head reveal"><span class="eyebrow">Comisión Brickø</span><h2>Cómo cobra<br><em>Brickø.</em></h2><p class="lead">El cliente publica y compara sin cargo. La comisión se aplica solo cuando la obra es adjudicada.</p></div><div class="commission-grid reveal"><article class="commission-card"><div><span class="commission-type">/ Para el cliente</span><h3>Publicar,
-    recibir ofertas y contratar.</h3><p>Podés cargar la solicitud,
-    comparar propuestas y seguir el trabajo sin comisión.</p></div><span class="commission-big">100%<br>gratis</span></article><article class="commission-card"><div><span class="commission-type">/ Para oferentes no ganadores</span><h3>Participar y enviar ofertas.</h3><p>Enviar propuestas y competir por una obra no genera cargo mientras no haya adjudicación.</p></div><span class="commission-big">100%<br>gratis</span></article><article class="commission-card winner"><div><span class="commission-type">/ Para el contratista ganador</span><h3>Al confirmar la adjudicación.</h3><p>La comisión se liquida al inicio y queda vinculada a la obra adjudicada.</p></div><span class="commission-big">10% del monto<br>adjudicado</span></article></div><div class="commission-note reveal">La comisión se cobra al contratista o profesional ganador al inicio del proceso de preparación de la obra. Después,
-    el cliente paga por hitos acordados y aprobados.</div></div></section>
+    .commission-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      margin-bottom: 24px;
+    }
+
+    .commission-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 32px 28px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg-1);
+    }
+
+    .commission-card.winner {
+      border-color: var(--orange-line);
+      background: color-mix(in srgb, var(--orange) 3%, var(--bg-1));
+    }
+
+    .commission-type {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .14em;
+      color: var(--orange);
+      margin-bottom: 18px;
+      display: block;
+      text-transform: uppercase;
+    }
+
+    .commission-card h3 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .commission-card p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .commission-big {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 36px;
+      line-height: 1.1;
+      color: var(--ink);
+      display: block;
+    }
+
+    .commission-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
 
     /* ===== CTA final ===== */
     .cta {
@@ -2692,7 +2749,8 @@
 
       .steps,
       .services,
-      .verify {
+      .verify,
+      .commission-grid {
         grid-template-columns: 1fr 1fr;
       }
 
@@ -2727,7 +2785,8 @@
       .steps,
       .services,
       .split,
-      .verify {
+      .verify,
+      .commission-grid {
         grid-template-columns: 1fr;
       }
 
