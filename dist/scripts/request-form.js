@@ -18,11 +18,6 @@ const RUBRO_LABELS = {
   'diseno-planificacion': 'Diseño y Planificación',
   pintura: 'Pintura', carpinteria: 'Carpintería', herreria: 'Herrería', jardineria: 'Jardinería'
 };
-const MODO_PAGO_LABELS = {
-  hitos: 'Pago por hitos',
-  finalizar: 'Pago al finalizar',
-  contratista: 'A elección del contratista'
-};
 const URG_LABELS = {
   baja: 'Sin apuro',
   media: 'Este mes',
@@ -75,14 +70,14 @@ function loadUserUI(session){
   if (nmEl) nmEl.textContent = display;
 }
 
-/* ── Chips: rubro (multi), modo_pago/etapa/tipo_construccion (single) ─ */
+/* ── Chips: rubro (multi), etapa/tipo_construccion (single) ─ */
 function initChips(){
   // Multi-select para rubros
   document.querySelectorAll('[data-field="rubro"] .chip').forEach(chip => {
     chip.addEventListener('click', () => chip.classList.toggle('selected'));
   });
-  // Single-select para modo_pago, etapa y tipo_construccion
-  ['modo_pago','etapa','tipo_construccion'].forEach(field => {
+  // Single-select para etapa y tipo_construccion
+  ['etapa','tipo_construccion'].forEach(field => {
     const grid = document.querySelector(`[data-field="${field}"]`);
     if (!grid) return;
     grid.querySelectorAll('.chip').forEach(chip => {
@@ -310,7 +305,6 @@ function handleFormSubmit(e){
 
   // Selecciones
   const rubros = [...document.querySelectorAll('[data-field="rubro"] .chip.selected')].map(c => c.dataset.value);
-  const modoPagoKey = document.querySelector('[data-field="modo_pago"] .chip.selected')?.dataset.value || 'hitos';
   const etapaRaw = document.querySelector('[data-field="etapa"] .chip.selected')?.dataset.value || null;
   const tipoConstruccionRaw = document.querySelector('[data-field="tipo_construccion"] .chip.selected')?.dataset.value || null;
   const urgenciaRaw = document.querySelector('[data-field="urgencia"] .urg-btn.selected')?.dataset.value || 'media';
@@ -328,19 +322,13 @@ function handleFormSubmit(e){
     ? (rubrosReadable.length ? rubrosReadable.join(' + ') + ' — Solicitud' : 'Refacción')
     : (rubrosReadable.length ? rubrosReadable.join(' + ') + ' — Obra Nueva' : 'Obra Nueva');
 
-  const modoPagoLabel = MODO_PAGO_LABELS[modoPagoKey] || modoPagoKey;
-
-  // Descripción formateada para almacenar transparente el modo de pago.
   // Las fotos/planos van aparte, subidas a Storage (ver handleConfirmPublish).
-  let fullDesc = desc;
-  fullDesc += `\n\n[Modo de pago: ${modoPagoLabel}]`;
-
   pendingPayload = {
     user_id: session.userId,
     tipo: tipoDB,                            // 'refaccion' | 'obra-nueva'
     rubros: rubros.length ? rubros : ['albanileria'],
     titulo,
-    descripcion: fullDesc,
+    descripcion: desc,
     urgencia,                                // 'baja' | 'media' | 'alta'
     direccion: addr,
     etapa,
@@ -352,7 +340,6 @@ function handleFormSubmit(e){
       rawDesc: desc,
       rubrosLabels: rubrosReadable.length ? rubrosReadable.join(', ') : 'Ninguno seleccionado (Albañilería por defecto)',
       urgenciaLabel: URG_LABELS[urgencia] || 'Sin especificar',
-      modoPagoLabel,
       superficieLabel: superficie ? `${superficie} m²` : 'No especificada',
       filesCount: uploadedFiles.length ? `${uploadedFiles.length} archivo(s) subido(s)` : 'Sin fotos/planos',
       ubicacionLabel: addr
@@ -390,15 +377,9 @@ function renderSummaryModal(meta){
         <div class="summary-item-val">${escapeHTML(meta.superficieLabel)}</div>
       </div>
     </div>
-    <div class="summary-grid-2">
-      <div class="summary-item">
-        <div class="summary-item-label">/05 Urgencia</div>
-        <div class="summary-item-val">${escapeHTML(meta.urgenciaLabel)}</div>
-      </div>
-      <div class="summary-item">
-        <div class="summary-item-label">/07 Modo de Pago</div>
-        <div class="summary-item-val">${escapeHTML(meta.modoPagoLabel)}</div>
-      </div>
+    <div class="summary-item">
+      <div class="summary-item-label">/05 Urgencia</div>
+      <div class="summary-item-val">${escapeHTML(meta.urgenciaLabel)}</div>
     </div>
     <div class="summary-item">
       <div class="summary-item-label">/06 Ubicación</div>

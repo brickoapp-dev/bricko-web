@@ -1,5 +1,5 @@
 /* client-dashboard.js — Dashboard del cliente
-   Panel de acceso a Mis Obras y Obra Nueva. */
+   Panel de acceso a Mis Obras y Nueva Solicitud. */
 
 const sb = window.supabase_client;
 
@@ -23,14 +23,16 @@ function initDashboard() {
   loadClientMetrics(session.userId);
 }
 
-/* ── Métricas (Activas / Ofertas nuevas / Finalizadas) ── */
+/* ── Métricas (En preparación / Activas / Ofertas nuevas / Finalizadas) ── */
 async function loadClientMetrics(uid){
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   try {
     const { data: reqs, error: e1 } = await sb.from('requests').select('id, status').eq('user_id', uid);
     if (e1) throw e1;
+    const preparacion = (reqs || []).filter(r => r.status === 'preparing').length;
     const activas = (reqs || []).filter(r => r.status === 'active').length;
     const finalizadas = (reqs || []).filter(r => r.status === 'done').length;
+    set('kpiPreparacion', preparacion);
     set('kpiActivas', activas);
     set('kpiFinalizadas', finalizadas);
 
