@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initUrgency();
   initUpload();
   initAddressMap();
+  initGeolocation();
   initForm();
   initLogout();
   initThemeToggle();
@@ -249,6 +250,100 @@ function updateMap(){
   mapIframe.src = `https://maps.google.com/maps?q=${query}&output=embed&hl=es&z=15`;
   mapIframe.style.display = 'block';
   mapEmpty.style.display = 'none';
+}
+
+/* ── Autocompletar dirección con la ubicación del dispositivo ─ */
+const PROVINCIA_ALIASES = {
+  'ciudad autónoma de buenos aires': 'CABA',
+  'ciudad autonoma de buenos aires': 'CABA',
+  'caba': 'CABA'
+};
+
+function initGeolocation(){
+  const btn = document.getElementById('btnUseLocation');
+  if (!btn) return;
+  btn.addEventListener('click', handleUseLocation);
+}
+
+function setGeolocLoading(btn, loading){
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.classList.toggle('is-loading', loading);
+  const label = btn.querySelector('span');
+  if (label) label.textContent = loading ? 'Ubicando...' : 'Usar mi ubicación';
+}
+
+function handleUseLocation(){
+  const btn = document.getElementById('btnUseLocation');
+  if (!('geolocation' in navigator)){
+    alert('Tu navegador no permite acceder a la ubicación del dispositivo.');
+    return;
+  }
+  setGeolocLoading(btn, true);
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      try {
+        await applyGeolocatedAddress(pos.coords.latitude, pos.coords.longitude);
+      } catch(err){
+        console.error('Error al obtener la dirección desde la ubicación:', err);
+        alert('No pudimos completar la dirección automáticamente. Completá los campos manualmente.');
+      } finally {
+        setGeolocLoading(btn, false);
+      }
+    },
+    (err) => {
+      setGeolocLoading(btn, false);
+      const messages = {
+        1: 'Denegaste el acceso a tu ubicación. Habilitalo en la configuración del navegador para usar esta función.',
+        2: 'No pudimos determinar tu ubicación. Intentá de nuevo o completá la dirección manualmente.',
+        3: 'La solicitud de ubicación tardó demasiado. Intentá de nuevo.'
+      };
+      alert(messages[err.code] || 'No pudimos acceder a tu ubicación.');
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+  );
+}
+
+async function applyGeolocatedAddress(lat, lon){
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&addressdetails=1&accept-language=es&zoom=18`;
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error('Nominatim respondió ' + res.status);
+  const data = await res.json();
+  const addr = data.address || {};
+
+  const provinciaSelect = document.getElementById('reqProvincia');
+  const ciudadInput = document.getElementById('reqCiudad');
+  const direccionInput = document.getElementById('reqDireccion');
+  const cpInput = document.getElementById('reqCP');
+
+  const calle = addr.road || addr.pedestrian || addr.residential || '';
+  const numero = addr.house_number || '';
+  const direccion = [calle, numero].filter(Boolean).join(' ');
+  if (direccionInput && direccion) direccionInput.value = direccion;
+
+  const ciudad = addr.city || addr.town || addr.village || addr.suburb || addr.municipality || '';
+  if (ciudadInput && ciudad) ciudadInput.value = ciudad;
+
+  if (cpInput && addr.postcode) cpInput.value = addr.postcode;
+
+  if (provinciaSelect && addr.state){
+    const match = matchProvincia(addr.state);
+    if (match) provinciaSelect.value = match;
+  }
+
+  updateMap();
+}
+
+function matchProvincia(stateName){
+  const select = document.getElementById('reqProvincia');
+  if (!select) return null;
+  const normalized = stateName.trim().toLowerCase();
+  if (PROVINCIA_ALIASES[normalized]) return PROVINCIA_ALIASES[normalized];
+  const options = Array.from(select.options).map(o => o.value).filter(Boolean);
+  const exact = options.find(o => o.toLowerCase() === normalized);
+  if (exact) return exact;
+  const partial = options.find(o => normalized.includes(o.toLowerCase()) || o.toLowerCase().includes(normalized));
+  return partial || null;
 }
 
 /* ── Submit & Summary Modal ───────────────────────────── */
