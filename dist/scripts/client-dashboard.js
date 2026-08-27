@@ -1,5 +1,5 @@
 /* client-dashboard.js — Dashboard del cliente
-   Panel de acceso a Mis Obras y Obra Nueva. */
+   Panel de acceso a Mis Obras y Nueva Solicitud. */
 
 const sb = window.supabase_client;
 
