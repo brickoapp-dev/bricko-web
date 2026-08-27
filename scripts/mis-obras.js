@@ -4,11 +4,12 @@
 const sb = window.supabase_client;
 
 const STATUS_MAP = {
-  pending:   { key: 'pending',   label: 'Pendiente',   class: 'st-pending' },
-  quoted:    { key: 'quoted',    label: 'Cotizando',   class: 'st-quoted' },
-  active:    { key: 'active',    label: 'En curso',    class: 'st-active' },
-  done:      { key: 'done',      label: 'Finalizada',  class: 'st-done' },
-  cancelled: { key: 'cancelled', label: 'Cancelada',   class: 'st-cancelled' }
+  pending:   { key: 'pending',   label: 'Pendiente',      class: 'st-pending' },
+  quoted:    { key: 'quoted',    label: 'Cotizando',      class: 'st-quoted' },
+  preparing: { key: 'preparing', label: 'En preparación', class: 'st-preparing' },
+  active:    { key: 'active',    label: 'En curso',       class: 'st-active' },
+  done:      { key: 'done',      label: 'Finalizada',     class: 'st-done' },
+  cancelled: { key: 'cancelled', label: 'Cancelada',      class: 'st-cancelled' }
 };
 
 const URG_LABELS = {
@@ -37,7 +38,9 @@ const TICONS = {
 };
 
 let OBRAS_DATA = [];
-let CURRENT_STATUS_FILTER = 'all';
+// null = sin filtro (se ven todas las obras); no hay botón "Todas" — es el
+// estado inicial antes de que el cliente elija un bucket.
+let CURRENT_STATUS_FILTER = null;
 let SEARCH_QUERY = '';
 let SORT_OPTION = 'recent';
 
@@ -94,39 +97,56 @@ async function fetchClientObras(userId){
   if (container) container.style.display = 'none';
   if (emptyState) emptyState.style.display = 'none';
 
+  // Fase 1: las solicitudes del cliente. Alcanza para contadores y tarjetas
+  // correctas — si esto falla, ahí sí no hay nada real que mostrar.
+  let requests;
   try {
-    // 1. Obtener solicitudes del usuario
-    const { data: requests, error: reqErr } = await sb
+    const { data, error: reqErr } = await sb
       .from('requests')
       .select('id, ticket_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, fotos')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-
     if (reqErr) throw reqErr;
-
-    if (!requests || requests.length === 0){
-      OBRAS_DATA = [];
-      updateCounters();
-      renderObras();
-      return;
+    requests = data;
+  } catch(err){
+    console.error('Error al cargar solicitudes:', err);
+    toast('err', 'Error de conexión', 'No pudimos cargar tus obras.');
+    if (skeleton) skeleton.style.display = 'none';
+    if (emptyState) {
+      emptyState.style.display = 'block';
+      document.getElementById('emptyMsg').textContent = 'Ocurrió un problema al conectar con el servidor. Reintentá en unos segundos.';
     }
+    return;
+  }
 
+  if (!requests || requests.length === 0){
+    OBRAS_DATA = [];
+    updateCounters();
+    renderObras();
+    return;
+  }
+
+  OBRAS_DATA = requests.map(r => normalizeObra(r, []));
+  updateCounters();
+  renderObras();
+
+  // Fase 2: enriquecimiento (presupuestos + perfiles de pros, imágenes
+  // firmadas, avance de hitos). Si algo acá falla, degradamos el render
+  // pero NUNCA vaciamos la lista que ya se mostró en la fase 1.
+  try {
     const reqIds = requests.map(r => r.id);
 
-    // 2. Obtener presupuestos de estas solicitudes
     const { data: quotes, error: quotesErr } = await sb
       .from('quotes')
       .select('id, request_id, pro_id, amount, description, features, status, created_at, professionals!quotes_pro_id_fkey(rubro)')
       .in('request_id', reqIds)
       .order('created_at', { ascending: false });
-
     if (quotesErr) console.warn('Aviso cargando presupuestos:', quotesErr);
 
-    // 3. Obtener nombre/apellido de los profesionales que cotizaron
-    //    (profiles tiene RLS "solo propio perfil": se usa una función
-    //    SECURITY DEFINER que solo expone estos datos de pros que cotizaron
-    //    en solicitudes del usuario actual — ver migración
-    //    20260817120000_fix_client_quote_visibility.sql)
+    // profiles tiene RLS "solo propio perfil": se usa una función
+    // SECURITY DEFINER que solo expone estos datos de pros que cotizaron
+    // en solicitudes del usuario actual — ver migración
+    // 20260817120000_fix_client_quote_visibility.sql
     if (quotes && quotes.length){
       const { data: proProfiles, error: profErr } = await sb
         .rpc('get_quote_professionals', { p_request_ids: reqIds });
@@ -136,30 +156,20 @@ async function fetchClientObras(userId){
       quotes.forEach(q => { q.profiles = profileById[q.pro_id] || null; });
     }
 
-    // Mapear presupuestos por request_id
     const quotesByReq = {};
     (quotes || []).forEach(q => {
       if (!quotesByReq[q.request_id]) quotesByReq[q.request_id] = [];
       quotesByReq[q.request_id].push(q);
     });
+    OBRAS_DATA.forEach(o => { o.quotes = quotesByReq[o.id] || []; });
 
-    // Construir estructura unificada
-    OBRAS_DATA = requests.map(r => normalizeObra(r, quotesByReq[r.id] || []));
     await attachSignedImageUrls(OBRAS_DATA);
     await attachAvance(OBRAS_DATA);
-
-    updateCounters();
-    renderObras();
-
   } catch(err){
-    console.error('Error al cargar obras:', err);
-    toast('err', 'Error de conexión', 'No pudimos cargar tus obras.');
-    if (skeleton) skeleton.style.display = 'none';
-    if (emptyState) {
-      emptyState.style.display = 'block';
-      document.getElementById('emptyMsg').textContent = 'Ocurrió un problema al conectar con el servidor.';
-    }
+    console.warn('Aviso: no se pudo completar el enriquecimiento de obras (presupuestos/imágenes/avance):', err);
   }
+
+  renderObras();
 }
 
 /* ── % de avance para obras en curso (hitos) ─────────── */
@@ -251,18 +261,18 @@ async function attachSignedImageUrls(obras){
 /* ── Actualizar contadores del toolbar ───────────────── */
 function updateCounters(){
   const count = {
-    all: OBRAS_DATA.length,
-    pending: OBRAS_DATA.filter(o => o.statusKey === 'pending').length,
-    quoted: OBRAS_DATA.filter(o => o.statusKey === 'quoted' || (o.quotes.length > 0 && o.statusKey === 'pending')).length,
-    active: OBRAS_DATA.filter(o => o.statusKey === 'active').length,
-    done: OBRAS_DATA.filter(o => o.statusKey === 'done').length
+    solicitudes: OBRAS_DATA.filter(o => o.statusKey === 'pending' || o.statusKey === 'quoted').length,
+    preparing:   OBRAS_DATA.filter(o => o.statusKey === 'preparing').length,
+    active:      OBRAS_DATA.filter(o => o.statusKey === 'active').length,
+    done:        OBRAS_DATA.filter(o => o.statusKey === 'done').length,
+    cancelled:   OBRAS_DATA.filter(o => o.statusKey === 'cancelled').length
   };
 
-  document.getElementById('countAll').textContent = count.all;
-  document.getElementById('countPending').textContent = count.pending;
-  document.getElementById('countQuoted').textContent = count.quoted;
+  document.getElementById('countSolicitudes').textContent = count.solicitudes;
+  document.getElementById('countPreparing').textContent = count.preparing;
   document.getElementById('countActive').textContent = count.active;
   document.getElementById('countDone').textContent = count.done;
+  document.getElementById('countCancelled').textContent = count.cancelled;
 }
 
 /* ── Eventos de filtros y búsqueda ───────────────────── */
@@ -306,9 +316,9 @@ function renderObras(){
 
   let filtered = OBRAS_DATA.filter(o => {
     // Filtro de estado
-    if (CURRENT_STATUS_FILTER !== 'all'){
-      if (CURRENT_STATUS_FILTER === 'quoted'){
-        if (o.statusKey !== 'quoted' && !(o.quotes.length > 0 && o.statusKey === 'pending')) return false;
+    if (CURRENT_STATUS_FILTER){
+      if (CURRENT_STATUS_FILTER === 'solicitudes'){
+        if (o.statusKey !== 'pending' && o.statusKey !== 'quoted') return false;
       } else if (o.statusKey !== CURRENT_STATUS_FILTER){
         return false;
       }
@@ -339,7 +349,7 @@ function renderObras(){
   if (filtered.length === 0){
     container.style.display = 'none';
     emptyState.style.display = 'block';
-    if (SEARCH_QUERY || CURRENT_STATUS_FILTER !== 'all'){
+    if (SEARCH_QUERY || CURRENT_STATUS_FILTER){
       document.getElementById('emptyMsg').textContent = 'No hay obras que coincidan con la búsqueda o filtro seleccionado.';
     } else {
       document.getElementById('emptyMsg').textContent = 'Todavía no tenés solicitudes de obras o refacciones publicadas.';

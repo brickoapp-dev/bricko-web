@@ -166,7 +166,7 @@ html.theme-anim * { transition: background-color .4s ease, border-color .4s ease
 
 /* KPI METRICS STRIP */
 .kpi-strip {
-  display: grid; grid-template-columns: repeat(3,1fr);
+  display: grid; grid-template-columns: repeat(4,1fr);
   border: 1px solid var(--line-strong); background: var(--bg-1);
   margin-bottom: 40px;
 }
@@ -1282,6 +1282,7 @@ body.modal-lock { overflow: hidden; }
 }
 .st-pending   { color: var(--muted); border: 1px solid var(--line-strong); background: var(--bg-2); }
 .st-quoted    { color: var(--orange); border: 1px solid var(--orange-line); background: var(--orange-dim); }
+.st-preparing { color: #8B5CF6; border: 1px solid rgba(139,92,246,.35); background: rgba(139,92,246,.1); }
 .st-active    { color: #2D8FE0; border: 1px solid rgba(45,143,224,.35); background: rgba(45,143,224,.1); }
 .st-done      { color: #3FB950; border: 1px solid rgba(63,185,80,.35); background: rgba(63,185,80,.1); }
 .st-cancelled { color: #E05252; border: 1px solid rgba(224,82,82,.35); background: rgba(224,82,82,.1); }
