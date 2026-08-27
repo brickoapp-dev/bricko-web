@@ -4,12 +4,20 @@
 const sb = window.supabase_client;
 
 const STATUS_MAP = {
-  pending:   { key: 'pending',   label: 'Pendiente',   class: 'st-pending' },
-  quoted:    { key: 'quoted',    label: 'Cotizando',   class: 'st-quoted' },
-  active:    { key: 'active',    label: 'En curso',    class: 'st-active' },
-  done:      { key: 'done',      label: 'Finalizada',  class: 'st-done' },
-  cancelled: { key: 'cancelled', label: 'Cancelada',   class: 'st-cancelled' }
+  pending:   { key: 'pending',   label: 'Pendiente',      class: 'st-pending' },
+  quoted:    { key: 'quoted',    label: 'Cotizando',      class: 'st-quoted' },
+  preparing: { key: 'preparing', label: 'Preparando obra', class: 'st-quoted' },
+  active:    { key: 'active',    label: 'En curso',       class: 'st-active' },
+  done:      { key: 'done',      label: 'Finalizada',     class: 'st-done' },
+  cancelled: { key: 'cancelled', label: 'Cancelada',      class: 'st-cancelled' }
 };
+
+// El toolbar solo tiene tabs para pending/quoted/active/done: 'preparing'
+// (cotización aceptada, profesional armando el arranque) se agrupa bajo
+// "En curso" para contar/filtrar, aunque su statusKey y label reales
+// sigan siendo 'preparing' — así el pill y el link a hitos/pagos (que
+// exigen o.statusKey === 'active') no aparecen antes de tiempo.
+const STATUS_GROUP = { pending: 'pending', quoted: 'quoted', preparing: 'active', active: 'active', done: 'done', cancelled: 'cancelled' };
 
 const URG_LABELS = {
   baja: 'Sin apuro',
@@ -254,7 +262,7 @@ function updateCounters(){
     all: OBRAS_DATA.length,
     pending: OBRAS_DATA.filter(o => o.statusKey === 'pending').length,
     quoted: OBRAS_DATA.filter(o => o.statusKey === 'quoted' || (o.quotes.length > 0 && o.statusKey === 'pending')).length,
-    active: OBRAS_DATA.filter(o => o.statusKey === 'active').length,
+    active: OBRAS_DATA.filter(o => STATUS_GROUP[o.statusKey] === 'active').length,
     done: OBRAS_DATA.filter(o => o.statusKey === 'done').length
   };
 
@@ -309,7 +317,7 @@ function renderObras(){
     if (CURRENT_STATUS_FILTER !== 'all'){
       if (CURRENT_STATUS_FILTER === 'quoted'){
         if (o.statusKey !== 'quoted' && !(o.quotes.length > 0 && o.statusKey === 'pending')) return false;
-      } else if (o.statusKey !== CURRENT_STATUS_FILTER){
+      } else if (STATUS_GROUP[o.statusKey] !== CURRENT_STATUS_FILTER && o.statusKey !== CURRENT_STATUS_FILTER){
         return false;
       }
     }

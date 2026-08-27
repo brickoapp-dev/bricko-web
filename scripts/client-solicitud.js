@@ -5,6 +5,7 @@ const sb = window.supabase_client;
 const STATUS_DB_TO_UI = {
   pending:   { key: 'pendiente', label: 'Pendiente' },
   quoted:    { key: 'cotizando', label: 'Cotizando' },
+  preparing: { key: 'cotizando', label: 'Preparando obra' },
   active:    { key: 'activo',    label: 'En curso' },
   done:      { key: 'completado', label: 'Finalizada' },
   cancelled: { key: 'cancelado', label: 'Cancelada' }

@@ -29,7 +29,10 @@ async function loadClientMetrics(uid){
   try {
     const { data: reqs, error: e1 } = await sb.from('requests').select('id, status').eq('user_id', uid);
     if (e1) throw e1;
-    const activas = (reqs || []).filter(r => r.status === 'active').length;
+    // 'preparing' (cotización aceptada, profesional armando el arranque)
+    // cuenta como "Activas" para el cliente aunque el estado interno
+    // todavía no sea 'active' — ver 'preparing' en request_status.
+    const activas = (reqs || []).filter(r => r.status === 'active' || r.status === 'preparing').length;
     const finalizadas = (reqs || []).filter(r => r.status === 'done').length;
     set('kpiActivas', activas);
     set('kpiFinalizadas', finalizadas);
