@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('bricko-theme');
+      if (t === 'dark' || t === 'light' || t === 'blueprint')
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <title>Brickø · Política de Privacidad</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles/legal.css" />
+</head>
+
+<body>
+  <div class="wrap">
+    <a href="index.html" class="brand">
+      <svg class="cube" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+        <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C" />
+        <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A" />
+      </svg>
+      <span>BRICK<span class="o-slash">Ø</span></span>
+    </a>
+
+    <div class="legal-head">
+      <span class="eyebrow">Documento legal</span>
+      <h1>Política de Privacidad</h1>
+      <span class="version-badge" id="versionBadge">v1.0 — 2026-09</span>
+    </div>
+
+    <div class="legal-warning">
+      Borrador funcional redactado para el desarrollo de la plataforma. Completar datos institucionales y someter
+      a revisión jurídica (Ley 25.326 de Protección de Datos Personales y normativa aplicable) antes de publicar.
+    </div>
+
+    <article class="legal-body">
+      <h2>1. Responsable del tratamiento</h2>
+      <p>Los datos personales recolectados a través de BRICKØ son tratados por <strong>[RAZÓN SOCIAL]</strong>, CUIT <strong>[●]</strong>, con domicilio en <strong>[●]</strong> y correo de contacto <strong>[EMAIL]</strong>, en su carácter de responsable del tratamiento ante la Agencia de Acceso a la Información Pública.</p>
+
+      <h2>2. Qué datos recopilamos</h2>
+      <p>Según el rol y la interacción con la plataforma, podemos recopilar: datos de identificación y contacto (nombre, apellido o razón social, DNI/CUIT, domicilio, teléfono, correo); datos de verificación del profesional (matrícula, condición fiscal, documentación colegial o previsional); datos de la obra o refacción solicitada (dirección del inmueble, rubro, alcance, fotos); datos de ejecución (hitos, montos, participantes asignados y su documentación); y datos de uso de la plataforma (sesión, preferencias de tema, registro de actividad).</p>
+
+      <h2>3. Para qué los usamos</h2>
+      <p>Usamos los datos para prestar el servicio (vincular clientes y profesionales, generar presupuestos, contratos e hitos), verificar identidad y condición profesional cuando corresponda, administrar la comisión de la plataforma, dar soporte, y cumplir obligaciones legales o contractuales.</p>
+
+      <h2>4. Con quién se comparten</h2>
+      <p>Compartimos los datos estrictamente necesarios con la otra parte de una misma obra (por ejemplo, el profesional ve los datos de contacto del cliente que lo contrató, y viceversa). No vendemos datos personales a terceros. Usamos proveedores de infraestructura (hosting, base de datos, almacenamiento de archivos) que actúan como encargados del tratamiento bajo nuestras instrucciones.</p>
+
+      <h2>5. Carpeta pública por QR</h2>
+      <p>La carpeta de obra accesible por QR (ver Términos y Condiciones, punto 11) muestra únicamente una vista reducida y de solo lectura: identificador de la obra, localidad, estado general, hitos y participantes con su función y estado de documentación. Nunca incluye DNI/CUIT, domicilios, montos, correos electrónicos, teléfonos ni los archivos de documentación en sí. El filtrado de qué se muestra se aplica del lado del servidor, no solo ocultando datos en la pantalla. El acceso a esa vista queda registrado (fecha/hora, y navegador/IP cuando el dispositivo del visitante los informa).</p>
+
+      <h2>6. Conservación de los datos</h2>
+      <p>Conservamos los datos mientras la cuenta esté activa y, luego de su baja, por los plazos que exijan obligaciones contractuales, fiscales, contables o de defensa de derechos.</p>
+
+      <h2>7. Seguridad</h2>
+      <p>Aplicamos controles de acceso por perfil (cada usuario solo puede leer o modificar lo que le corresponde según su rol), reglas de seguridad a nivel de base de datos y almacenamiento cifrado en tránsito. Ningún sistema es infalible: ante un incidente de seguridad, actuaremos conforme a la normativa aplicable.</p>
+
+      <h2>8. Derechos del titular de los datos</h2>
+      <p>De acuerdo con la Ley 25.326, el titular de los datos tiene derecho a acceder, rectificar, actualizar y suprimir sus datos personales, así como a revocar el consentimiento prestado, escribiendo a <strong>[EMAIL]</strong>. La Agencia de Acceso a la Información Pública es el organismo de control en la materia.</p>
+
+      <h2>9. Cookies y almacenamiento local</h2>
+      <p>Usamos almacenamiento local del navegador para mantener la sesión iniciada y recordar preferencias de tema visual. No usamos cookies de rastreo publicitario de terceros.</p>
+
+      <h2>10. Cambios a esta política</h2>
+      <p>Si publicamos una nueva versión de esta política, se identificará con un número de versión y fecha, y se le va a pedir a cada usuario que la vuelva a aceptar antes de seguir usando las funciones que dependen de ese consentimiento.</p>
+
+      <h2>11. Contacto</h2>
+      <p>Para consultas sobre esta política o el tratamiento de tus datos: <strong>[EMAIL]</strong> - <strong>[DOMICILIO]</strong> - <strong>[TELÉFONO]</strong>.</p>
+
+      <p class="legal-implementacion"><strong>Nota:</strong> este documento fue redactado como borrador funcional para el desarrollo de BRICKØ y no reemplaza el asesoramiento de un profesional en protección de datos personales.</p>
+    </article>
+  </div>
+
+  <script src="scripts/legal-versions.js"></script>
+  <script>
+    document.getElementById('versionBadge').textContent =
+      window.BRICKO_LEGAL.privacidad.version + ' — ' + window.BRICKO_LEGAL.privacidad.fecha;
+  </script>
+</body>
+
+</html>

@@ -137,7 +137,8 @@ async function loadProfile(uid){
     const { data: profile, error } = await sb.from('profiles')
       .select(`first_name, last_name, phone, city, province, address, avatar_url,
         razon_social, tipo_persona, dni, cuit, usa_domicilio_alt, domicilio_contractual_alt,
-        caracter_inmueble, caracter_inmueble_aclaracion`)
+        caracter_inmueble, caracter_inmueble_aclaracion,
+        terminos_version, terminos_aceptado_en, privacidad_version, privacidad_leida_en`)
       .eq('id', uid).single();
     if (error) throw error;
     if (!profile) return;
@@ -167,8 +168,29 @@ async function loadProfile(uid){
       const box = document.getElementById('avatarPreview');
       if (box) box.innerHTML = `<img src="${profile.avatar_url}" alt="avatar">`;
     }
+
+    renderLegalInfo(profile);
   } catch(e){
     console.error('Error cargando perfil:', e);
+  }
+}
+
+/* ── Legales y privacidad: qué versión aceptó y cuándo ───────────────── */
+function renderLegalInfo(profile){
+  const fmt = (iso) => iso ? new Date(iso).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' }) : null;
+
+  const terminosEl = document.getElementById('legalTerminosInfo');
+  if (terminosEl){
+    terminosEl.textContent = profile.terminos_version
+      ? `Versión ${profile.terminos_version} · aceptada el ${fmt(profile.terminos_aceptado_en)}`
+      : 'Todavía no hay un registro de aceptación.';
+  }
+
+  const privacidadEl = document.getElementById('legalPrivacidadInfo');
+  if (privacidadEl){
+    privacidadEl.textContent = profile.privacidad_version
+      ? `Versión ${profile.privacidad_version} · leída el ${fmt(profile.privacidad_leida_en)}`
+      : 'Todavía no hay un registro de lectura.';
   }
 }
 
