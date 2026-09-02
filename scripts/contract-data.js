@@ -194,5 +194,32 @@ async function validateContractData(obraId) {
   return faltantes;
 }
 
+/* ── Payload + hash para la máquina de estados del contrato (T3) ────── */
+function canonicalStringify(value) {
+  if (Array.isArray(value)) return '[' + value.map(canonicalStringify).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort().map(k => JSON.stringify(k) + ':' + canonicalStringify(value[k])).join(',') + '}';
+  }
+  return JSON.stringify(value);
+}
+
+async function sha256Hex(text) {
+  const bytes = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* payload = getContractData() sin _raw (no hace falta persistir las
+   filas crudas, solo los valores ya resueltos que ve el contrato) +
+   hash SHA-256 canónico (orden de claves estable, para que el mismo
+   contenido siempre dé el mismo hash sin importar el orden de inserción). */
+async function buildContractPayload(obraId) {
+  const data = await getContractData(obraId);
+  const { _raw, ...payload } = data;
+  const hash = await sha256Hex(canonicalStringify(payload));
+  return { payload, hash };
+}
+
 window.getContractData = getContractData;
 window.validateContractData = validateContractData;
+window.buildContractPayload = buildContractPayload;

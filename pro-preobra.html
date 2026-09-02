@@ -126,36 +126,36 @@
             <div class="pj-gate-card">
               <div class="pj-kicker">03 · Contrato</div>
               <h2>Contrato y anexos.</h2>
-              <p class="lead">Se documentan las relaciones principales antes de distribuir resultados y participantes.</p>
+              <p class="lead">El contrato marco (campos [1]-[21]), el anexo de hitos ([22]-[27],[31]), el de materiales ([28]) y el de equipo ([29],[30]) se generan solos con los datos ya cargados en los perfiles, la obra, los hitos y el equipo. Si falta algo, te lleva directo a la pantalla donde se carga -- no hay ningún formulario acá.</p>
+
               <div class="pj-doc-row">
-                <div><strong>Contrato marco de obra</strong><small>Cliente + contratista · alcance general</small><small class="pj-doc-filename" id="contratoFileName"></small></div>
-                <div style="display:flex;align-items:center;gap:8px">
-                  <span class="pj-status" id="docContratoStatus">Pendiente</span>
-                  <a class="pj-btn" id="contratoViewLink" href="#" target="_blank" rel="noopener" hidden>Ver</a>
-                  <input type="file" id="contratoFileInput" accept=".pdf,.doc,.docx,image/*" hidden />
-                  <label class="pj-btn" for="contratoFileInput" style="cursor:pointer">Subir</label>
-                  <button class="pj-btn" id="btnMarkContrato" data-doc-tipo="contrato" hidden>Marcar firmado</button>
-                </div>
+                <div><strong>Estado del contrato</strong><small id="contratoVersionInfo">Sin generar todavía</small></div>
+                <span class="pj-status warn" id="contratoEstadoPill">Borrador</span>
               </div>
-              <div class="pj-doc-row">
-                <div><strong>Anexo económico</strong><small>Monto, comisión y pagos por hitos</small><small class="pj-doc-filename" id="anexoFileName"></small></div>
-                <div style="display:flex;align-items:center;gap:8px">
-                  <span class="pj-status" id="docAnexoStatus">Pendiente</span>
-                  <a class="pj-btn" id="anexoViewLink" href="#" target="_blank" rel="noopener" hidden>Ver</a>
-                  <input type="file" id="anexoFileInput" accept=".pdf,.doc,.docx,image/*" hidden />
-                  <label class="pj-btn" for="anexoFileInput" style="cursor:pointer">Subir</label>
-                  <button class="pj-btn" id="btnMarkAnexo" data-doc-tipo="anexo" hidden>Marcar firmado</button>
-                </div>
-              </div>
-              <div class="pj-gate-footer">
+
+              <div id="contratoFaltantes"></div>
+
+              <div class="pj-gate-footer" style="flex-wrap:wrap;row-gap:10px">
                 <span class="pj-status warn" id="contratoStatus">Pendiente</span>
-                <div style="display:flex;gap:8px">
-                  <button class="pj-btn" id="btnConfirmContrato">Confirmar contrato firmado</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="pj-btn" id="btnVerBorrador">Ver borrador</button>
+                  <button class="pj-btn" id="btnCorregirDatos" disabled>Corregir datos</button>
+                  <button class="pj-btn primary" id="btnEnviarContrato" disabled>Enviar</button>
+                  <button class="pj-btn primary" id="btnFirmarContrato" disabled>Firmar</button>
+                  <button class="pj-btn" id="btnDescargarFinal" disabled>Descargar final</button>
                   <button class="pj-btn primary" data-goto-gate="4">Siguiente</button>
                 </div>
               </div>
             </div>
           </section>
+
+          <!-- Modal: vista previa del contrato (borrador o versión congelada) -->
+          <div class="modal-overlay" id="contratoPreviewModal">
+            <div class="modal" style="max-width:820px">
+              <div class="modal-head"><span id="contratoPreviewTitle">Vista previa del contrato</span><button class="modal-close" data-close-contrato-modal aria-label="Cerrar"></button></div>
+              <div class="modal-body" id="contratoPreviewBody" style="padding:0;max-height:70vh;overflow-y:auto"></div>
+            </div>
+          </div>
 
           <!-- Gate 4 -->
           <section class="pj-gate-panel" data-gate-panel="4">
@@ -272,6 +272,9 @@
   <script src="scripts/supabase.min.js"></script>
   <script src="scripts/00-supabase.js"></script>
   <script src="scripts/01-auth.js" defer></script>
+  <script src="scripts/contract-fields.js"></script>
+  <script src="scripts/contract-data.js"></script>
+  <script src="scripts/contract-render.js"></script>
   <script src="scripts/pro-preobra.js"></script>
 
 </body>

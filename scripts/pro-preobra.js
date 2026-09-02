@@ -14,7 +14,10 @@ const MODALIDAD_ROLE_CLASS = {
   contratista:'contratista', colaborador_independiente:'padic',
   dependiente:'dep', subcontratista:'sub', profesional:'pro'
 };
-const DOC_ESTADO_LABEL = { pendiente:'Pendiente', borrador:'Borrador', firmado:'Firmado' };
+const CONTRATO_ESTADO_LABEL = {
+  null: 'Borrador', enviado: 'Enviado', aceptado_cliente: 'Aceptado por el cliente',
+  aceptado_contratista: 'Aceptado por vos', firmado: 'Firmado', invalidado: 'Borrador'
+};
 
 function getSession(){
   try {
@@ -27,7 +30,7 @@ let SESSION = null;
 let REQ_ID = null;
 let UI_GATE = 1;
 let GATE_FROM_URL = false;
-const STATE = { request:null, prep:null, hitos:[], participantes:[], equipo:[], documentos:[] };
+const STATE = { request:null, prep:null, hitos:[], participantes:[], equipo:[], documentosCount:0, contrato:null };
 
 document.addEventListener('DOMContentLoaded', async () => {
   SESSION = getSession();
@@ -104,7 +107,7 @@ async function loadAll(){
 
   const { data: documentos } = await sb
     .from('obra_documentos')
-    .select('*')
+    .select('id')
     .eq('request_id', REQ_ID);
 
   const firstLoad = STATE.prep == null;
@@ -115,12 +118,40 @@ async function loadAll(){
   STATE.hitos = hitos || [];
   STATE.participantes = participantes;
   STATE.equipo = equipo || [];
-  STATE.documentos = documentos || [];
-  STATE.documentosCount = STATE.documentos.length;
-  await attachDocSignedUrls(STATE.documentos);
+  STATE.documentosCount = documentos?.length || 0;
+
+  await loadContratoState();
 
   if (firstLoad && !GATE_FROM_URL) UI_GATE = prep.current_gate || 2;
   render();
+}
+
+/* ── Contrato: payload+hash en vivo, reconciliación y versión activa ── */
+async function loadContratoState(){
+  const { payload, hash } = await window.buildContractPayload(REQ_ID);
+  const faltantes = await window.validateContractData(REQ_ID);
+
+  await sb.rpc('contrato_invalidar_si_cambio', { p_request_id: REQ_ID, p_hash_actual: hash });
+
+  const { data: version } = await sb
+    .from('contrato_versiones')
+    .select('*')
+    .eq('request_id', REQ_ID)
+    .neq('estado', 'invalidado')
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let aceptaciones = [];
+  if (version){
+    const { data: acept } = await sb
+      .from('contrato_aceptaciones')
+      .select('*')
+      .eq('contrato_version_id', version.id);
+    aceptaciones = acept || [];
+  }
+
+  STATE.contrato = { payload, hash, faltantes, version, aceptaciones };
 }
 
 /* ── Render ──────────────────────────────────────────── */
@@ -152,11 +183,8 @@ function render(){
   setStatusPill('comisionStatus', prep.gate_comision, 'Acreditada', 'Pendiente');
   document.getElementById('btnToggleComision').textContent = prep.gate_comision ? 'Marcar pendiente' : 'Marcar acreditada';
 
-  renderContratoDocs();
+  renderContrato();
   setStatusPill('contratoStatus', prep.gate_contrato, 'Contrato firmado', 'Pendiente');
-  const btnConfirmContrato = document.getElementById('btnConfirmContrato');
-  btnConfirmContrato.disabled = prep.gate_contrato;
-  btnConfirmContrato.textContent = prep.gate_contrato ? 'Contrato confirmado' : 'Confirmar contrato firmado';
 
   renderMilestones();
   setStatusPill('hitosStatus', prep.gate_hitos, 'Plan confirmado', 'Pendiente');
@@ -196,78 +224,44 @@ function setStatusPill(id, done, okLabel, pendingLabel){
   el.className = 'pj-status ' + (done ? 'ok' : 'warn');
 }
 
-function findObraDoc(tipo){
-  return STATE.documentos.find(d => d.tipo === tipo && !d.hito_id);
-}
+function renderContrato(){
+  const c = STATE.contrato;
+  if (!c) return;
 
-async function attachDocSignedUrls(documentos){
-  await Promise.all(documentos.map(async (d) => {
-    if (!d.storage_path){ d.url = null; return; }
-    try {
-      const { data } = await sb.storage.from('obra-docs').createSignedUrl(d.storage_path, 3600);
-      d.url = data?.signedUrl || null;
-    } catch(e){ d.url = null; }
-  }));
-}
+  const estado = c.version ? c.version.estado : null;
+  const pill = document.getElementById('contratoEstadoPill');
+  pill.textContent = CONTRATO_ESTADO_LABEL[estado] ?? estado;
+  pill.className = 'pj-status ' + (estado === 'firmado' ? 'ok' : estado ? 'orange' : 'warn');
 
-function renderContratoDocs(){
-  renderDocRow('contrato', findObraDoc('contrato'), 'docContratoStatus', 'contratoFileName', 'btnMarkContrato', 'contratoViewLink');
-  renderDocRow('anexo', findObraDoc('anexo'), 'docAnexoStatus', 'anexoFileName', 'btnMarkAnexo', 'anexoViewLink');
-}
+  const info = document.getElementById('contratoVersionInfo');
+  info.textContent = c.version
+    ? `Versión ${c.version.version} · enviado ${new Date(c.version.enviado_at).toLocaleString('es-AR')}`
+      + (c.version.firmado_at ? ` · firmado ${new Date(c.version.firmado_at).toLocaleString('es-AR')}` : '')
+    : 'Sin generar todavía';
 
-function renderDocRow(tipo, doc, statusId, fileNameId, markBtnId, viewLinkId){
-  const statusEl = document.getElementById(statusId);
-  const fileNameEl = document.getElementById(fileNameId);
-  const markBtn = document.getElementById(markBtnId);
-  const viewLink = document.getElementById(viewLinkId);
-  const uploadLabel = document.querySelector(`label[for="${tipo}FileInput"]`);
+  // Un faltante de perfil_cliente no es navegable desde acá: es la
+  // pantalla del cliente (client-perfil.html), y esta página es
+  // pro-only -- ir ahí solo rebotaría al pro de vuelta a pro.html.
+  const esCorregibleAqui = (f) => !!f.pantalla && f.origen !== 'perfil_cliente';
 
-  if (!doc){
-    statusEl.textContent = 'Pendiente';
-    statusEl.className = 'pj-status warn';
-    fileNameEl.textContent = '';
-    markBtn.hidden = true;
-    viewLink.hidden = true;
-    if (uploadLabel) uploadLabel.textContent = 'Subir';
-  } else {
-    statusEl.textContent = DOC_ESTADO_LABEL[doc.estado] || doc.estado;
-    statusEl.className = 'pj-status ' + (doc.estado === 'firmado' ? 'ok' : 'warn');
-    fileNameEl.textContent = doc.nombre || '';
-    markBtn.hidden = false;
-    markBtn.textContent = doc.estado === 'firmado' ? 'Marcar borrador' : 'Marcar firmado';
-    markBtn.dataset.docId = doc.id;
-    markBtn.dataset.docEstado = doc.estado;
-    if (doc.url){
-      viewLink.hidden = false;
-      viewLink.href = doc.url;
-    } else {
-      viewLink.hidden = true;
-    }
-    if (uploadLabel) uploadLabel.textContent = 'Reemplazar';
-  }
-}
+  const faltantesEl = document.getElementById('contratoFaltantes');
+  faltantesEl.innerHTML = c.faltantes.length ? `
+    <div class="pj-panel pj-panel-pad" style="margin-top:14px">
+      <div class="pj-kicker">Faltan ${c.faltantes.length} dato(s) para generar el contrato</div>
+      ${c.faltantes.map(f => `
+        <div class="pj-doc-row">
+          <div><strong>[${f.id}] ${escapeHTML(f.label || 'Campo por definir')}</strong><small>${escapeHTML(f.nota || (f.motivo === 'vacio' ? (f.origen === 'perfil_cliente' ? 'Todavía no lo cargó el cliente en su perfil.' : 'Todavía no se cargó.') : 'Sin pantalla de origen todavía.'))}</small></div>
+          ${esCorregibleAqui(f) ? `<a class="pj-btn" href="${f.pantalla}" target="_blank" rel="noopener">Corregir</a>` : ''}
+        </div>
+      `).join('')}
+    </div>` : '';
 
-async function uploadObraDoc(tipo, file){
-  const ext = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
-  const path = `${REQ_ID}/${tipo}-${Date.now()}.${ext}`;
-  const { error: upErr } = await sb.storage.from('obra-docs').upload(path, file, { contentType: file.type, cacheControl: '3600' });
-  if (upErr){ toast('err', 'No se pudo subir el archivo', upErr.message); return; }
+  const yaFirmeYo = c.aceptaciones.some(a => a.rol === 'contratista');
 
-  const existing = findObraDoc(tipo);
-  const { error } = existing
-    ? await sb.from('obra_documentos').update({ nombre: file.name, storage_path: path, estado: 'borrador' }).eq('id', existing.id)
-    : await sb.from('obra_documentos').insert({ request_id: REQ_ID, tipo, nombre: file.name, storage_path: path, estado: 'borrador' });
-  if (error){ toast('err', 'No se pudo guardar el documento', error.message); return; }
-
-  toast('ok', 'Documento cargado', file.name);
-  await loadAll();
-}
-
-async function toggleDocEstado(docId, currentEstado){
-  const next = currentEstado === 'firmado' ? 'borrador' : 'firmado';
-  const { error } = await sb.from('obra_documentos').update({ estado: next }).eq('id', docId);
-  if (error){ toast('err', 'No se pudo actualizar', error.message); return; }
-  await loadAll();
+  document.getElementById('btnCorregirDatos').disabled = !c.faltantes.some(esCorregibleAqui);
+  document.getElementById('btnEnviarContrato').disabled = c.faltantes.length > 0 || !!estado;
+  document.getElementById('btnFirmarContrato').disabled = !estado || estado === 'firmado' || yaFirmeYo;
+  document.getElementById('btnDescargarFinal').disabled = estado !== 'firmado';
 }
 
 function renderMilestones(){
@@ -349,17 +343,50 @@ function initEvents(){
       return;
     }
 
-    const markDocBtn = e.target.closest('[data-doc-id]');
-    if (markDocBtn){
-      await toggleDocEstado(markDocBtn.dataset.docId, markDocBtn.dataset.docEstado);
+    if (e.target.closest('#btnVerBorrador')){
+      openContratoPreview(STATE.contrato.payload, 'Vista previa — borrador en vivo');
       return;
     }
 
-    if (e.target.closest('#btnConfirmContrato')){
-      const { error } = await sb.rpc('confirm_contrato', { p_request_id: REQ_ID });
-      if (error){ toast('err', 'No se pudo confirmar', error.message); return; }
-      toast('ok', 'Contrato confirmado', 'Ya podés pasar al plan de hitos.');
+    if (e.target.closest('#btnCorregirDatos')){
+      const destino = STATE.contrato.faltantes.find(f => f.pantalla && f.origen !== 'perfil_cliente');
+      if (destino) window.open(destino.pantalla, '_blank', 'noopener');
+      return;
+    }
+
+    if (e.target.closest('#btnEnviarContrato')){
+      const { payload, hash } = STATE.contrato;
+      const { error } = await sb.rpc('contrato_enviar', { p_request_id: REQ_ID, p_payload: payload, p_hash: hash });
+      if (error){ toast('err', 'No se pudo enviar', error.message); return; }
+      toast('ok', 'Contrato enviado', 'Quedó congelada esta versión. Ahora falta que cliente y contratista lo firmen.');
       await loadAll();
+      return;
+    }
+
+    if (e.target.closest('#btnFirmarContrato')){
+      const versionId = STATE.contrato.version?.id;
+      if (!versionId) return;
+      const { data, error } = await sb.rpc('contrato_aceptar', { p_version_id: versionId });
+      if (error){ toast('err', 'No se pudo firmar', error.message); return; }
+      if (data?.estado === 'firmado'){
+        const { error: confirmErr } = await sb.rpc('confirm_contrato', { p_request_id: REQ_ID });
+        if (confirmErr) console.warn('confirm_contrato:', confirmErr.message);
+        toast('ok', 'Contrato firmado', 'Las dos partes aceptaron esta versión. Ya podés pasar al plan de hitos.');
+      } else {
+        toast('ok', 'Firma registrada', 'Falta que la otra parte también firme para que quede firmado.');
+      }
+      await loadAll();
+      return;
+    }
+
+    if (e.target.closest('#btnDescargarFinal')){
+      const v = STATE.contrato.version;
+      if (v?.estado === 'firmado') downloadContratoFinal(v);
+      return;
+    }
+
+    if (e.target.closest('[data-close-contrato-modal]') || e.target.id === 'contratoPreviewModal'){
+      document.getElementById('contratoPreviewModal').classList.remove('open');
       return;
     }
 
@@ -409,18 +436,6 @@ function initEvents(){
       await loadAll();
       return;
     }
-  });
-
-  document.getElementById('contratoFileInput').addEventListener('change', (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (file) uploadObraDoc('contrato', file);
-  });
-
-  document.getElementById('anexoFileInput').addEventListener('change', (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (file) uploadObraDoc('anexo', file);
   });
 
   document.getElementById('newMilestoneForm').addEventListener('submit', async (e) => {
@@ -482,6 +497,24 @@ function initEvents(){
     toast('ok', 'Participante agregado', nombre);
     await loadAll();
   });
+}
+
+/* ── Contrato: preview modal y descarga final ────────────────────────── */
+function openContratoPreview(payload, titulo){
+  document.getElementById('contratoPreviewTitle').textContent = titulo;
+  document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(payload);
+  document.getElementById('contratoPreviewModal').classList.add('open');
+}
+
+function downloadContratoFinal(version){
+  const meta = `Versión ${version.version} · Firmado ${new Date(version.firmado_at).toLocaleString('es-AR')} · Hash ${version.hash.slice(0, 16)}…`;
+  const html = window.renderContratoHTML(version.payload, meta);
+  const win = window.open('', '_blank');
+  if (!win){ toast('err', 'No se pudo abrir la vista', 'Habilitá los pop-ups para descargar el contrato final.'); return; }
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Contrato firmado — v${version.version}</title></head><body>${html}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 300);
 }
 
 /* ── Nav / UI compartida ─────────────────────────────── */
