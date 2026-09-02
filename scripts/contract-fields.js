@@ -45,26 +45,36 @@ window.BRICKO_FIELDS = [
     id: 1, estado: 'definido', clave: 'cliente_nombre_completo',
     label: 'Nombre / razón social del comitente', origen: 'perfil_cliente',
     tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
-    fuente: { tabla: 'profiles', columnas: ['first_name', 'last_name'] }
+    fuente: { tabla: 'profiles', columnas: ['razon_social', 'first_name', 'last_name'] }
   },
-  stubField(2, 'pendiente', {
-    origen: 'perfil_cliente', alimenta: 'contrato',
-    todo: 'TODO (PARTES): DNI/CUIT del comitente. client-perfil.html no pide DNI/CUIT hoy -- no existe columna en profiles. Definir si va en profiles o en una tabla de verificación propia del cliente (como professional_verification para el pro) antes de agregar la pantalla.'
-  }),
+  // T1: client-perfil.html agrega tipo_persona/dni/cuit (persona humana ->
+  // DNI con CUIT opcional; persona jurídica -> CUIT obligatorio).
+  {
+    id: 2, estado: 'definido', clave: 'cliente_dni_cuit',
+    label: 'DNI/CUIT del comitente', origen: 'perfil_cliente',
+    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'profiles', columnas: ['tipo_persona', 'dni', 'cuit'] }
+  },
   {
     id: 3, estado: 'definido', clave: 'cliente_domicilio',
     label: 'Domicilio contractual del comitente', origen: 'perfil_cliente',
     tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
-    fuente: { tabla: 'profiles', columnas: ['address'] }
+    fuente: { tabla: 'profiles', columnas: ['address', 'usa_domicilio_alt', 'domicilio_contractual_alt'] }
   },
   stubField(4, 'existe_no_expuesto', {
     clave: 'cliente_email', label: 'Correo del comitente', origen: 'perfil_cliente', alimenta: 'contrato',
     todo: 'TODO (PARTES): el cliente ya dio su email al registrarse (auth.users.email), pero profiles no lo guarda y un profesional no puede leer auth.users de otro usuario por RLS. Exponerlo (ej. columna profiles.email poblada por handle_new_user + backfill) en vez de pedirlo de nuevo.'
   }),
-  stubField(5, 'pendiente', {
-    origen: 'obra', alimenta: 'contrato',
-    todo: 'TODO (PARTES): carácter en que el comitente actúa respecto del inmueble (propietario, apoderado, etc.). No se recolecta en ninguna pantalla hoy -- es del inmueble/obra puntual, no del perfil general del cliente (puede cambiar entre solicitudes).'
-  }),
+  // T1: client-perfil.html agrega caracter_inmueble (select obligatorio) +
+  // caracter_inmueble_aclaracion (obligatoria si no es "propietario").
+  // Corrige el origen respecto de la primera versión de este diccionario:
+  // se decidió que viva en el perfil general del cliente, no por obra.
+  {
+    id: 5, estado: 'definido', clave: 'caracter_inmueble',
+    label: 'Carácter respecto del inmueble', origen: 'perfil_cliente',
+    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'profiles', columnas: ['caracter_inmueble', 'caracter_inmueble_aclaracion'] }
+  },
 
   // ── PARTES: CONTRATISTA (profesional) — [6]-[11] ───────────────────
   {

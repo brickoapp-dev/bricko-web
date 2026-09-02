@@ -15,6 +15,26 @@ function tipoRubroLabel(request) {
   return request?.tipo_construccion || null;
 }
 
+function dniCuitLabel(profile) {
+  if (!profile) return null;
+  if (profile.tipo_persona === 'juridica') return profile.cuit || null;
+  return profile.cuit ? `${profile.dni} (CUIT ${profile.cuit})` : (profile.dni || null);
+}
+
+function domicilioContractual(profile) {
+  if (!profile) return null;
+  if (profile.usa_domicilio_alt && profile.domicilio_contractual_alt) return profile.domicilio_contractual_alt;
+  return profile.address || null;
+}
+
+function caracterInmuebleLabel(profile) {
+  if (!profile?.caracter_inmueble) return null;
+  if (profile.caracter_inmueble === 'propietario') return 'Propietario';
+  return profile.caracter_inmueble_aclaracion
+    ? `${profile.caracter_inmueble} (${profile.caracter_inmueble_aclaracion})`
+    : profile.caracter_inmueble;
+}
+
 /* Arma el objeto único de datos de contrato para una obra (request_id).
    Lee perfil del cliente, perfil del contratista, datos de la obra, el
    precio adjudicado, hitos y participantes -- una sola vuelta de
@@ -45,7 +65,9 @@ async function getContractData(obraId) {
     { data: quote },
     { data: hitos }
   ] = await Promise.all([
-    sb.from('profiles').select('*').eq('id', request.user_id).single(),
+    sb.from('profiles')
+      .select('first_name, last_name, razon_social, tipo_persona, dni, cuit, address, usa_domicilio_alt, domicilio_contractual_alt, caracter_inmueble, caracter_inmueble_aclaracion')
+      .eq('id', request.user_id).single(),
     sb.from('profiles').select('*').eq('id', prep.pro_id).single(),
     sb.from('professional_verification').select('*').eq('id', prep.pro_id).maybeSingle(),
     sb.from('quotes').select('amount').eq('request_id', obraId).eq('pro_id', prep.pro_id).eq('status', 'accepted').maybeSingle(),
@@ -73,8 +95,10 @@ async function getContractData(obraId) {
     obraId,
 
     // PARTES — comitente [1]-[5]
-    cliente_nombre_completo: joinName(clientProfile?.first_name, clientProfile?.last_name),
-    cliente_domicilio: clientProfile?.address || null,
+    cliente_nombre_completo: clientProfile?.razon_social || joinName(clientProfile?.first_name, clientProfile?.last_name),
+    cliente_dni_cuit: dniCuitLabel(clientProfile),
+    cliente_domicilio: domicilioContractual(clientProfile),
+    caracter_inmueble: caracterInmuebleLabel(clientProfile),
 
     // PARTES — contratista [6]-[11]
     contratista_nombre_completo: joinName(proProfile?.first_name, proProfile?.last_name),
