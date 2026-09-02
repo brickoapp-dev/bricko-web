@@ -110,11 +110,6 @@ async function getContractData(obraId) {
     participantes = parts || [];
   }
 
-  const participantesPorHito = {};
-  participantes.forEach(p => {
-    (participantesPorHito[p.hito_id] ||= []).push(p.nombre);
-  });
-
   return {
     obraId,
 
@@ -140,12 +135,14 @@ async function getContractData(obraId) {
     obra_precio_total: quote?.amount ?? null,
     obra_moneda: 'ARS',
 
-    // 4. HITOS Y ENTREGABLES [22]-[25],[27] (uno por hito)
+    // 4. HITOS Y ENTREGABLES [22]-[27],[31] (uno por hito)
     hito_titulo: hitosList.map(h => h.titulo),
     hito_resultado_verificable: hitosList.map(h => h.descripcion),
     hito_monto: hitosList.map(h => h.monto),
     hito_fecha_objetivo: hitosList.map(h => h.fecha_estimada),
-    hito_responsable: hitosList.map(h => (participantesPorHito[h.id] || []).join(', ') || null),
+    hito_criterio_aceptacion: hitosList.map(h => h.criterio_aceptacion),
+    hito_responsable: hitosList.map(h => h.responsable_nombre || null),
+    plazo_observacion_dias: hitosList.map(h => (h.plazo_propio ? h.plazo_observacion_dias : prep.plazo_observacion_dias_default) ?? null),
 
     // 6. EQUIPO Y MODALIDAD DE PARTICIPACIÓN [29]-[30]
     participantes_listado: participantes.map(p => ({ hito_id: p.hito_id, nombre: p.nombre, especialidad: p.especialidad, modalidad: p.modalidad })),
@@ -223,3 +220,7 @@ async function buildContractPayload(obraId) {
 window.getContractData = getContractData;
 window.validateContractData = validateContractData;
 window.buildContractPayload = buildContractPayload;
+// Reutilizados por el versionado del plan por hitos (T4): mismo mecanismo
+// de hash que el contrato, sobre un payload distinto.
+window.canonicalStringify = canonicalStringify;
+window.sha256Hex = sha256Hex;

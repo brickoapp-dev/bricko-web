@@ -35,17 +35,24 @@ const CONTRACT_CSS = `
 function renderContratoHTML(data, meta) {
   data = data || {};
   const hitoCount = (data.hito_titulo || []).length;
+  const hitoCelda = (arr, i, fmt) => {
+    const v = arr?.[i];
+    if (v === null || v === undefined || v === '') return '<mark class="cf-falta">falta</mark>';
+    return fmt ? fmt(v) : escapeHTML(String(v));
+  };
   const hitosRows = hitoCount
     ? Array.from({ length: hitoCount }, (_, i) => `
       <tr>
         <td>${i + 1}</td>
-        <td>${escapeHTML(data.hito_titulo?.[i] || '')}</td>
-        <td>${escapeHTML(data.hito_resultado_verificable?.[i] || '')}</td>
-        <td>$ ${money(data.hito_monto?.[i])}</td>
-        <td>${escapeHTML(data.hito_fecha_objetivo?.[i] || '')}</td>
-        <td>${escapeHTML(data.hito_responsable?.[i] || '')}</td>
+        <td>${hitoCelda(data.hito_titulo, i)}</td>
+        <td>${hitoCelda(data.hito_resultado_verificable, i)}</td>
+        <td>${hitoCelda(data.hito_criterio_aceptacion, i)}</td>
+        <td>${hitoCelda(data.hito_monto, i, (v) => `$ ${money(v)}`)}</td>
+        <td>${hitoCelda(data.hito_fecha_objetivo, i)}</td>
+        <td>${hitoCelda(data.hito_responsable, i)}</td>
+        <td>${hitoCelda(data.plazo_observacion_dias, i, (v) => `${v} días`)}</td>
       </tr>`).join('')
-    : `<tr><td colspan="6"><mark class="cf-falta">falta: plan por hitos [22]-[25],[27]</mark></td></tr>`;
+    : `<tr><td colspan="8"><mark class="cf-falta">falta: plan por hitos [22]-[27],[31]</mark></td></tr>`;
 
   const participantes = data.participantes_listado || [];
   const participantesRows = participantes.length
@@ -101,11 +108,14 @@ function renderContratoHTML(data, meta) {
 
       <h2>4. HITOS Y ENTREGABLES</h2>
       <table class="contrato-tabla">
-        <thead><tr><th>#</th><th>Título [22]</th><th>Resultado verificable [23]</th><th>Monto [24]</th><th>Fecha objetivo [25]</th><th>Responsable [27]</th></tr></thead>
+        <thead><tr>
+          <th>#</th><th>Título [22]</th><th>Resultado verificable [23]</th>
+          <th>Criterio de aceptación [26]</th><th>Monto [24]</th><th>Fecha objetivo [25]</th>
+          <th>Responsable [27]</th><th>Plazo de observación [31]</th>
+        </tr></thead>
         <tbody>${hitosRows}</tbody>
       </table>
-      <p>Criterio de aceptación: ${campo(data, 'hito_criterio_aceptacion', '[26] Criterio de aceptación')}.</p>
-      <p>El COMITENTE aprobará u observará cada hito dentro del plazo indicado en ${campo(data, 'plazo_aprobacion_hitos', '[31] Plazo de aprobación de hitos')}.
+      <p>El COMITENTE aprobará u observará cada hito dentro del plazo de observación indicado en la tabla.
       La observación debe identificar el incumplimiento concreto respecto del resultado o criterio acordado.</p>
 
       <h2>5. MATERIALES</h2>

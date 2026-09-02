@@ -162,24 +162,68 @@
             <div class="pj-gate-card">
               <div class="pj-kicker">04 · Plan de obra</div>
               <h2>Dividí la obra en hitos.</h2>
-              <p class="lead">Cada hito define un resultado verificable, un monto y una fecha estimada.</p>
+              <p class="lead">Cada hito define un resultado verificable [23], un criterio de aceptación [26], un monto [24], una fecha objetivo [25], un responsable [27] y un plazo de observación [31]. Al confirmar, el plan queda congelado (versión + hash) y de solo lectura.</p>
+
+              <div class="pj-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+                <div class="pj-field">
+                  <label class="pj-small">Plazo de observación por defecto (días)</label>
+                  <input class="form-input" id="mPlazoDefault" type="number" min="1" placeholder="Ej: 5" />
+                </div>
+                <div class="pj-field">
+                  <label class="pj-small">Monto adjudicado vs. suma de hitos</label>
+                  <span class="pj-status warn" id="montoDeltaInfo">—</span>
+                </div>
+              </div>
+
+              <div class="pj-notice-product" id="fechaOrdenWarning" style="display:none;margin-bottom:18px">
+                <p>Las fechas objetivo no están en orden creciente. Podés confirmar igual, pero revisá el orden de los hitos.</p>
+              </div>
 
               <div class="pj-milestones" id="milestonesList"></div>
 
               <form id="newMilestoneForm" class="pj-panel pj-panel-pad" style="margin-top:16px;display:grid;gap:12px;grid-template-columns:1fr 1fr">
-                <div style="grid-column:1/-1"><label class="pj-small">Título del hito</label><input class="form-input" id="mTitulo" required placeholder="Ej: Preparación y estructura" /></div>
-                <div style="grid-column:1/-1"><label class="pj-small">Resultado esperado</label><textarea class="form-input" id="mDescripcion" rows="2" placeholder="¿Qué queda terminado y verificable al cerrar este hito?"></textarea></div>
-                <div><label class="pj-small">Monto (ARS)</label><input class="form-input" id="mMonto" type="number" required placeholder="0" /></div>
-                <div><label class="pj-small">Fecha estimada</label><input class="form-input" id="mFecha" type="date" /></div>
+                <div style="grid-column:1/-1"><label class="pj-small">Título del hito [22]</label><input class="form-input" id="mTitulo" required placeholder="Ej: Preparación y estructura" /></div>
+                <div style="grid-column:1/-1"><label class="pj-small">Resultado esperado [23] (obligatorio)</label><textarea class="form-input" id="mDescripcion" rows="2" required placeholder="¿Qué queda terminado y verificable al cerrar este hito?"></textarea></div>
+                <div style="grid-column:1/-1"><label class="pj-small">Criterio de aceptación [26] (obligatorio)</label><textarea class="form-input" id="mCriterioAceptacion" rows="2" required placeholder="¿Qué se verifica para dar el hito por cumplido?"></textarea></div>
+                <div><label class="pj-small">Monto (ARS) [24]</label><input class="form-input" id="mMonto" type="number" required placeholder="0" /></div>
+                <div><label class="pj-small">Fecha objetivo [25]</label><input class="form-input" id="mFecha" type="date" /></div>
+                <div style="grid-column:1/-1"><label class="pj-small">Responsable [27] (obligatorio)</label>
+                  <select class="form-input" id="mResponsable" required>
+                    <option value="">Seleccioná un responsable</option>
+                  </select>
+                </div>
+                <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px">
+                  <input type="checkbox" id="mPlazoPropio" style="width:16px;height:16px;accent-color:var(--orange)" />
+                  <label for="mPlazoPropio" style="text-transform:none;font-size:13px;margin:0">Este hito tiene un plazo de observación propio (distinto del de la obra)</label>
+                </div>
+                <div id="mPlazoPropioField" style="grid-column:1/-1;display:none">
+                  <label class="pj-small">Plazo propio (días) [31]</label>
+                  <input class="form-input" id="mPlazoDias" type="number" min="1" placeholder="Ej: 10" />
+                </div>
                 <div style="grid-column:1/-1"><button class="pj-btn primary" type="submit">+ Agregar hito</button></div>
               </form>
 
               <div class="pj-gate-footer">
                 <span class="pj-status warn" id="hitosStatus">Pendiente</span>
                 <button class="pj-btn primary" id="confirmMilestones">Confirmar plan por hitos</button>
+                <button class="pj-btn" id="btnReabrirPlan" style="display:none">Editar plan (reabrir)</button>
               </div>
             </div>
           </section>
+
+          <!-- Modal: advertencia al reabrir el plan por hitos -->
+          <div class="modal-overlay" id="reabrirPlanModal">
+            <div class="modal">
+              <div class="modal-head"><span>Reabrir plan por hitos</span><button class="modal-close" data-close-reabrir-modal aria-label="Cerrar"></button></div>
+              <div class="modal-body">
+                <p class="modal-sub" id="reabrirPlanText">¿Reabrir el plan para editarlo?</p>
+                <div style="display:flex;gap:12px;justify-content:flex-end">
+                  <button class="btn-ghost" data-close-reabrir-modal type="button">Cancelar</button>
+                  <button class="pj-btn primary" id="btnConfirmReabrir" type="button">Sí, reabrir plan</button>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- Gate 5 -->
           <section class="pj-gate-panel" data-gate-panel="5">

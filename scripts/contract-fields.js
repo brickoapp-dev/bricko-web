@@ -198,15 +198,17 @@ window.BRICKO_FIELDS = [
     tipo: 'date', requerido: true, alimenta: 'anexo_hitos', lista: true,
     fuente: { tabla: 'hitos', columnas: ['fecha_estimada'] }
   },
-  stubField(26, 'pendiente', {
-    origen: 'plan_hitos', alimenta: 'anexo_hitos',
-    todo: 'TODO (HITOS): criterio de aceptación del hito. hitos.descripcion cubre el "resultado verificable" [23] pero no hay un campo separado de "criterio de aceptación" -- ver si son el mismo dato o hace falta una columna nueva (hitos.criterio_aceptacion).'
-  }),
+  {
+    id: 26, estado: 'definido', clave: 'hito_criterio_aceptacion',
+    label: 'Criterio de aceptación del hito', origen: 'plan_hitos',
+    tipo: 'text', requerido: true, alimenta: 'anexo_hitos', lista: true,
+    fuente: { tabla: 'hitos', columnas: ['criterio_aceptacion'] }
+  },
   {
     id: 27, estado: 'definido', clave: 'hito_responsable',
-    label: 'Responsable del hito', origen: 'participantes',
-    tipo: 'text', requerido: false, alimenta: 'anexo_hitos', lista: true,
-    fuente: { tabla: 'hito_participantes', columnas: ['nombre'], filtro: 'agrupado por hito_id' }
+    label: 'Responsable del hito', origen: 'plan_hitos',
+    tipo: 'text', requerido: true, alimenta: 'anexo_hitos', lista: true,
+    fuente: { tabla: 'hitos', columnas: ['responsable_nombre', 'responsable_equipo_id'] }
   },
 
   // ── 5. MATERIALES — [28] ────────────────────────────────────────────
@@ -229,9 +231,13 @@ window.BRICKO_FIELDS = [
     fuente: { tabla: 'hito_participantes', columnas: ['documentacion_nota'] }
   },
 
-  // ── 4. HITOS Y ENTREGABLES (cont.) — [31] ───────────────────────────
-  stubField(31, 'pendiente', {
-    origen: 'obra', alimenta: 'anexo_hitos',
-    todo: 'TODO (HITOS): plazo en que el comitente debe aprobar u observar cada hito (ej. "5 días hábiles"). No existe ningún campo de este tipo en obra_preparacion -- es una configuración a nivel obra, no por hito.'
-  })
+  // ── 4. HITOS Y ENTREGABLES (cont.) — [31] (T4) ─────────────────────
+  // Un valor por hito: plazo_observacion_dias propio si plazo_propio,
+  // si no el default de la obra (obra_preparacion.plazo_observacion_dias_default).
+  {
+    id: 31, estado: 'definido', clave: 'plazo_observacion_dias',
+    label: 'Plazo de observación del hito (días)', origen: 'plan_hitos',
+    tipo: 'number', requerido: true, alimenta: 'anexo_hitos', lista: true,
+    fuente: { tabla: 'hitos', columnas: ['plazo_propio', 'plazo_observacion_dias'], fallback: { tabla: 'obra_preparacion', columna: 'plazo_observacion_dias_default' } }
+  }
 ];

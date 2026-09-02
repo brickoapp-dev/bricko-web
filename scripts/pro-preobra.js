@@ -30,7 +30,7 @@ let SESSION = null;
 let REQ_ID = null;
 let UI_GATE = 1;
 let GATE_FROM_URL = false;
-const STATE = { request:null, prep:null, hitos:[], participantes:[], equipo:[], documentosCount:0, contrato:null };
+const STATE = { request:null, prep:null, hitos:[], participantes:[], equipo:[], documentosCount:0, contrato:null, planHitos:null };
 
 document.addEventListener('DOMContentLoaded', async () => {
   SESSION = getSession();
@@ -121,9 +121,23 @@ async function loadAll(){
   STATE.documentosCount = documentos?.length || 0;
 
   await loadContratoState();
+  await loadPlanHitosState();
 
   if (firstLoad && !GATE_FROM_URL) UI_GATE = prep.current_gate || 2;
   render();
+}
+
+/* ── Plan por hitos: versión activa (confirmado/invalidado) ─────────── */
+async function loadPlanHitosState(){
+  const { data: version } = await sb
+    .from('plan_hitos_versiones')
+    .select('*')
+    .eq('request_id', REQ_ID)
+    .neq('estado', 'invalidado')
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  STATE.planHitos = { version };
 }
 
 /* ── Contrato: payload+hash en vivo, reconciliación y versión activa ── */
@@ -186,7 +200,7 @@ function render(){
   renderContrato();
   setStatusPill('contratoStatus', prep.gate_contrato, 'Contrato firmado', 'Pendiente');
 
-  renderMilestones();
+  renderPlanHitos();
   setStatusPill('hitosStatus', prep.gate_hitos, 'Plan confirmado', 'Pendiente');
 
   renderEquipoSelect();
@@ -264,12 +278,18 @@ function renderContrato(){
   document.getElementById('btnDescargarFinal').disabled = estado !== 'firmado';
 }
 
-function renderMilestones(){
+function renderPlanHitos(){
+  const confirmado = !!STATE.planHitos?.version;
+
+  renderResponsableSelect();
+
   const list = document.getElementById('milestonesList');
   if (!STATE.hitos.length){
     list.innerHTML = '<div class="pj-empty">Todavía no agregaste hitos.</div>';
   } else {
-    list.innerHTML = STATE.hitos.map(h => `
+    list.innerHTML = STATE.hitos.map(h => {
+      const plazoDias = h.plazo_propio ? h.plazo_observacion_dias : STATE.prep.plazo_observacion_dias_default;
+      return `
       <article class="pj-milestone">
         <div class="pj-milestone-head">
           <div class="pj-milestone-num">${String(h.numero).padStart(2,'0')}</div>
@@ -279,18 +299,57 @@ function renderMilestones(){
         <div class="pj-milestone-body">
           <div class="pj-milestone-meta">
             <div><small>Monto</small><strong>$ ${money(h.monto)}</strong></div>
-            <div><small>Fecha</small><strong>${h.fecha_estimada ? new Date(h.fecha_estimada + 'T00:00:00').toLocaleDateString('es-AR') : '—'}</strong></div>
+            <div><small>Fecha objetivo</small><strong>${h.fecha_estimada ? new Date(h.fecha_estimada + 'T00:00:00').toLocaleDateString('es-AR') : '—'}</strong></div>
+            <div><small>Criterio de aceptación</small><strong>${escapeHTML(h.criterio_aceptacion || '—')}</strong></div>
+            <div><small>Responsable</small><strong>${escapeHTML(h.responsable_nombre || '—')}</strong></div>
+            <div><small>Plazo de observación</small><strong>${plazoDias ? plazoDias + ' días' + (h.plazo_propio ? ' (propio)' : '') : '—'}</strong></div>
             <div><small>Avance</small><strong>${h.avance_pct}%</strong></div>
             <div><small>Pago</small><strong>${{pending:'Pendiente',approved:'Aprobado',paid:'Pagado'}[h.pago_estado] || h.pago_estado}</strong></div>
           </div>
-          ${h.status === 'pending' ? `<div class="pj-actions" style="margin-top:12px"><button class="pj-btn" data-delete-hito="${h.id}">Eliminar</button></div>` : ''}
+          ${h.status === 'pending' && !confirmado ? `<div class="pj-actions" style="margin-top:12px"><button class="pj-btn" data-delete-hito="${h.id}">Eliminar</button></div>` : ''}
         </div>
       </article>
-    `).join('');
+    `;
+    }).join('');
   }
 
   const select = document.getElementById('pHito');
   select.innerHTML = STATE.hitos.map(h => `<option value="${h.id}">${String(h.numero).padStart(2,'0')} · ${escapeHTML(h.titulo)}</option>`).join('');
+
+  // Monto adjudicado vs. suma de hitos (delta en vivo)
+  const montoHitos = STATE.hitos.reduce((s, h) => s + Number(h.monto || 0), 0);
+  const delta = montoHitos - STATE.montoAdjudicado;
+  const deltaEl = document.getElementById('montoDeltaInfo');
+  deltaEl.textContent = delta === 0
+    ? `$ ${money(montoHitos)} = monto adjudicado`
+    : `$ ${money(montoHitos)} vs. $ ${money(STATE.montoAdjudicado)} (${delta > 0 ? '+' : ''}${money(delta)})`;
+  deltaEl.className = 'pj-status ' + (delta === 0 ? 'ok' : 'warn');
+
+  // Fechas objetivo en orden creciente (advertencia, no bloqueo)
+  const fechas = STATE.hitos.map(h => h.fecha_estimada).filter(Boolean);
+  const enOrden = fechas.every((f, i) => i === 0 || f >= fechas[i - 1]);
+  document.getElementById('fechaOrdenWarning').style.display = (fechas.length > 1 && !enOrden) ? '' : 'none';
+
+  // Plazo de observación por defecto (obra)
+  const plazoDefaultInput = document.getElementById('mPlazoDefault');
+  if (document.activeElement !== plazoDefaultInput) plazoDefaultInput.value = STATE.prep.plazo_observacion_dias_default || '';
+  plazoDefaultInput.disabled = confirmado;
+
+  // Bloquear el form de alta y mostrar Editar/Reabrir en vez de Confirmar
+  document.getElementById('newMilestoneForm').style.display = confirmado ? 'none' : '';
+  document.getElementById('confirmMilestones').style.display = confirmado ? 'none' : '';
+  document.getElementById('btnReabrirPlan').style.display = confirmado ? '' : 'none';
+}
+
+function renderResponsableSelect(){
+  const select = document.getElementById('mResponsable');
+  if (!select) return;
+  const current = select.value;
+  const yo = ((SESSION.firstName || '') + ' ' + (SESSION.lastName || '')).trim() || 'Yo (el contratista)';
+  select.innerHTML = `<option value="">Seleccioná un responsable</option>
+    <option value="__yo__">${escapeHTML(yo)} (vos)</option>
+    ${STATE.equipo.map(p => `<option value="${p.id}">${escapeHTML(p.nombre)}${p.especialidad ? ' · ' + escapeHTML(p.especialidad) : ''}</option>`).join('')}`;
+  select.value = current;
 }
 
 function renderEquipoSelect(){
@@ -391,10 +450,34 @@ function initEvents(){
     }
 
     if (e.target.closest('#confirmMilestones')){
-      const { error } = await sb.rpc('confirm_milestones_plan', { p_request_id: REQ_ID });
+      const { payload, hash } = await buildPlanHitosPayload();
+      const { error } = await sb.rpc('plan_hitos_confirmar', { p_request_id: REQ_ID, p_payload: payload, p_hash: hash });
       if (error){ toast('err', 'No se pudo confirmar', error.message); return; }
-      toast('ok', 'Plan por hitos confirmado', 'Ya podés pasar a participantes.');
+      toast('ok', 'Plan por hitos confirmado', 'Los hitos quedaron de solo lectura. Ya podés pasar a participantes.');
       await loadAll();
+      return;
+    }
+
+    if (e.target.closest('#btnReabrirPlan')){
+      const contratoFirmado = STATE.contrato?.version?.estado === 'firmado';
+      document.getElementById('reabrirPlanText').textContent = contratoFirmado
+        ? 'El contrato ya está FIRMADO por las dos partes. Si reabrís el plan por hitos para editarlo, la próxima vez que se detecte el cambio el contrato firmado va a quedar invalidado y va a haber que enviarlo y firmarlo de nuevo. ¿Confirmás que querés reabrir igual?'
+        : 'Vas a poder volver a editar los hitos. La versión confirmada actual queda como historial. ¿Confirmás?';
+      document.getElementById('reabrirPlanModal').classList.add('open');
+      return;
+    }
+
+    if (e.target.closest('#btnConfirmReabrir')){
+      const { error } = await sb.rpc('plan_hitos_reabrir', { p_request_id: REQ_ID });
+      document.getElementById('reabrirPlanModal').classList.remove('open');
+      if (error){ toast('err', 'No se pudo reabrir', error.message); return; }
+      toast('ok', 'Plan reabierto', 'Ya podés volver a editar los hitos.');
+      await loadAll();
+      return;
+    }
+
+    if (e.target.closest('[data-close-reabrir-modal]') || e.target.id === 'reabrirPlanModal'){
+      document.getElementById('reabrirPlanModal').classList.remove('open');
       return;
     }
 
@@ -438,20 +521,52 @@ function initEvents(){
     }
   });
 
+  document.getElementById('mPlazoPropio').addEventListener('change', (e) => {
+    document.getElementById('mPlazoPropioField').style.display = e.target.checked ? '' : 'none';
+  });
+
+  document.getElementById('mPlazoDefault').addEventListener('change', async (e) => {
+    const dias = e.target.value ? Number(e.target.value) : null;
+    const { error } = await sb.from('obra_preparacion').update({ plazo_observacion_dias_default: dias }).eq('request_id', REQ_ID);
+    if (error){ toast('err', 'No se pudo guardar el plazo', error.message); return; }
+    STATE.prep.plazo_observacion_dias_default = dias;
+    toast('ok', 'Plazo por defecto actualizado', dias ? `${dias} días` : 'Sin definir');
+    renderPlanHitos();
+  });
+
   document.getElementById('newMilestoneForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const titulo = document.getElementById('mTitulo').value.trim();
     const descripcion = document.getElementById('mDescripcion').value.trim();
+    const criterioAceptacion = document.getElementById('mCriterioAceptacion').value.trim();
     const monto = Number(document.getElementById('mMonto').value);
     const fecha = document.getElementById('mFecha').value || null;
+    const responsableValue = document.getElementById('mResponsable').value;
+    const plazoPropio = document.getElementById('mPlazoPropio').checked;
+    const plazoDias = document.getElementById('mPlazoDias').value ? Number(document.getElementById('mPlazoDias').value) : null;
+
     if (!titulo || !monto){ toast('err', 'Faltan datos', 'Título y monto son obligatorios.'); return; }
+    if (!descripcion){ toast('err', 'Falta el resultado esperado', 'Es obligatorio.'); return; }
+    if (!criterioAceptacion){ toast('err', 'Falta el criterio de aceptación', 'Es obligatorio.'); return; }
+    if (!responsableValue){ toast('err', 'Falta el responsable', 'Elegí quién responde por este hito.'); return; }
+    if (plazoPropio && !plazoDias){ toast('err', 'Falta el plazo propio', 'Cargá los días o destildá "plazo propio".'); return; }
+
+    const equipoMember = responsableValue === '__yo__' ? null : STATE.equipo.find(p => p.id === responsableValue);
+    const responsableNombre = responsableValue === '__yo__'
+      ? (((SESSION.firstName || '') + ' ' + (SESSION.lastName || '')).trim() || 'Contratista')
+      : (equipoMember?.nombre || '');
+    const responsableEquipoId = responsableValue === '__yo__' ? null : responsableValue;
 
     const numero = (STATE.hitos[STATE.hitos.length - 1]?.numero || 0) + 1;
     const { error } = await sb.from('hitos').insert({
-      request_id: REQ_ID, numero, titulo, descripcion: descripcion || null, monto, fecha_estimada: fecha
+      request_id: REQ_ID, numero, titulo, descripcion, monto, fecha_estimada: fecha,
+      criterio_aceptacion: criterioAceptacion,
+      responsable_nombre: responsableNombre, responsable_equipo_id: responsableEquipoId,
+      plazo_propio: plazoPropio, plazo_observacion_dias: plazoPropio ? plazoDias : null
     });
     if (error){ toast('err', 'No se pudo agregar', error.message); return; }
     e.target.reset();
+    document.getElementById('mPlazoPropioField').style.display = 'none';
     toast('ok', 'Hito agregado', titulo);
     await loadAll();
   });
@@ -515,6 +630,21 @@ function downloadContratoFinal(version){
   win.document.close();
   win.focus();
   setTimeout(() => win.print(), 300);
+}
+
+/* ── Plan por hitos: payload + hash (mismo mecanismo que el contrato) ── */
+async function buildPlanHitosPayload(){
+  const payload = {
+    plazo_observacion_dias_default: STATE.prep.plazo_observacion_dias_default,
+    hitos: STATE.hitos.map(h => ({
+      numero: h.numero, titulo: h.titulo, descripcion: h.descripcion, monto: h.monto,
+      fecha_estimada: h.fecha_estimada, criterio_aceptacion: h.criterio_aceptacion,
+      responsable_nombre: h.responsable_nombre, responsable_equipo_id: h.responsable_equipo_id,
+      plazo_propio: h.plazo_propio, plazo_observacion_dias: h.plazo_observacion_dias
+    }))
+  };
+  const hash = await window.sha256Hex(window.canonicalStringify(payload));
+  return { payload, hash };
 }
 
 /* ── Nav / UI compartida ─────────────────────────────── */
