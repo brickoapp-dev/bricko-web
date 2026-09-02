@@ -89,22 +89,13 @@ function renderContratoHTML(data, meta) {
       en adelante el "CONTRATISTA", se celebra el presente contrato de obra.</p>
 
       <h2>1. OBJETO</h2>
-      <p>El CONTRATISTA se obliga a ejecutar el trabajo en el inmueble sito en ${campo(data, 'obra_direccion_inmueble', '[12] Dirección del inmueble')},
-      correspondiente al tipo/rubro ${campo(data, 'obra_tipo_rubro', '[13] Tipo/rubro')}.
-      El alcance contratado es ${campo(data, 'obra_alcance', '[14] Alcance contratado')}.
-      Quedan excluidos: ${campo(data, 'obra_exclusiones', '[15] Exclusiones')}.</p>
+      <p><mark class="cf-falta">PENDIENTE [12]-[15]: el PDF de referencias menciona estos campos pero no define el texto de esta cláusula -- falta el documento 01 de la serie (cuerpo del contrato marco). No se redacta un texto propio para no inventar la cláusula.</mark></p>
 
       <h2>2. PRECIO Y FORMA DE PAGO</h2>
-      <p>El precio total es $ ${data.obra_precio_total != null ? money(data.obra_precio_total) : campo(data, 'obra_precio_total', '[16] Precio total')}
-      en ${campo(data, 'obra_moneda', '[17] Moneda')},
-      con el tratamiento de impuestos indicado en ${campo(data, 'obra_tratamiento_impuestos', '[18] Tratamiento de impuestos')}.
-      El anticipo y/o forma inicial de pago será ${campo(data, 'obra_forma_pago_inicial', '[19] Forma de pago inicial')}.
-      Los pagos posteriores se vinculan a los hitos acordados.</p>
+      <p><mark class="cf-falta">PENDIENTE [16]-[19]: mismo caso que la sección 1 -- falta el documento 01 de la serie.</mark></p>
 
       <h2>3. PLAZO</h2>
-      <p>Fecha estimada de inicio: ${campo(data, 'obra_fecha_inicio', '[20] Fecha de inicio')}.
-      Fecha estimada de finalización: ${campo(data, 'obra_fecha_fin', '[21] Fecha de finalización')}.
-      Los cambios de plazo deben quedar documentados mediante una orden de cambio aceptada por ambas partes.</p>
+      <p><mark class="cf-falta">PENDIENTE [20]-[21]: mismo caso que la sección 1 -- falta el documento 01 de la serie.</mark></p>
 
       <h2>4. HITOS Y ENTREGABLES</h2>
       <table class="contrato-tabla">

@@ -10,11 +10,6 @@ function joinName(first, last) {
   return full || null;
 }
 
-function tipoRubroLabel(request) {
-  if (request?.rubros && request.rubros.length) return request.rubros.join(', ');
-  return request?.tipo_construccion || null;
-}
-
 function dniCuitLabel(profile) {
   if (!profile) return null;
   if (profile.tipo_persona === 'juridica') return profile.cuit || null;
@@ -96,7 +91,7 @@ async function getContractData(obraId) {
 
   const { data: request, error: reqErr } = await sb
     .from('requests')
-    .select('id, ticket_id, titulo, direccion, tipo, rubros, tipo_construccion, superficie, descripcion, user_id, status')
+    .select('id, ticket_id, titulo, tipo, superficie, user_id, status')
     .eq('id', obraId)
     .single();
   if (reqErr || !request) throw new Error(`Obra ${obraId} no encontrada`);
@@ -112,7 +107,6 @@ async function getContractData(obraId) {
     { data: clientProfile },
     { data: proProfile },
     { data: proVerif },
-    { data: quote },
     { data: hitos }
   ] = await Promise.all([
     sb.from('profiles')
@@ -122,7 +116,6 @@ async function getContractData(obraId) {
     sb.from('professional_verification')
       .select('dni_number, cuit, condicion_fiscal, direccion, usa_domicilio_alt, domicilio_contractual, matricula_entidad, matricula_numero, matricula_vencimiento, matricula_adjunto')
       .eq('id', prep.pro_id).maybeSingle(),
-    sb.from('quotes').select('amount').eq('request_id', obraId).eq('pro_id', prep.pro_id).eq('status', 'accepted').maybeSingle(),
     sb.from('hitos').select('*').eq('request_id', obraId).order('numero', { ascending: true })
   ]);
 
@@ -163,14 +156,8 @@ async function getContractData(obraId) {
     contratista_condicion_fiscal: proVerif?.condicion_fiscal || null,
     contratista_matricula: matriculaResumen(proVerif),
 
-    // 1. OBJETO [12]-[14]
-    obra_direccion_inmueble: request.direccion || null,
-    obra_tipo_rubro: tipoRubroLabel(request),
-    obra_alcance: request.descripcion || null,
-
-    // 2. PRECIO Y FORMA DE PAGO [16]-[17]
-    obra_precio_total: quote?.amount ?? null,
-    obra_moneda: 'ARS',
+    // OBJETO [12]-[14] y PRECIO [16]-[17]: pendientes, ver contract-fields.js
+    // -- el PDF los referencia pero no los define, no se inventa el mapeo.
 
     // 4. HITOS Y ENTREGABLES [22]-[27],[31] (uno por hito)
     hito_titulo: hitosList.map(h => h.titulo),
@@ -187,7 +174,7 @@ async function getContractData(obraId) {
       resumenDocumentacionParticipante(p, participanteDocs.filter(d => d.participante_id === p.id))
     ),
 
-    _raw: { request, prep, clientProfile, proProfile, proVerif, quote, hitos: hitosList, participantes, participanteDocs }
+    _raw: { request, prep, clientProfile, proProfile, proVerif, hitos: hitosList, participantes, participanteDocs }
   };
 }
 

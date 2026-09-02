@@ -154,42 +154,40 @@ window.BRICKO_FIELDS = [
   },
 
   // ── 1. OBJETO — [12]-[15] ───────────────────────────────────────────
-  {
-    id: 12, estado: 'definido', clave: 'obra_direccion_inmueble',
-    label: 'Dirección del inmueble', origen: 'obra',
-    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
-    fuente: { tabla: 'requests', columnas: ['direccion'] }
-  },
-  {
-    id: 13, estado: 'definido', clave: 'obra_tipo_rubro',
-    label: 'Tipo/rubro del trabajo', origen: 'obra',
-    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
-    fuente: { tabla: 'requests', columnas: ['rubros', 'tipo_construccion'] }
-  },
-  {
-    id: 14, estado: 'definido', clave: 'obra_alcance',
-    label: 'Alcance contratado', origen: 'obra',
-    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
-    fuente: { tabla: 'requests', columnas: ['descripcion'] }
-  },
+  // [12]-[14] (cuerpo del contrato marco): BRICKO_01_Contrato_Tipo_Referencias.pdf
+  // referencia estos números pero no los define -- la definición (qué
+  // cuenta como "alcance", cómo se redacta la dirección/rubro dentro de
+  // la cláusula, etc.) tiene que salir del documento 01 de la serie, que
+  // todavía no fue provisto. Antes había un mapeo directo a requests.* acá:
+  // se revirtió a pendiente para no inventar el criterio de redacción.
+  stubField(12, 'pendiente', {
+    origen: 'obra', alimenta: 'contrato',
+    todo: 'TODO (OBJETO): dirección del inmueble. El PDF referencia [12] pero no lo define -- falta el documento 01 de la serie (cuerpo del contrato marco).'
+  }),
+  stubField(13, 'pendiente', {
+    origen: 'obra', alimenta: 'contrato',
+    todo: 'TODO (OBJETO): tipo/rubro del trabajo. El PDF referencia [13] pero no lo define -- falta el documento 01 de la serie (cuerpo del contrato marco).'
+  }),
+  stubField(14, 'pendiente', {
+    origen: 'obra', alimenta: 'contrato',
+    todo: 'TODO (OBJETO): alcance contratado. El PDF referencia [14] pero no lo define -- falta el documento 01 de la serie (cuerpo del contrato marco).'
+  }),
   stubField(15, 'pendiente', {
     origen: 'obra', alimenta: 'contrato',
     todo: 'TODO (OBJETO): exclusiones del alcance contratado. No existe ningún campo de "exclusiones" en requests/quotes hoy.'
   }),
 
   // ── 2. PRECIO Y FORMA DE PAGO — [16]-[19] ───────────────────────────
-  {
-    id: 16, estado: 'definido', clave: 'obra_precio_total',
-    label: 'Precio total', origen: 'obra',
-    tipo: 'number', requerido: true, alimenta: 'contrato', lista: false,
-    fuente: { tabla: 'quotes', columnas: ['amount'], filtro: "status = 'accepted'" }
-  },
-  {
-    id: 17, estado: 'definido', clave: 'obra_moneda',
-    label: 'Moneda', origen: 'obra',
-    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
-    fuente: { constante: 'ARS' }
-  },
+  // [16]-[17]: mismo caso que [12]-[14] -- referenciados pero no definidos
+  // en el PDF disponible. Falta el documento 01 de la serie.
+  stubField(16, 'pendiente', {
+    origen: 'obra', alimenta: 'contrato',
+    todo: 'TODO (PRECIO): precio total. El PDF referencia [16] pero no lo define -- falta el documento 01 de la serie (cuerpo del contrato marco).'
+  }),
+  stubField(17, 'pendiente', {
+    origen: 'obra', alimenta: 'contrato',
+    todo: 'TODO (PRECIO): moneda. El PDF referencia [17] pero no lo define -- falta el documento 01 de la serie (cuerpo del contrato marco).'
+  }),
   stubField(18, 'pendiente', {
     origen: 'obra', alimenta: 'contrato',
     todo: 'TODO (PRECIO): tratamiento de impuestos. No se recolecta en ninguna pantalla hoy.'
