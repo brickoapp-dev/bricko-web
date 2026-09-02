@@ -18,6 +18,10 @@ const CONTRATO_ESTADO_LABEL = {
   null: 'Borrador', enviado: 'Enviado', aceptado_cliente: 'Aceptado por el cliente',
   aceptado_contratista: 'Aceptado por vos', firmado: 'Firmado', invalidado: 'Borrador'
 };
+const ESTADO_PARTICIPANTE_LABEL = { completo: 'Completo', registrado: 'Registrado', revisar: 'Revisar' };
+const ESTADO_PARTICIPANTE_CLASS = { completo: 'ok', registrado: 'orange', revisar: 'warn' };
+const DOC_ESTADO_CLASS = { vigente: 'ok', por_vencer: 'orange', vencido: 'warn', faltante: 'warn' };
+const PENDING_DOC_FILES = {};
 
 function getSession(){
   try {
@@ -30,7 +34,7 @@ let SESSION = null;
 let REQ_ID = null;
 let UI_GATE = 1;
 let GATE_FROM_URL = false;
-const STATE = { request:null, prep:null, hitos:[], participantes:[], equipo:[], documentosCount:0, contrato:null, planHitos:null };
+const STATE = { request:null, prep:null, hitos:[], participantes:[], participanteDocs:[], equipo:[], documentosCount:0, contrato:null, planHitos:null };
 
 document.addEventListener('DOMContentLoaded', async () => {
   SESSION = getSession();
@@ -100,6 +104,16 @@ async function loadAll(){
     participantes = parts || [];
   }
 
+  let participanteDocs = [];
+  if (participantes.length){
+    const { data: docs } = await sb
+      .from('participante_documentos')
+      .select('*')
+      .in('participante_id', participantes.map(p => p.id));
+    participanteDocs = docs || [];
+    await attachParticipanteDocSignedUrls(participanteDocs);
+  }
+
   const { data: equipo } = await sb
     .from('pro_equipo')
     .select('*')
@@ -117,6 +131,7 @@ async function loadAll(){
   STATE.montoAdjudicado = quote?.amount || 0;
   STATE.hitos = hitos || [];
   STATE.participantes = participantes;
+  STATE.participanteDocs = participanteDocs;
   STATE.equipo = equipo || [];
   STATE.documentosCount = documentos?.length || 0;
 
@@ -365,26 +380,127 @@ function renderEquipoSelect(){
   if (hint) hint.style.display = STATE.equipo.length ? 'none' : '';
 }
 
+/* ── Documentación tipada por modalidad [29]-[30] ────────────────────
+   Espejo en JS de public.documento_estado() -- solo para mostrar en el
+   momento; la fuente de verdad real es hito_participantes.estado,
+   calculado en la base por recalcular_estado_participante(). */
+function docEstadoLocal(doc){
+  if (!doc || !doc.storage_path) return 'faltante';
+  if (!doc.fecha_vencimiento) return 'vigente';
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const venc = new Date(doc.fecha_vencimiento + 'T00:00:00');
+  const dias = Math.round((venc - hoy) / 86400000);
+  if (dias < 0) return 'vencido';
+  if (dias <= 30) return 'por_vencer';
+  return 'vigente';
+}
+
+async function attachParticipanteDocSignedUrls(docs){
+  await Promise.all(docs.map(async (d) => {
+    if (!d.storage_path){ d.url = null; return; }
+    try {
+      const { data } = await sb.storage.from('participante-docs').createSignedUrl(d.storage_path, 3600);
+      d.url = data?.signedUrl || null;
+    } catch(e){ d.url = null; }
+  }));
+}
+
 function renderParticipants(){
-  const tbody = document.querySelector('#participantsTable tbody');
+  const listEl = document.getElementById('participantsList');
   if (!STATE.participantes.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="pj-small" style="padding:16px 11px">Todavía no asignaste participantes.</td></tr>';
+    listEl.innerHTML = '<div class="pj-empty">Todavía no asignaste participantes.</div>';
     return;
   }
+
   const hitoById = {};
   STATE.hitos.forEach(h => { hitoById[h.id] = h; });
-  tbody.innerHTML = STATE.participantes.map(p => {
+  const docsByParticipante = {};
+  STATE.participanteDocs.forEach(d => { (docsByParticipante[d.participante_id] ||= []).push(d); });
+
+  listEl.innerHTML = STATE.participantes.map(p => {
     const h = hitoById[p.hito_id];
+    const requisitos = window.REQUISITOS_POR_MODALIDAD[p.modalidad] || [];
+    const docsMap = {};
+    (docsByParticipante[p.id] || []).forEach(d => { docsMap[d.tipo] = d; });
+
+    const filas = requisitos.length ? requisitos.map(req => {
+      const doc = docsMap[req.tipo];
+      const estadoDoc = docEstadoLocal(doc);
+      const key = `${p.id}::${req.tipo}`;
+      const inputId = `docfile_${p.id}_${req.tipo}`;
+      return `
+        <tr>
+          <td><strong>${escapeHTML(req.label)}</strong></td>
+          <td>
+            ${doc?.url ? `<a class="pj-btn" href="${doc.url}" target="_blank" rel="noopener">Ver</a>` : ''}
+            <input type="file" id="${inputId}" data-doc-file="${key}" accept=".pdf,image/*" hidden />
+            <label class="pj-btn" for="${inputId}" style="cursor:pointer">${doc?.storage_path ? 'Reemplazar' : 'Subir'}</label>
+          </td>
+          <td><input type="date" class="form-input" data-doc-emision="${key}" value="${doc?.fecha_emision || ''}" /></td>
+          <td><input type="date" class="form-input" data-doc-vencimiento="${key}" value="${doc?.fecha_vencimiento || ''}" /></td>
+          <td><span class="pj-status ${DOC_ESTADO_CLASS[estadoDoc]}">${window.DOC_ESTADO_LABEL[estadoDoc]}</span></td>
+          <td><button class="pj-btn" data-save-doc="${key}">Guardar</button></td>
+        </tr>
+      `;
+    }).join('') : `<tr><td colspan="6" class="pj-small">Modalidad sin requisitos definidos.</td></tr>`;
+
     return `
-      <tr>
-        <td><strong>${h ? String(h.numero).padStart(2,'0') + ' · ' + escapeHTML(h.titulo) : '—'}</strong><small>${escapeHTML(p.especialidad || '')}</small></td>
-        <td><strong>${escapeHTML(p.nombre)}</strong>${p.equipo_id ? '<small>Mi equipo</small>' : ''}</td>
-        <td><span class="pj-role ${MODALIDAD_ROLE_CLASS[p.modalidad] || ''}">${MODALIDAD_LABEL[p.modalidad] || p.modalidad}</span></td>
-        <td><small>${escapeHTML(p.documentacion_nota || '—')}</small></td>
-        <td><button class="pj-btn" data-delete-participant="${p.id}">Quitar</button></td>
-      </tr>
+      <article class="pj-milestone">
+        <div class="pj-milestone-head">
+          <div>
+            <div class="pj-small">${h ? String(h.numero).padStart(2, '0') + ' · ' + escapeHTML(h.titulo) : 'Hito eliminado'}</div>
+            <h3>${escapeHTML(p.nombre)}</h3>
+            <div class="pj-small"><span class="pj-role ${MODALIDAD_ROLE_CLASS[p.modalidad] || ''}">${MODALIDAD_LABEL[p.modalidad] || p.modalidad}</span> ${escapeHTML(p.especialidad || '')}</div>
+          </div>
+          <span class="pj-status ${ESTADO_PARTICIPANTE_CLASS[p.estado] || 'warn'}">${ESTADO_PARTICIPANTE_LABEL[p.estado] || p.estado}</span>
+        </div>
+        <div class="pj-milestone-body">
+          <div class="pj-table-wrap" style="margin-top:6px">
+            <table class="pj-table">
+              <thead><tr><th>Documento [30]</th><th>Adjunto</th><th>Emisión</th><th>Vencimiento</th><th>Estado</th><th></th></tr></thead>
+              <tbody>${filas}</tbody>
+            </table>
+          </div>
+          <div class="pj-field" style="margin-top:14px">
+            <label class="pj-small">Observaciones</label>
+            <input class="form-input" data-observaciones-input="${p.id}" value="${escapeHTML(p.observaciones || '')}" placeholder="Notas libres (no reemplaza a los documentos)" />
+          </div>
+          <div class="pj-actions" style="margin-top:12px">
+            <button class="pj-btn" data-save-observaciones="${p.id}">Guardar observaciones</button>
+            <button class="pj-btn" data-delete-participant="${p.id}">Quitar</button>
+          </div>
+        </div>
+      </article>
     `;
   }).join('');
+}
+
+async function saveParticipanteDocumento(key){
+  const [participanteId, tipo] = key.split('::');
+  const emisionInput = document.querySelector(`[data-doc-emision="${key}"]`);
+  const vencimientoInput = document.querySelector(`[data-doc-vencimiento="${key}"]`);
+  const update = {
+    participante_id: participanteId,
+    tipo,
+    fecha_emision: emisionInput.value || null,
+    fecha_vencimiento: vencimientoInput.value || null
+  };
+
+  const file = PENDING_DOC_FILES[key];
+  if (file){
+    const ext = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
+    const path = `${REQ_ID}/${participanteId}/${tipo}-${Date.now()}.${ext}`;
+    const { error: upErr } = await sb.storage.from('participante-docs').upload(path, file, { contentType: file.type, cacheControl: '3600' });
+    if (upErr){ toast('err', 'No se pudo subir el archivo', upErr.message); return; }
+    update.storage_path = path;
+  }
+
+  const { error } = await sb.from('participante_documentos').upsert(update, { onConflict: 'participante_id,tipo' });
+  if (error){ toast('err', 'No se pudo guardar el documento', error.message); return; }
+
+  delete PENDING_DOC_FILES[key];
+  toast('ok', 'Documento guardado', '');
+  await loadAll();
 }
 
 /* ── Eventos ─────────────────────────────────────────── */
@@ -519,6 +635,23 @@ function initEvents(){
       await loadAll();
       return;
     }
+
+    const saveDocBtn = e.target.closest('[data-save-doc]');
+    if (saveDocBtn){
+      await saveParticipanteDocumento(saveDocBtn.dataset.saveDoc);
+      return;
+    }
+
+    const saveObsBtn = e.target.closest('[data-save-observaciones]');
+    if (saveObsBtn){
+      const participanteId = saveObsBtn.dataset.saveObservaciones;
+      const input = document.querySelector(`[data-observaciones-input="${participanteId}"]`);
+      const { error } = await sb.from('hito_participantes').update({ observaciones: input.value.trim() || null }).eq('id', participanteId);
+      if (error){ toast('err', 'No se pudo guardar', error.message); return; }
+      toast('ok', 'Observaciones guardadas', '');
+      await loadAll();
+      return;
+    }
   });
 
   document.getElementById('mPlazoPropio').addEventListener('change', (e) => {
@@ -577,15 +710,15 @@ function initEvents(){
     const nombreInput = document.getElementById('pNombre');
     const espInput = document.getElementById('pEspecialidad');
     const modInput = document.getElementById('pModalidad');
-    const notaInput = document.getElementById('pNota');
+    const obsInput = document.getElementById('pObservaciones');
     if (member){
       nombreInput.value = member.nombre;
       espInput.value = member.especialidad || '';
-      modInput.value = member.modalidad;
-      notaInput.value = member.documentacion_nota || '';
+      if (['dependiente', 'subcontratista', 'colaborador_independiente', 'profesional'].includes(member.modalidad)) modInput.value = member.modalidad;
+      obsInput.value = member.documentacion_nota || '';
       nombreInput.readOnly = true; espInput.readOnly = true; modInput.disabled = true;
     } else {
-      nombreInput.value = ''; espInput.value = ''; notaInput.value = '';
+      nombreInput.value = ''; espInput.value = ''; obsInput.value = '';
       nombreInput.readOnly = false; espInput.readOnly = false; modInput.disabled = false;
     }
   });
@@ -597,12 +730,13 @@ function initEvents(){
     const nombre = document.getElementById('pNombre').value.trim();
     const especialidad = document.getElementById('pEspecialidad').value.trim();
     const modalidad = document.getElementById('pModalidad').value;
-    const documentacion_nota = document.getElementById('pNota').value.trim();
+    const observaciones = document.getElementById('pObservaciones').value.trim();
     if (!hito_id){ toast('err', 'Falta el hito', 'Agregá al menos un hito antes de asignar participantes.'); return; }
     if (!nombre){ toast('err', 'Falta el nombre', ''); return; }
+    if (!modalidad){ toast('err', 'Falta la modalidad', 'Elegí una de las cuatro opciones.'); return; }
 
     const { error } = await sb.from('hito_participantes').insert({
-      hito_id, equipo_id, nombre, especialidad: especialidad || null, modalidad, documentacion_nota: documentacion_nota || null
+      hito_id, equipo_id, nombre, especialidad: especialidad || null, modalidad, observaciones: observaciones || null
     });
     if (error){ toast('err', 'No se pudo agregar', error.message); return; }
     e.target.reset();
@@ -611,6 +745,14 @@ function initEvents(){
     document.getElementById('pModalidad').disabled = false;
     toast('ok', 'Participante agregado', nombre);
     await loadAll();
+  });
+
+  document.addEventListener('change', (e) => {
+    const fileInput = e.target.closest('[data-doc-file]');
+    if (fileInput){
+      const file = fileInput.files?.[0];
+      if (file) PENDING_DOC_FILES[fileInput.dataset.docFile] = file;
+    }
   });
 }
 

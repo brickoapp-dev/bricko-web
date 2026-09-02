@@ -40,6 +40,34 @@ function domicilioContractualPro(verif) {
   return verif.direccion || null;
 }
 
+/* Espejo en JS de public.documento_estado() -- mismas reglas, para no
+   depender de un round-trip solo para mostrar el resumen en el
+   contrato (la fuente de verdad real sigue siendo hito_participantes.estado,
+   calculado en la base por recalcular_estado_participante()). */
+function documentoEstadoJS(storagePath, fechaVencimiento) {
+  if (!storagePath) return 'faltante';
+  if (!fechaVencimiento) return 'vigente';
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const venc = new Date(fechaVencimiento + 'T00:00:00');
+  const diffDias = Math.round((venc - hoy) / 86400000);
+  if (diffDias < 0) return 'vencido';
+  if (diffDias <= 30) return 'por_vencer';
+  return 'vigente';
+}
+
+function resumenDocumentacionParticipante(participante, docsDeEsteParticipante) {
+  const requisitos = window.REQUISITOS_POR_MODALIDAD?.[participante.modalidad] || [];
+  if (!requisitos.length) return `${participante.nombre}: sin requisitos definidos para "${participante.modalidad}"`;
+  const porTipo = {};
+  docsDeEsteParticipante.forEach(d => { porTipo[d.tipo] = d; });
+  const detalle = requisitos.map(req => {
+    const doc = porTipo[req.tipo];
+    const estado = documentoEstadoJS(doc?.storage_path, doc?.fecha_vencimiento);
+    return `${req.label}: ${window.DOC_ESTADO_LABEL[estado]}`;
+  }).join(', ');
+  return `${participante.nombre} (${participante.modalidad}): ${detalle}`;
+}
+
 function caracterInmuebleLabel(profile) {
   if (!profile?.caracter_inmueble) return null;
   if (profile.caracter_inmueble === 'propietario') return 'Propietario';
@@ -110,6 +138,15 @@ async function getContractData(obraId) {
     participantes = parts || [];
   }
 
+  let participanteDocs = [];
+  if (participantes.length) {
+    const { data: docs } = await sb
+      .from('participante_documentos')
+      .select('*')
+      .in('participante_id', participantes.map(p => p.id));
+    participanteDocs = docs || [];
+  }
+
   return {
     obraId,
 
@@ -146,9 +183,11 @@ async function getContractData(obraId) {
 
     // 6. EQUIPO Y MODALIDAD DE PARTICIPACIÓN [29]-[30]
     participantes_listado: participantes.map(p => ({ hito_id: p.hito_id, nombre: p.nombre, especialidad: p.especialidad, modalidad: p.modalidad })),
-    participantes_documentacion: participantes.map(p => p.documentacion_nota).filter(Boolean),
+    participantes_documentacion: participantes.map(p =>
+      resumenDocumentacionParticipante(p, participanteDocs.filter(d => d.participante_id === p.id))
+    ),
 
-    _raw: { request, prep, clientProfile, proProfile, proVerif, quote, hitos: hitosList, participantes }
+    _raw: { request, prep, clientProfile, proProfile, proVerif, quote, hitos: hitosList, participantes, participanteDocs }
   };
 }
 

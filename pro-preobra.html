@@ -245,12 +245,7 @@
                 </div>
               </div>
 
-              <div class="pj-table-wrap">
-                <table class="pj-table" id="participantsTable">
-                  <thead><tr><th>Hito / entregable</th><th>Responsable</th><th>Modalidad</th><th>Nota</th><th></th></tr></thead>
-                  <tbody></tbody>
-                </table>
-              </div>
+              <div class="pj-milestones" id="participantsList"></div>
 
               <form id="newParticipantForm" class="pj-panel pj-panel-pad" style="margin-top:16px;display:grid;gap:12px;grid-template-columns:1fr 1fr">
                 <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
@@ -262,16 +257,16 @@
                 <div><label class="pj-small">Nombre / razón social</label><input class="form-input" id="pNombre" required placeholder="Ej: Carlos Pérez" /></div>
                 <div><label class="pj-small">Especialidad</label><input class="form-input" id="pEspecialidad" placeholder="Ej: Albañilería" /></div>
                 <div>
-                  <label class="pj-small">Modalidad</label>
+                  <label class="pj-small">Modalidad [29]</label>
                   <select class="form-input" id="pModalidad" required>
-                    <option value="contratista">Contratista</option>
-                    <option value="colaborador_independiente">Colaborador independiente (PADIC)</option>
+                    <option value="">Seleccioná una modalidad</option>
                     <option value="dependiente">Dependiente</option>
                     <option value="subcontratista">Subcontratista</option>
+                    <option value="colaborador_independiente">Colaborador independiente (PADIC)</option>
                     <option value="profesional">Profesional</option>
                   </select>
                 </div>
-                <div style="grid-column:1/-1"><label class="pj-small">Documentación / nota</label><input class="form-input" id="pNota" placeholder="Ej: PADIC aceptado, CUIT activo" /></div>
+                <div style="grid-column:1/-1"><label class="pj-small">Observaciones (opcional -- no reemplaza a los documentos de [30])</label><input class="form-input" id="pObservaciones" placeholder="Notas libres, si hace falta" /></div>
                 <div style="grid-column:1/-1"><button class="pj-btn primary" type="submit">+ Agregar participante</button></div>
               </form>
 

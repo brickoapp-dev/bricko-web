@@ -39,6 +39,42 @@ function stubField(id, estado, { clave = null, label = null, origen = null, alim
   };
 }
 
+/* REQUISITOS_POR_MODALIDAD (T5) — mapa modalidad -> documentos exigidos
+   para el campo [30]. Espejo de la tabla modalidad_requisitos en SQL
+   (ver migración 20260902170000_participante_documentos.sql) -- los
+   `tipo` tienen que coincidir exactamente con los de esa tabla. PADIC
+   se pide únicamente en 'colaborador_independiente', en ninguna otra
+   modalidad. El campo libre único de "documentación/nota" no cumple
+   ningún requisito de esta lista -- cada uno se satisface con su
+   propio documento tipado (adjunto + vigencia) en participante_documentos. */
+window.REQUISITOS_POR_MODALIDAD = {
+  colaborador_independiente: [
+    { tipo: 'padic_aceptado', label: 'PADIC aceptado' },
+    { tipo: 'cuit_activo', label: 'CUIT activo' },
+    { tipo: 'asignacion_hito', label: 'Asignación al hito' },
+    { tipo: 'factura_propia', label: 'Factura propia' }
+  ],
+  dependiente: [
+    { tipo: 'registracion_laboral', label: 'Registración laboral (ARCA)' },
+    { tipo: 'cobertura_riesgos', label: 'Cobertura de riesgos correspondiente' }
+  ],
+  subcontratista: [
+    { tipo: 'contrato', label: 'Contrato' },
+    { tipo: 'cuit', label: 'CUIT' },
+    { tipo: 'facturacion', label: 'Facturación' },
+    { tipo: 'documentacion_tecnica', label: 'Documentación técnica aplicable' }
+  ],
+  profesional: [
+    { tipo: 'matricula', label: 'Matrícula' },
+    { tipo: 'contrato_profesional', label: 'Contrato profesional' },
+    { tipo: 'documentacion_colegial_previsional', label: 'Documentación colegial/previsional aplicable' }
+  ]
+};
+
+window.DOC_ESTADO_LABEL = {
+  vigente: 'Vigente', por_vencer: 'Por vencer', vencido: 'Vencido', faltante: 'Faltante'
+};
+
 window.BRICKO_FIELDS = [
   // ── PARTES: COMITENTE (cliente) — [1]-[5] ──────────────────────────
   {
@@ -225,10 +261,14 @@ window.BRICKO_FIELDS = [
     fuente: { tabla: 'hito_participantes', columnas: ['nombre', 'especialidad', 'modalidad'] }
   },
   {
+    // T5: ya no sale de un campo libre único (hito_participantes.observaciones,
+    // ex documentacion_nota) -- cada participante tiene un documento
+    // tipado por requisito de su modalidad (ver REQUISITOS_POR_MODALIDAD
+    // más arriba), con adjunto + vigencia, en participante_documentos.
     id: 30, estado: 'definido', clave: 'participantes_documentacion',
-    label: 'Documentación exigible por modalidad', origen: 'participantes',
-    tipo: 'text', requerido: false, alimenta: 'anexo_equipo', lista: true,
-    fuente: { tabla: 'hito_participantes', columnas: ['documentacion_nota'] }
+    label: 'Documentación exigible por modalidad (adjunto + vigencia)', origen: 'participantes',
+    tipo: 'text', requerido: true, alimenta: 'anexo_equipo', lista: true,
+    fuente: { tabla: 'participante_documentos', columnas: ['tipo', 'storage_path', 'fecha_emision', 'fecha_vencimiento'] }
   },
 
   // ── 4. HITOS Y ENTREGABLES (cont.) — [31] (T4) ─────────────────────
