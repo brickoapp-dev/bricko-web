@@ -127,12 +127,28 @@
               <div class="pj-kicker">03 · Contrato</div>
               <h2>Contrato y anexos.</h2>
               <p class="lead">Se documentan las relaciones principales antes de distribuir resultados y participantes.</p>
-              <div class="pj-doc-row"><div><strong>Contrato marco de obra</strong><small>Cliente + contratista · alcance general</small></div><span class="pj-status" id="docContratoStatus">Pendiente</span></div>
-              <div class="pj-doc-row"><div><strong>Anexo económico</strong><small>Monto, comisión y pagos por hitos</small></div><span class="pj-status" id="docAnexoStatus">Pendiente</span></div>
+              <div class="pj-doc-row">
+                <div><strong>Contrato marco de obra</strong><small>Cliente + contratista · alcance general</small><small class="pj-doc-filename" id="contratoFileName"></small></div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span class="pj-status" id="docContratoStatus">Pendiente</span>
+                  <input type="file" id="contratoFileInput" accept=".pdf,.doc,.docx,image/*" hidden />
+                  <label class="pj-btn" for="contratoFileInput" style="cursor:pointer">Subir</label>
+                  <button class="pj-btn" id="btnMarkContrato" data-doc-tipo="contrato" hidden>Marcar firmado</button>
+                </div>
+              </div>
+              <div class="pj-doc-row">
+                <div><strong>Anexo económico</strong><small>Monto, comisión y pagos por hitos</small><small class="pj-doc-filename" id="anexoFileName"></small></div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span class="pj-status" id="docAnexoStatus">Pendiente</span>
+                  <input type="file" id="anexoFileInput" accept=".pdf,.doc,.docx,image/*" hidden />
+                  <label class="pj-btn" for="anexoFileInput" style="cursor:pointer">Subir</label>
+                  <button class="pj-btn" id="btnMarkAnexo" data-doc-tipo="anexo" hidden>Marcar firmado</button>
+                </div>
+              </div>
               <div class="pj-gate-footer">
                 <span class="pj-status warn" id="contratoStatus">Pendiente</span>
                 <div style="display:flex;gap:8px">
-                  <button class="pj-btn" id="btnToggleContrato">Marcar contrato firmado</button>
+                  <button class="pj-btn" id="btnConfirmContrato">Confirmar contrato firmado</button>
                   <button class="pj-btn primary" data-goto-gate="4">Siguiente</button>
                 </div>
               </div>
