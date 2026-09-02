@@ -337,13 +337,7 @@ function initEvents(){
     }
 
     if (e.target.closest('#btnConfirmContrato')){
-      const contratoDoc = findObraDoc('contrato');
-      const anexoDoc = findObraDoc('anexo');
-      if (contratoDoc?.estado !== 'firmado' || anexoDoc?.estado !== 'firmado'){
-        toast('err', 'Faltan documentos', 'Subí y marcá como firmados el contrato y el anexo antes de confirmar.');
-        return;
-      }
-      const { error } = await sb.from('obra_preparacion').update({ gate_contrato: true }).eq('request_id', REQ_ID);
+      const { error } = await sb.rpc('confirm_contrato', { p_request_id: REQ_ID });
       if (error){ toast('err', 'No se pudo confirmar', error.message); return; }
       toast('ok', 'Contrato confirmado', 'Ya podés pasar al plan de hitos.');
       await loadAll();
