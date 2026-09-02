@@ -1,6 +1,13 @@
-/* properfil.js — Perfil del profesional: foto, rubros, localidad, residencia,
-   dirección y DNI (frente/dorso). Sube archivos a Supabase Storage y guarda
-   los datos en professionals + professional_verification. */
+/* properfil.js — Perfil del profesional (titular de la cuenta): nombre,
+   razón social, foto, rubros, localidad, residencia, dirección, DNI/CUIT,
+   condición fiscal y matrícula profesional (campos [6]-[11] de
+   BRICKO_01_Contrato_Tipo_Referencias.pdf). Sube archivos a Supabase
+   Storage y guarda en profiles + professionals + professional_verification.
+
+   No tiene nada que ver con "Mi equipo" (pro-equipo.html / pro_equipo):
+   esto es el titular de la cuenta, el equipo es gente que el titular
+   contrata para una obra puntual. Sin componentes ni tablas compartidas
+   entre las dos pantallas. */
 
 const sb = window.supabase_client;
 
@@ -11,7 +18,7 @@ const RUBRO_LABELS = {
 };
 
 // Archivos pendientes de subir (si el usuario eligió uno nuevo)
-const pending = { avatar: null, dniFront: null, dniBack: null };
+const pending = { avatar: null, dniFront: null, dniBack: null, matricula: null };
 let SESSION = null;
 
 function getSession(){
@@ -29,6 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadUserUI(SESSION);
   initChips();
   initFilePickers();
+  initConditionalFields();
   initLogout();
   initThemeToggle();
   document.getElementById('btnSave')?.addEventListener('click', save);
@@ -43,6 +51,65 @@ function loadUserUI(session){
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   set('proAv', initials);
   set('proNm', session.firstName || name);
+  const email = document.getElementById('fEmail');
+  if (email) email.value = session.email || '';
+}
+
+/* ── Domicilio alternativo / condición fiscal: mostrar/ocultar ──────── */
+function initConditionalFields(){
+  document.getElementById('fUsaDomicilioAlt')?.addEventListener('change', (e) => {
+    document.getElementById('domicilioAltField').hidden = !e.target.checked;
+  });
+  document.getElementById('fCondicionFiscal')?.addEventListener('change', applyCondicionFiscalVisibility);
+}
+
+function applyCondicionFiscalVisibility(){
+  const factura = ['responsable_inscripto', 'monotributo'].includes(document.getElementById('fCondicionFiscal').value);
+  document.getElementById('cuitOptionalTag').hidden = factura;
+}
+
+/* ── Validación: DNI (7-8 dígitos) y CUIT (dígito verificador módulo 11) ── */
+function validarDni(dni){
+  return /^[0-9]{7,8}$/.test(dni);
+}
+
+function validarCuit(cuit){
+  if (!/^[0-9]{11}$/.test(cuit)) return false;
+  const mult = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+  let suma = 0;
+  for (let i = 0; i < 10; i++) suma += Number(cuit[i]) * mult[i];
+  let verificador = 11 - (suma % 11);
+  if (verificador === 11) verificador = 0;
+  if (verificador === 10) return false;
+  return verificador === Number(cuit[10]);
+}
+
+function setFieldInvalid(fieldId, invalid){
+  document.getElementById(fieldId)?.classList.toggle('invalid', invalid);
+}
+
+/* Valida los campos [7] y [10] antes de guardar. Devuelve true si todo
+   está OK; si no, marca los campos inválidos. */
+function validateIdentityFields(){
+  let ok = true;
+  const dni = document.getElementById('fDni').value.replace(/\D/g, '');
+  const cuit = document.getElementById('fCuit').value.replace(/\D/g, '');
+  const condicionFiscal = document.getElementById('fCondicionFiscal').value;
+  const factura = ['responsable_inscripto', 'monotributo'].includes(condicionFiscal);
+
+  const dniInvalido = dni !== '' && !validarDni(dni);
+  setFieldInvalid('dniField', dniInvalido);
+  if (dniInvalido) ok = false;
+
+  const cuitInvalido = factura ? !validarCuit(cuit) : (cuit !== '' && !validarCuit(cuit));
+  setFieldInvalid('cuitField', cuitInvalido);
+  if (cuitInvalido) ok = false;
+
+  const condicionFiscalInvalida = !condicionFiscal;
+  setFieldInvalid('condicionFiscalField', condicionFiscalInvalida);
+  if (condicionFiscalInvalida) ok = false;
+
+  return ok;
 }
 
 /* ── Chips de rubros (multi) ─────────────────────────── */
@@ -63,6 +130,14 @@ function initFilePickers(){
   });
   bindFile('dniFrontInput', 'dniFront', (url) => setDrop('dropFront', url));
   bindFile('dniBackInput', 'dniBack', (url) => setDrop('dropBack', url));
+
+  document.getElementById('matriculaInput')?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    pending.matricula = file;
+    const nameEl = document.getElementById('matriculaFileName');
+    if (nameEl) nameEl.textContent = file.name;
+  });
 }
 function bindFile(inputId, key, onPreview){
   const input = document.getElementById(inputId);
@@ -87,6 +162,17 @@ function setDrop(dropId, url){
 /* ── Cargar datos existentes ─────────────────────────── */
 async function loadProfile(uid){
   try {
+    const { data: profile } = await sb.from('profiles')
+      .select('first_name, last_name, razon_social')
+      .eq('id', uid).single();
+
+    if (profile){
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+      set('fFirstName', profile.first_name);
+      set('fLastName', profile.last_name);
+      set('fRazonSocial', profile.razon_social);
+    }
+
     const { data: pro } = await sb.from('professionals')
       .select('rubro, rubros, avatar_url, localidad, residencia')
       .eq('id', uid).single();
@@ -108,12 +194,34 @@ async function loadProfile(uid){
     }
 
     const { data: verif } = await sb.from('professional_verification')
-      .select('dni_front_url, dni_back_url, direccion')
+      .select(`dni_front_url, dni_back_url, direccion, dni_number, cuit, condicion_fiscal,
+        usa_domicilio_alt, domicilio_contractual_alt,
+        matricula_entidad, matricula_numero, matricula_vencimiento, matricula_adjunto_path`)
       .eq('id', uid).maybeSingle();
 
     if (verif){
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
       if (verif.direccion) document.getElementById('fDireccion').value = verif.direccion;
-      // DNI: bucket privado -> URL firmada temporal para previsualizar
+      set('fDni', verif.dni_number);
+      set('fCuit', verif.cuit);
+      set('fCondicionFiscal', verif.condicion_fiscal);
+      set('fMatriculaEntidad', verif.matricula_entidad);
+      set('fMatriculaNumero', verif.matricula_numero);
+      set('fMatriculaVencimiento', verif.matricula_vencimiento);
+
+      document.getElementById('fUsaDomicilioAlt').checked = !!verif.usa_domicilio_alt;
+      document.getElementById('domicilioAltField').hidden = !verif.usa_domicilio_alt;
+      if (verif.domicilio_contractual_alt) document.getElementById('fDomicilioAlt').value = verif.domicilio_contractual_alt;
+
+      if (verif.matricula_adjunto_path){
+        const nombreArchivo = verif.matricula_adjunto_path.split('/').pop();
+        const nameEl = document.getElementById('matriculaFileName');
+        if (nameEl) nameEl.textContent = `Archivo cargado: ${nombreArchivo}`;
+      }
+
+      applyCondicionFiscalVisibility();
+
+      // DNI/dorso y frente: bucket privado -> URL firmada temporal para previsualizar
       if (verif.dni_front_url) signedPreview(verif.dni_front_url, 'dropFront');
       if (verif.dni_back_url)  signedPreview(verif.dni_back_url, 'dropBack');
     }
@@ -142,12 +250,28 @@ async function uploadFile(bucket, path, file){
 
 /* ── Guardar ─────────────────────────────────────────── */
 async function save(){
+  if (!validateIdentityFields()){
+    toast('err', 'Revisá los datos marcados', 'Hay campos obligatorios o con formato inválido.');
+    return;
+  }
+
   const btn = document.getElementById('btnSave');
   if (btn){ btn.disabled = true; btn.textContent = 'Guardando…'; }
   const uid = SESSION.userId;
 
   try {
-    // 1) Subir archivos nuevos (si los hay)
+    const usaDomicilioAlt = document.getElementById('fUsaDomicilioAlt').checked;
+
+    // 1) profiles: nombre / apellido / razón social ([6])
+    const profileUpdate = {
+      first_name: document.getElementById('fFirstName').value.trim() || null,
+      last_name: document.getElementById('fLastName').value.trim() || null,
+      razon_social: document.getElementById('fRazonSocial').value.trim() || null
+    };
+    const { error: e0 } = await sb.from('profiles').update(profileUpdate).eq('id', uid);
+    if (e0) throw e0;
+
+    // 2) professionals: directorio público
     const proUpdate = {
       rubros: getSelectedRubros(),
       localidad: document.getElementById('fLocalidad').value.trim() || null,
@@ -162,8 +286,20 @@ async function save(){
       proUpdate.avatar_url = `${data.publicUrl}?v=${Date.now()}`;
     }
 
-    // 2) Datos privados (DNI + dirección)
-    const verifUpsert = { id: uid, direccion: document.getElementById('fDireccion').value.trim() || null };
+    // 3) professional_verification: datos privados (DNI/CUIT, domicilio,
+    // condición fiscal, matrícula) -- [7],[8],[10],[11]
+    const verifUpsert = {
+      id: uid,
+      direccion: document.getElementById('fDireccion').value.trim() || null,
+      usa_domicilio_alt: usaDomicilioAlt,
+      domicilio_contractual_alt: usaDomicilioAlt ? (document.getElementById('fDomicilioAlt').value.trim() || null) : null,
+      dni_number: document.getElementById('fDni').value.replace(/\D/g, '') || null,
+      cuit: document.getElementById('fCuit').value.replace(/\D/g, '') || null,
+      condicion_fiscal: document.getElementById('fCondicionFiscal').value || null,
+      matricula_entidad: document.getElementById('fMatriculaEntidad').value.trim() || null,
+      matricula_numero: document.getElementById('fMatriculaNumero').value.trim() || null,
+      matricula_vencimiento: document.getElementById('fMatriculaVencimiento').value || null
+    };
 
     if (pending.dniFront){
       const ext = (pending.dniFront.name.split('.').pop() || 'jpg').toLowerCase();
@@ -173,8 +309,12 @@ async function save(){
       const ext = (pending.dniBack.name.split('.').pop() || 'jpg').toLowerCase();
       verifUpsert.dni_back_url = await uploadFile('dni', `${uid}/dni-back.${ext}`, pending.dniBack);
     }
+    if (pending.matricula){
+      const ext = (pending.matricula.name.split('.').pop() || 'pdf').toLowerCase();
+      verifUpsert.matricula_adjunto_path = await uploadFile('matricula', `${uid}/matricula.${ext}`, pending.matricula);
+    }
 
-    // 3) Persistir en la base
+    // 4) Persistir en la base
     const { error: e1 } = await sb.from('professionals').update(proUpdate).eq('id', uid);
     if (e1) throw e1;
 
@@ -182,7 +322,7 @@ async function save(){
     if (e2) throw e2;
 
     toast('ok', 'Perfil actualizado', 'Tus cambios se guardaron correctamente.');
-    pending.avatar = pending.dniFront = pending.dniBack = null;
+    pending.avatar = pending.dniFront = pending.dniBack = pending.matricula = null;
   } catch(err){
     console.error('Error guardando perfil:', err);
     toast('err', 'No se pudo guardar', err.message || 'Intentá de nuevo.');

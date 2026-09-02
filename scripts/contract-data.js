@@ -27,12 +27,34 @@ function domicilioContractual(profile) {
   return profile.address || null;
 }
 
+function dniCuitLabelPro(verif) {
+  if (!verif) return null;
+  const factura = ['responsable_inscripto', 'monotributo'].includes(verif.condicion_fiscal);
+  if (factura) return verif.cuit || null;
+  return verif.cuit ? `${verif.dni_number} (CUIT ${verif.cuit})` : (verif.dni_number || null);
+}
+
+function domicilioContractualPro(verif) {
+  if (!verif) return null;
+  if (verif.usa_domicilio_alt && verif.domicilio_contractual_alt) return verif.domicilio_contractual_alt;
+  return verif.direccion || null;
+}
+
 function caracterInmuebleLabel(profile) {
   if (!profile?.caracter_inmueble) return null;
   if (profile.caracter_inmueble === 'propietario') return 'Propietario';
   return profile.caracter_inmueble_aclaracion
     ? `${profile.caracter_inmueble} (${profile.caracter_inmueble_aclaracion})`
     : profile.caracter_inmueble;
+}
+
+/* dniCuitLabel/domicilioContractual ya cubren el mismo patrón para
+   professional_verification (mismos nombres de columna que profiles). */
+
+function matriculaResumen(verif) {
+  if (!verif?.matricula_entidad && !verif?.matricula_numero) return null;
+  const partes = [verif.matricula_entidad, verif.matricula_numero].filter(Boolean).join(' · ');
+  return verif.matricula_vencimiento ? `${partes} (vence ${verif.matricula_vencimiento})` : partes;
 }
 
 /* Arma el objeto único de datos de contrato para una obra (request_id).
@@ -68,8 +90,10 @@ async function getContractData(obraId) {
     sb.from('profiles')
       .select('first_name, last_name, razon_social, tipo_persona, dni, cuit, address, usa_domicilio_alt, domicilio_contractual_alt, caracter_inmueble, caracter_inmueble_aclaracion')
       .eq('id', request.user_id).single(),
-    sb.from('profiles').select('*').eq('id', prep.pro_id).single(),
-    sb.from('professional_verification').select('*').eq('id', prep.pro_id).maybeSingle(),
+    sb.from('profiles').select('first_name, last_name, razon_social').eq('id', prep.pro_id).single(),
+    sb.from('professional_verification')
+      .select('dni_number, cuit, condicion_fiscal, direccion, usa_domicilio_alt, domicilio_contractual_alt, matricula_entidad, matricula_numero, matricula_vencimiento, matricula_adjunto_path')
+      .eq('id', prep.pro_id).maybeSingle(),
     sb.from('quotes').select('amount').eq('request_id', obraId).eq('pro_id', prep.pro_id).eq('status', 'accepted').maybeSingle(),
     sb.from('hitos').select('*').eq('request_id', obraId).order('numero', { ascending: true })
   ]);
@@ -101,9 +125,11 @@ async function getContractData(obraId) {
     caracter_inmueble: caracterInmuebleLabel(clientProfile),
 
     // PARTES — contratista [6]-[11]
-    contratista_nombre_completo: joinName(proProfile?.first_name, proProfile?.last_name),
-    contratista_dni_cuit: proVerif?.dni_number || null,
-    contratista_domicilio: proVerif?.direccion || null,
+    contratista_nombre_completo: proProfile?.razon_social || joinName(proProfile?.first_name, proProfile?.last_name),
+    contratista_dni_cuit: dniCuitLabelPro(proVerif),
+    contratista_domicilio: domicilioContractualPro(proVerif),
+    contratista_condicion_fiscal: proVerif?.condicion_fiscal || null,
+    contratista_matricula: matriculaResumen(proVerif),
 
     // 1. OBJETO [12]-[14]
     obra_direccion_inmueble: request.direccion || null,

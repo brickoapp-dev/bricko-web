@@ -76,37 +76,46 @@ window.BRICKO_FIELDS = [
     fuente: { tabla: 'profiles', columnas: ['caracter_inmueble', 'caracter_inmueble_aclaracion'] }
   },
 
-  // ── PARTES: CONTRATISTA (profesional) — [6]-[11] ───────────────────
+  // ── PARTES: CONTRATISTA (profesional) — [6]-[11] (T2) ──────────────
   {
     id: 6, estado: 'definido', clave: 'contratista_nombre_completo',
     label: 'Nombre / razón social del contratista', origen: 'perfil_profesional',
     tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
-    fuente: { tabla: 'profiles', columnas: ['first_name', 'last_name'] }
+    fuente: { tabla: 'profiles', columnas: ['razon_social', 'first_name', 'last_name'] }
   },
   {
     id: 7, estado: 'definido', clave: 'contratista_dni_cuit',
     label: 'DNI/CUIT del contratista', origen: 'perfil_profesional',
     tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
-    fuente: { tabla: 'professional_verification', columnas: ['dni_number'] }
+    fuente: { tabla: 'professional_verification', columnas: ['dni_number', 'cuit', 'condicion_fiscal'] }
   },
   {
     id: 8, estado: 'definido', clave: 'contratista_domicilio',
     label: 'Domicilio contractual del contratista', origen: 'perfil_profesional',
     tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
-    fuente: { tabla: 'professional_verification', columnas: ['direccion'] }
+    fuente: { tabla: 'professional_verification', columnas: ['direccion', 'usa_domicilio_alt', 'domicilio_contractual_alt'] }
   },
   stubField(9, 'existe_no_expuesto', {
     clave: 'contratista_email', label: 'Correo del contratista', origen: 'perfil_profesional', alimenta: 'contrato',
     todo: 'TODO (PARTES): mismo caso que [4] -- el pro ya dio su email al registrarse pero no está expuesto vía profiles/professionals para que el cliente (u otro contexto) lo lea. Exponerlo en vez de pedirlo de nuevo.'
   }),
-  stubField(10, 'pendiente', {
-    origen: 'perfil_profesional', alimenta: 'contrato',
-    todo: 'TODO (PARTES): condición fiscal del contratista (monotributista, responsable inscripto, etc.). No existe columna en professionals/professional_verification. Probablemente properfil.html.'
-  }),
-  stubField(11, 'pendiente', {
-    origen: 'perfil_profesional', alimenta: 'contrato',
-    todo: 'TODO (PARTES): matrícula/registro del contratista "cuando corresponda". No existe columna hoy -- ver si aplica a todos los rubros o solo a algunos antes de agregar el campo.'
-  }),
+  {
+    id: 10, estado: 'definido', clave: 'contratista_condicion_fiscal',
+    label: 'Condición fiscal del contratista', origen: 'perfil_profesional',
+    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'professional_verification', columnas: ['condicion_fiscal'] }
+  },
+  {
+    id: 11, estado: 'definido', clave: 'contratista_matricula',
+    label: 'Matrícula / registro profesional del contratista', origen: 'perfil_profesional',
+    // requerido:false -- "Profesionales de la construcción" (el rubro que
+    // la vuelve obligatoria según la consigna de T2) no existe como valor
+    // en los 8 chips de rubro de properfil.html. Sin ese mapeo quedaría
+    // obligatorio para todos o para ninguno -- se dejó opcional para
+    // todos por ahora, ver TODO en properfil.js/README de la tarea.
+    tipo: 'text', requerido: false, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'professional_verification', columnas: ['matricula_entidad', 'matricula_numero', 'matricula_vencimiento', 'matricula_adjunto_path'] }
+  },
 
   // ── 1. OBJETO — [12]-[15] ───────────────────────────────────────────
   {
