@@ -131,6 +131,7 @@
                 <div><strong>Contrato marco de obra</strong><small>Cliente + contratista · alcance general</small><small class="pj-doc-filename" id="contratoFileName"></small></div>
                 <div style="display:flex;align-items:center;gap:8px">
                   <span class="pj-status" id="docContratoStatus">Pendiente</span>
+                  <a class="pj-btn" id="contratoViewLink" href="#" target="_blank" rel="noopener" hidden>Ver</a>
                   <input type="file" id="contratoFileInput" accept=".pdf,.doc,.docx,image/*" hidden />
                   <label class="pj-btn" for="contratoFileInput" style="cursor:pointer">Subir</label>
                   <button class="pj-btn" id="btnMarkContrato" data-doc-tipo="contrato" hidden>Marcar firmado</button>
@@ -140,6 +141,7 @@
                 <div><strong>Anexo económico</strong><small>Monto, comisión y pagos por hitos</small><small class="pj-doc-filename" id="anexoFileName"></small></div>
                 <div style="display:flex;align-items:center;gap:8px">
                   <span class="pj-status" id="docAnexoStatus">Pendiente</span>
+                  <a class="pj-btn" id="anexoViewLink" href="#" target="_blank" rel="noopener" hidden>Ver</a>
                   <input type="file" id="anexoFileInput" accept=".pdf,.doc,.docx,image/*" hidden />
                   <label class="pj-btn" for="anexoFileInput" style="cursor:pointer">Subir</label>
                   <button class="pj-btn" id="btnMarkAnexo" data-doc-tipo="anexo" hidden>Marcar firmado</button>

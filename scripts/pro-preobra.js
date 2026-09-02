@@ -117,6 +117,7 @@ async function loadAll(){
   STATE.equipo = equipo || [];
   STATE.documentos = documentos || [];
   STATE.documentosCount = STATE.documentos.length;
+  await attachDocSignedUrls(STATE.documentos);
 
   if (firstLoad && !GATE_FROM_URL) UI_GATE = prep.current_gate || 2;
   render();
@@ -199,15 +200,26 @@ function findObraDoc(tipo){
   return STATE.documentos.find(d => d.tipo === tipo && !d.hito_id);
 }
 
-function renderContratoDocs(){
-  renderDocRow('contrato', findObraDoc('contrato'), 'docContratoStatus', 'contratoFileName', 'btnMarkContrato');
-  renderDocRow('anexo', findObraDoc('anexo'), 'docAnexoStatus', 'anexoFileName', 'btnMarkAnexo');
+async function attachDocSignedUrls(documentos){
+  await Promise.all(documentos.map(async (d) => {
+    if (!d.storage_path){ d.url = null; return; }
+    try {
+      const { data } = await sb.storage.from('obra-docs').createSignedUrl(d.storage_path, 3600);
+      d.url = data?.signedUrl || null;
+    } catch(e){ d.url = null; }
+  }));
 }
 
-function renderDocRow(tipo, doc, statusId, fileNameId, markBtnId){
+function renderContratoDocs(){
+  renderDocRow('contrato', findObraDoc('contrato'), 'docContratoStatus', 'contratoFileName', 'btnMarkContrato', 'contratoViewLink');
+  renderDocRow('anexo', findObraDoc('anexo'), 'docAnexoStatus', 'anexoFileName', 'btnMarkAnexo', 'anexoViewLink');
+}
+
+function renderDocRow(tipo, doc, statusId, fileNameId, markBtnId, viewLinkId){
   const statusEl = document.getElementById(statusId);
   const fileNameEl = document.getElementById(fileNameId);
   const markBtn = document.getElementById(markBtnId);
+  const viewLink = document.getElementById(viewLinkId);
   const uploadLabel = document.querySelector(`label[for="${tipo}FileInput"]`);
 
   if (!doc){
@@ -215,6 +227,7 @@ function renderDocRow(tipo, doc, statusId, fileNameId, markBtnId){
     statusEl.className = 'pj-status warn';
     fileNameEl.textContent = '';
     markBtn.hidden = true;
+    viewLink.hidden = true;
     if (uploadLabel) uploadLabel.textContent = 'Subir';
   } else {
     statusEl.textContent = DOC_ESTADO_LABEL[doc.estado] || doc.estado;
@@ -224,6 +237,12 @@ function renderDocRow(tipo, doc, statusId, fileNameId, markBtnId){
     markBtn.textContent = doc.estado === 'firmado' ? 'Marcar borrador' : 'Marcar firmado';
     markBtn.dataset.docId = doc.id;
     markBtn.dataset.docEstado = doc.estado;
+    if (doc.url){
+      viewLink.hidden = false;
+      viewLink.href = doc.url;
+    } else {
+      viewLink.hidden = true;
+    }
     if (uploadLabel) uploadLabel.textContent = 'Reemplazar';
   }
 }
