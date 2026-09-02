@@ -1,5 +1,8 @@
-/* client-perfil.js — Perfil del cliente: nombre, contacto, localidad y
-   dirección. Sube la foto a Supabase Storage y guarda los datos en profiles. */
+/* client-perfil.js — Perfil del cliente: nombre, contacto, localidad,
+   dirección e identificación para contratos (razón social, DNI/CUIT,
+   domicilio contractual, carácter respecto del inmueble -- campos
+   [1],[2],[3],[5] de BRICKO_01_Contrato_Tipo_Referencias.pdf). Sube la
+   foto a Supabase Storage y guarda todo en profiles. */
 
 const sb = window.supabase_client;
 
@@ -23,10 +26,83 @@ document.addEventListener('DOMContentLoaded', async () => {
   initFilePicker();
   initLogout();
   initThemeToggle();
+  initConditionalFields();
   document.getElementById('btnSave')?.addEventListener('click', save);
 
   await loadProfile(SESSION.userId);
 });
+
+/* ── DNI/CUIT/Razón social/Carácter: mostrar/ocultar según selección ── */
+function initConditionalFields(){
+  document.getElementById('fTipoPersona')?.addEventListener('change', applyTipoPersonaVisibility);
+  document.getElementById('fUsaDomicilioAlt')?.addEventListener('change', (e) => {
+    document.getElementById('domicilioAltField').hidden = !e.target.checked;
+  });
+  document.getElementById('fCaracterInmueble')?.addEventListener('change', applyCaracterVisibility);
+}
+
+function applyTipoPersonaVisibility(){
+  const esJuridica = document.getElementById('fTipoPersona').value === 'juridica';
+  document.getElementById('dniField').hidden = esJuridica;
+  document.getElementById('cuitOptionalTag').hidden = esJuridica;
+}
+
+function applyCaracterVisibility(){
+  const esPropietario = document.getElementById('fCaracterInmueble').value === 'propietario' || document.getElementById('fCaracterInmueble').value === '';
+  document.getElementById('caracterAclaracionField').hidden = esPropietario;
+}
+
+/* ── Validación: DNI (7-8 dígitos) y CUIT (dígito verificador módulo 11) ── */
+function validarDni(dni){
+  return /^[0-9]{7,8}$/.test(dni);
+}
+
+function validarCuit(cuit){
+  if (!/^[0-9]{11}$/.test(cuit)) return false;
+  const mult = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+  let suma = 0;
+  for (let i = 0; i < 10; i++) suma += Number(cuit[i]) * mult[i];
+  let verificador = 11 - (suma % 11);
+  if (verificador === 11) verificador = 0;
+  if (verificador === 10) return false;
+  return verificador === Number(cuit[10]);
+}
+
+function setFieldInvalid(fieldId, invalid){
+  document.getElementById(fieldId)?.classList.toggle('invalid', invalid);
+}
+
+/* Valida los campos [2] y [5] antes de guardar. Devuelve true si todo
+   está OK; si no, marca los campos inválidos y muestra por qué. */
+function validateIdentityFields(){
+  let ok = true;
+  const tipoPersona = document.getElementById('fTipoPersona').value;
+  const dni = document.getElementById('fDni').value.replace(/\D/g, '');
+  const cuit = document.getElementById('fCuit').value.replace(/\D/g, '');
+  const caracter = document.getElementById('fCaracterInmueble').value;
+  const aclaracion = document.getElementById('fCaracterAclaracion').value.trim();
+
+  const dniRequerido = tipoPersona === 'humana';
+  const dniInvalido = dniRequerido ? !validarDni(dni) : (dni !== '' && !validarDni(dni));
+  setFieldInvalid('dniField', dniInvalido);
+  if (dniInvalido) ok = false;
+
+  const cuitRequerido = tipoPersona === 'juridica';
+  const cuitInvalido = cuitRequerido ? !validarCuit(cuit) : (cuit !== '' && !validarCuit(cuit));
+  setFieldInvalid('cuitField', cuitInvalido);
+  if (cuitInvalido) ok = false;
+
+  const caracterInvalido = !caracter;
+  setFieldInvalid('caracterField', caracterInvalido);
+  if (caracterInvalido) ok = false;
+
+  const aclaracionRequerida = caracter && caracter !== 'propietario';
+  const aclaracionInvalida = aclaracionRequerida && !aclaracion;
+  setFieldInvalid('caracterAclaracionField', aclaracionInvalida);
+  if (aclaracionInvalida) ok = false;
+
+  return ok;
+}
 
 /* ── Nav ─────────────────────────────────────────────── */
 function loadUserUI(session){
@@ -59,7 +135,10 @@ function initFilePicker(){
 async function loadProfile(uid){
   try {
     const { data: profile, error } = await sb.from('profiles')
-      .select('first_name, last_name, phone, city, province, address, avatar_url')
+      .select(`first_name, last_name, phone, city, province, address, avatar_url,
+        razon_social, tipo_persona, dni, cuit, usa_domicilio_alt, domicilio_contractual,
+        caracter_inmueble, caracter_inmueble_detalle,
+        terminos_version, terminos_aceptado_en, privacidad_version, privacidad_leida_en`)
       .eq('id', uid).single();
     if (error) throw error;
     if (!profile) return;
@@ -71,13 +150,47 @@ async function loadProfile(uid){
     set('fCity', profile.city);
     set('fProvince', profile.province);
     set('fAddress', profile.address);
+    set('fRazonSocial', profile.razon_social);
+    set('fTipoPersona', profile.tipo_persona || 'humana');
+    set('fDni', profile.dni);
+    set('fCuit', profile.cuit);
+    set('fCaracterInmueble', profile.caracter_inmueble);
+    set('fCaracterAclaracion', profile.caracter_inmueble_detalle);
+
+    document.getElementById('fUsaDomicilioAlt').checked = !!profile.usa_domicilio_alt;
+    document.getElementById('domicilioAltField').hidden = !profile.usa_domicilio_alt;
+    if (profile.domicilio_contractual) document.getElementById('fDomicilioAlt').value = profile.domicilio_contractual;
+
+    applyTipoPersonaVisibility();
+    applyCaracterVisibility();
 
     if (profile.avatar_url){
       const box = document.getElementById('avatarPreview');
       if (box) box.innerHTML = `<img src="${profile.avatar_url}" alt="avatar">`;
     }
+
+    renderLegalInfo(profile);
   } catch(e){
     console.error('Error cargando perfil:', e);
+  }
+}
+
+/* ── Legales y privacidad: qué versión aceptó y cuándo ───────────────── */
+function renderLegalInfo(profile){
+  const fmt = (iso) => iso ? new Date(iso).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' }) : null;
+
+  const terminosEl = document.getElementById('legalTerminosInfo');
+  if (terminosEl){
+    terminosEl.textContent = profile.terminos_version
+      ? `Versión ${profile.terminos_version} · aceptada el ${fmt(profile.terminos_aceptado_en)}`
+      : 'Todavía no hay un registro de aceptación.';
+  }
+
+  const privacidadEl = document.getElementById('legalPrivacidadInfo');
+  if (privacidadEl){
+    privacidadEl.textContent = profile.privacidad_version
+      ? `Versión ${profile.privacidad_version} · leída el ${fmt(profile.privacidad_leida_en)}`
+      : 'Todavía no hay un registro de lectura.';
   }
 }
 
@@ -95,18 +208,35 @@ async function uploadAvatar(uid, file){
 
 /* ── Guardar ─────────────────────────────────────────── */
 async function save(){
+  if (!validateIdentityFields()){
+    toast('err', 'Revisá los datos marcados', 'Hay campos obligatorios o con formato inválido.');
+    return;
+  }
+
   const btn = document.getElementById('btnSave');
   if (btn){ btn.disabled = true; btn.textContent = 'Guardando…'; }
   const uid = SESSION.userId;
 
   try {
+    const tipoPersona = document.getElementById('fTipoPersona').value;
+    const usaDomicilioAlt = document.getElementById('fUsaDomicilioAlt').checked;
+    const caracter = document.getElementById('fCaracterInmueble').value;
+
     const update = {
       first_name: document.getElementById('fFirstName').value.trim() || null,
       last_name: document.getElementById('fLastName').value.trim() || null,
       phone: document.getElementById('fPhone').value.trim() || null,
       city: document.getElementById('fCity').value.trim() || null,
       province: document.getElementById('fProvince').value.trim() || null,
-      address: document.getElementById('fAddress').value.trim() || null
+      address: document.getElementById('fAddress').value.trim() || null,
+      razon_social: document.getElementById('fRazonSocial').value.trim() || null,
+      tipo_persona: tipoPersona,
+      dni: tipoPersona === 'juridica' ? null : (document.getElementById('fDni').value.replace(/\D/g, '') || null),
+      cuit: document.getElementById('fCuit').value.replace(/\D/g, '') || null,
+      usa_domicilio_alt: usaDomicilioAlt,
+      domicilio_contractual: usaDomicilioAlt ? (document.getElementById('fDomicilioAlt').value.trim() || null) : null,
+      caracter_inmueble: caracter || null,
+      caracter_inmueble_detalle: caracter !== 'propietario' ? (document.getElementById('fCaracterAclaracion').value.trim() || null) : null
     };
 
     if (pendingAvatar){

@@ -60,7 +60,7 @@ async function loadAll(){
   }
 
   const { data: participantes } = await sb
-    .from('hito_participantes')
+    .from('participantes')
     .select('id, nombre, modalidad, monto_pactado, hitos(titulo)')
     .in('hito_id', hitoIds)
     .order('created_at', { ascending: false });

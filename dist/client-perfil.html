@@ -44,6 +44,18 @@
     }
     input[type="text"]:focus { border-color: var(--orange); background: var(--bg-1); box-shadow: 0 0 0 3px var(--orange-dim); }
     input[type="text"]:disabled, input[type="email"]:disabled { color: var(--muted); cursor: not-allowed; }
+    select {
+      width: 100%; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 2px;
+      padding: 12px 14px; color: var(--ink); font-family: var(--body); font-size: 14px; outline: none;
+      cursor: pointer; transition: all .2s; appearance: none;
+    }
+    select:focus { border-color: var(--orange); background: var(--bg-1); box-shadow: 0 0 0 3px var(--orange-dim); }
+    .field.invalid input[type="text"], .field.invalid select { border-color: #E54E10; }
+    .field-error { font-size: 11.5px; color: #E54E10; margin-top: 6px; display: none; }
+    .field.invalid .field-error { display: block; }
+    .checkbox-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--orange); cursor: pointer; flex-shrink: 0; }
+    .checkbox-row label { font-family: var(--body); font-size: 13px; color: var(--ink-2); cursor: pointer; text-transform: none; letter-spacing: normal; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
 
@@ -124,6 +136,13 @@
           <input type="text" id="fLastName" placeholder="Ej: García" />
         </div>
       </div>
+      <div class="hint" style="margin:-10px 0 18px">Alimenta el campo <strong>[1]</strong> del contrato (nombre / razón social).</div>
+
+      <div class="field">
+        <label for="fRazonSocial">Razón social (opcional)</label>
+        <input type="text" id="fRazonSocial" placeholder="Ej: Estudio García SRL" />
+        <div class="hint">Si la completás, se usa en el contrato en lugar de tu nombre y apellido.</div>
+      </div>
 
       <div class="grid-2">
         <div class="field">
@@ -151,6 +170,80 @@
       <div class="field">
         <label for="fAddress">Dirección</label>
         <input type="text" id="fAddress" placeholder="Calle, número, piso/depto" />
+        <div class="hint">Se usa como domicilio contractual en el contrato (campo [3]).</div>
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="fUsaDomicilioAlt" />
+        <label for="fUsaDomicilioAlt">Usar otro domicilio contractual</label>
+      </div>
+
+      <div class="field" id="domicilioAltField" hidden>
+        <label for="fDomicilioAlt">Domicilio contractual alternativo</label>
+        <input type="text" id="fDomicilioAlt" placeholder="Calle, número, piso/depto" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Identificación para el contrato</div>
+
+      <div class="field">
+        <label for="fTipoPersona">Tipo de persona</label>
+        <select id="fTipoPersona">
+          <option value="humana">Persona humana</option>
+          <option value="juridica">Persona jurídica</option>
+        </select>
+      </div>
+
+      <div class="grid-2">
+        <div class="field" id="dniField">
+          <label for="fDni">DNI</label>
+          <input type="text" id="fDni" placeholder="Ej: 30123456" inputmode="numeric" />
+          <div class="hint">7 u 8 dígitos, sin puntos.</div>
+          <div class="field-error" id="dniError">DNI inválido: tiene que tener 7 u 8 dígitos.</div>
+        </div>
+        <div class="field" id="cuitField">
+          <label for="fCuit">CUIT <span id="cuitOptionalTag">(opcional)</span></label>
+          <input type="text" id="fCuit" placeholder="Ej: 20301234567" inputmode="numeric" />
+          <div class="hint">11 dígitos, sin guiones.</div>
+          <div class="field-error" id="cuitError">CUIT inválido: el dígito verificador no coincide.</div>
+        </div>
+      </div>
+
+      <div class="field" id="caracterField">
+        <label for="fCaracterInmueble">Carácter respecto del inmueble</label>
+        <select id="fCaracterInmueble">
+          <option value="">Seleccioná una opción</option>
+          <option value="propietario">Propietario</option>
+          <option value="copropietario">Copropietario</option>
+          <option value="poseedor">Poseedor</option>
+          <option value="inquilino_autorizado">Inquilino con autorización</option>
+          <option value="representante_apoderado">Representante o apoderado</option>
+          <option value="administrador_consorcio">Administrador de consorcio</option>
+        </select>
+        <div class="hint">Alimenta el campo [5] del contrato.</div>
+        <div class="field-error" id="caracterError">Elegí una opción.</div>
+      </div>
+
+      <div class="field" id="caracterAclaracionField" hidden>
+        <label for="fCaracterAclaracion">Aclaración</label>
+        <input type="text" id="fCaracterAclaracion" placeholder="Detalle su relación con el inmueble" />
+        <div class="hint">Obligatorio cuando el carácter no es "Propietario".</div>
+        <div class="field-error" id="caracterAclaracionError">Este campo es obligatorio.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Legales y privacidad</div>
+      <div class="field">
+        <label>Términos y Condiciones</label>
+        <div class="hint" id="legalTerminosInfo">Cargando…</div>
+        <a class="hint" href="terminos.html" target="_blank" rel="noopener" style="color:var(--orange);text-decoration:underline">Volver a leer los Términos y Condiciones</a>
+      </div>
+      <div class="field">
+        <label>Política de Privacidad</label>
+        <div class="hint" id="legalPrivacidadInfo">Cargando…</div>
+        <a class="hint" href="privacidad.html" target="_blank" rel="noopener" style="color:var(--orange);text-decoration:underline">Volver a leer la Política de Privacidad</a>
       </div>
     </div>
 
@@ -164,6 +257,7 @@
 
   <script src="scripts/supabase.min.js"></script>
   <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/legal-versions.js"></script>
   <script src="scripts/01-auth.js" defer></script>
   <script src="scripts/client-perfil.js" defer></script>
 </body>

@@ -460,7 +460,7 @@ async function loadObraSection() {
 
   let participantes = [];
   if (OBRA.hitos.length) {
-    const { data: parts } = await sb.from('hito_participantes').select('*').in('hito_id', OBRA.hitos.map(h => h.id)).order('created_at', { ascending: true });
+    const { data: parts } = await sb.from('participantes').select('*').in('hito_id', OBRA.hitos.map(h => h.id)).order('created_at', { ascending: true });
     participantes = parts || [];
   }
   OBRA.participantes = participantes;

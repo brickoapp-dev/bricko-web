@@ -425,7 +425,8 @@
       display: inline-block;
       overflow: hidden;
       white-space: nowrap;
-      max-width: 80px; /* Ancho suficiente para "BRICK" */
+      max-width: 80px;
+      /* Ancho suficiente para "BRICK" */
       vertical-align: bottom;
       transition: max-width .5s cubic-bezier(0.6, 0, 0.2, 1), opacity .35s ease;
     }
@@ -1658,6 +1659,69 @@
       font-size: 14px;
     }
 
+    /* ====== CÓMO COBRA BRICKØ ====== */
+    .commission-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      margin-bottom: 24px;
+    }
+
+    .commission-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 32px 28px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg-1);
+    }
+
+    .commission-card.winner {
+      border-color: var(--orange-line);
+      background: color-mix(in srgb, var(--orange) 3%, var(--bg-1));
+    }
+
+    .commission-type {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .14em;
+      color: var(--orange);
+      margin-bottom: 18px;
+      display: block;
+      text-transform: uppercase;
+    }
+
+    .commission-card h3 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .commission-card p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .commission-big {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 36px;
+      line-height: 1.1;
+      color: var(--ink);
+      display: block;
+    }
+
+    .commission-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
     /* ===== CTA final ===== */
     .cta {
       padding: 130px 0;
@@ -2156,21 +2220,25 @@
       transition: all .22s ease;
       overflow: hidden;
     }
+
     .file-upload-box:hover {
       border-color: var(--orange);
       background: var(--orange-soft, rgba(242, 92, 24, 0.06));
     }
+
     .file-upload-box.has-file {
       border-color: #3FB950;
       border-style: solid;
       background: rgba(63, 185, 80, 0.07);
     }
+
     .file-upload-content {
       display: flex;
       align-items: center;
       gap: 12px;
       pointer-events: none;
     }
+
     .file-upload-icon {
       width: 22px;
       height: 22px;
@@ -2178,15 +2246,18 @@
       flex-shrink: 0;
       transition: stroke .2s ease;
     }
+
     .file-upload-box.has-file .file-upload-icon {
       stroke: #3FB950;
     }
+
     .file-upload-info {
       display: flex;
       flex-direction: column;
       gap: 2px;
       min-width: 0;
     }
+
     .file-upload-title {
       font-family: var(--body);
       font-weight: 600;
@@ -2196,10 +2267,12 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
     .file-upload-box.has-file .file-upload-title {
       color: #3FB950;
       font-weight: 700;
     }
+
     .file-upload-hint {
       font-family: var(--mono);
       font-size: 9.5px;
@@ -2207,6 +2280,7 @@
       letter-spacing: .04em;
       text-transform: uppercase;
     }
+
     .file-input-hidden {
       position: absolute;
       inset: 0;
@@ -2250,6 +2324,7 @@
       gap: 8px;
       padding: 6px 0;
     }
+
     .rchip {
       display: inline-flex;
       align-items: center;
@@ -2266,10 +2341,12 @@
       user-select: none;
       transition: all .22s ease;
     }
+
     .rchip:hover {
       border-color: var(--muted);
       color: var(--ink);
     }
+
     .rchip input[type="checkbox"] {
       appearance: none;
       -webkit-appearance: none;
@@ -2287,13 +2364,16 @@
       align-items: center;
       justify-content: center;
     }
+
     .rchip input[type="checkbox"]:hover {
       border-color: var(--orange);
     }
+
     .rchip input[type="checkbox"]:checked {
       background: var(--orange);
       border-color: var(--orange);
     }
+
     .rchip input[type="checkbox"]:checked::after {
       content: "";
       display: block;
@@ -2304,6 +2384,7 @@
       transform: rotate(45deg);
       margin-top: -2px;
     }
+
     .rchip:has(input:checked) {
       border-color: var(--orange);
       color: var(--ink);
@@ -2421,6 +2502,13 @@
     .auth-submit.loading {
       pointer-events: none;
       color: transparent;
+    }
+
+    .auth-submit:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
     }
 
     .auth-submit.loading::after {
@@ -2668,7 +2756,8 @@
 
       .steps,
       .services,
-      .verify {
+      .verify,
+      .commission-grid {
         grid-template-columns: 1fr 1fr;
       }
 
@@ -2703,7 +2792,8 @@
       .steps,
       .services,
       .split,
-      .verify {
+      .verify,
+      .commission-grid {
         grid-template-columns: 1fr;
       }
 
@@ -2781,7 +2871,8 @@
           <path class="iso-left" d="M2 7 L2 17 L12 22 L12 12 Z" />
           <path class="iso-right" d="M22 7 L22 17 L12 22 L12 12 Z" />
         </svg>
-        <span style="display: flex; align-items: center;"><span class="brand-text">BRICK</span><span class="o">Ø</span></span>
+        <span style="display: flex; align-items: center;"><span class="brand-text">BRICK</span><span
+            class="o">Ø</span></span>
       </a>
 
       <nav class="nav-links" aria-label="Principal">
@@ -3073,7 +3164,8 @@
           <article class="svc reveal rd1">
             <div class="svc-top">
               <div class="svc-ico"><svg viewBox="0 0 24 24">
-                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                  <path
+                    d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
                 </svg></div>
               <span class="svc-id">/07</span>
             </div>
@@ -3186,6 +3278,35 @@
       </div>
     </section>
 
+    <!-- ====== CÓMO COBRA BRICKØ ====== -->
+    <section class="sec" id="comision">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <span class="eyebrow">Comisión Brickø</span>
+          <h2>Cómo cobra<br><em>Brickø.</em></h2>
+          <p class="lead">El cliente publica y compara sin cargo. La comisión se aplica solo cuando la obra es adjudicada.</p>
+        </div>
+        <div class="commission-grid reveal">
+          <article class="commission-card">
+            <div><span class="commission-type">/ Para el cliente</span><h3>Publicar, recibir ofertas y contratar.</h3>
+            <p>Podés cargar la solicitud, comparar propuestas y seguir el trabajo sin comisión.</p></div>
+            <span class="commission-big">100%<br>gratis</span>
+          </article>
+          <article class="commission-card">
+            <div><span class="commission-type">/ Para oferentes no ganadores</span><h3>Participar y enviar ofertas.</h3>
+            <p>Enviar propuestas y competir por una obra no genera cargo mientras no haya adjudicación.</p></div>
+            <span class="commission-big">100%<br>gratis</span>
+          </article>
+          <article class="commission-card winner">
+            <div><span class="commission-type">/ Para el contratista ganador</span><h3>Al confirmar la adjudicación.</h3>
+            <p>La comisión se liquida al inicio y queda vinculada a la obra adjudicada.</p></div>
+            <span class="commission-big">10% del monto<br>adjudicado</span>
+          </article>
+        </div>
+        <div class="commission-note reveal">La comisión se cobra al contratista o profesional ganador al inicio del proceso de preparación de la obra. Después, el cliente paga por hitos acordados y aprobados.</div>
+      </div>
+    </section>
+
     <!-- ====== CTA FINAL ====== -->
     <section class="cta">
       <div class="wrap">
@@ -3241,8 +3362,8 @@
           <ul>
             <li><a href="#">Sobre Brickø</a></li>
             <li><a href="#">Soporte</a></li>
-            <li><a href="#">Términos</a></li>
-            <li><a href="#">Privacidad</a></li>
+            <li><a href="terminos.html" target="_blank" rel="noopener">Términos</a></li>
+            <li><a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a></li>
           </ul>
         </div>
       </div>
@@ -3420,33 +3541,45 @@
 
             <!-- Nombre de usuario -->
             <div class="field">
-              <label class="field-label" for="regUsername"><span><span class="ix">/05</span> Nombre de usuario</span><span class="req">*</span></label>
+              <label class="field-label" for="regUsername"><span><span class="ix">/05</span> Nombre de
+                  usuario</span><span class="req">*</span></label>
               <div class="field-wrap">
-                <span class="input-prefix" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--accent,#F25C18); font-weight:600;">@</span>
-                <input type="text" id="regUsername" class="field-input" placeholder="miusuario" style="padding-left:28px;" />
+                <span class="input-prefix"
+                  style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--accent,#F25C18); font-weight:600;">@</span>
+                <input type="text" id="regUsername" class="field-input" placeholder="miusuario"
+                  style="padding-left:28px;" />
               </div>
               <div class="field-msg">Ingresá tu nombre de usuario</div>
             </div>
 
             <!-- Rubros de Trabajo (múltiples) -->
             <div class="field">
-              <label class="field-label"><span><span class="ix">/06</span> Rubros de trabajo</span><span class="req">*</span></label>
+              <label class="field-label"><span><span class="ix">/06</span> Rubros de trabajo</span><span
+                  class="req">*</span></label>
               <div class="rubro-chips-select" id="regRubrosSelect">
-                <label class="rchip"><input type="checkbox" name="regRubro" value="plomeria"> <span>Plomería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="plomeria">
+                  <span>Plomería</span></label>
                 <label class="rchip"><input type="checkbox" name="regRubro" value="gas"> <span>Gas</span></label>
-                <label class="rchip"><input type="checkbox" name="regRubro" value="electricidad"> <span>Electricidad</span></label>
-                <label class="rchip"><input type="checkbox" name="regRubro" value="albanileria" checked> <span>Albañilería</span></label>
-                <label class="rchip"><input type="checkbox" name="regRubro" value="pintura"> <span>Pintura</span></label>
-                <label class="rchip"><input type="checkbox" name="regRubro" value="carpinteria"> <span>Carpintería</span></label>
-                <label class="rchip"><input type="checkbox" name="regRubro" value="herreria"> <span>Herrería</span></label>
-                <label class="rchip"><input type="checkbox" name="regRubro" value="jardineria"> <span>Jardinería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="electricidad">
+                  <span>Electricidad</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="albanileria" checked>
+                  <span>Albañilería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="pintura">
+                  <span>Pintura</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="carpinteria">
+                  <span>Carpintería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="herreria">
+                  <span>Herrería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="jardineria">
+                  <span>Jardinería</span></label>
               </div>
               <div class="field-msg">Seleccioná al menos un rubro</div>
             </div>
 
             <!-- Número de DNI -->
             <div class="field">
-              <label class="field-label" for="regDni"><span><span class="ix">/07</span> Número de DNI</span><span class="req">*</span></label>
+              <label class="field-label" for="regDni"><span><span class="ix">/07</span> Número de DNI</span><span
+                  class="req">*</span></label>
               <input type="text" id="regDni" class="field-input" placeholder="12345678" maxlength="10" />
               <div class="field-msg">Ingresá tu DNI</div>
             </div>
@@ -3457,9 +3590,10 @@
               <div class="file-upload-box" id="boxRegAvatar">
                 <input type="file" id="regAvatar" class="file-input-hidden" accept="image/*" />
                 <div class="file-upload-content">
-                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                    <circle cx="12" cy="13" r="4"/>
+                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
                   </svg>
                   <div class="file-upload-info">
                     <span class="file-upload-title">Subir foto de perfil</span>
@@ -3471,16 +3605,18 @@
 
             <!-- DNI Frente -->
             <div class="field">
-              <label class="field-label" for="regDniFront"><span><span class="ix">/09</span> DNI Frente</span><span class="req">*</span></label>
+              <label class="field-label" for="regDniFront"><span><span class="ix">/09</span> DNI Frente</span><span
+                  class="req">*</span></label>
               <div class="file-upload-box" id="boxRegDniFront">
                 <input type="file" id="regDniFront" class="file-input-hidden" accept="image/*" />
                 <div class="file-upload-content">
-                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <rect x="3" y="4" width="18" height="16" rx="2"/>
-                    <circle cx="9" cy="10" r="2"/>
-                    <line x1="15" y1="8" x2="19" y2="8"/>
-                    <line x1="15" y1="12" x2="19" y2="12"/>
-                    <line x1="7" y1="16" x2="17" y2="16"/>
+                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8">
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <circle cx="9" cy="10" r="2" />
+                    <line x1="15" y1="8" x2="19" y2="8" />
+                    <line x1="15" y1="12" x2="19" y2="12" />
+                    <line x1="7" y1="16" x2="17" y2="16" />
                   </svg>
                   <div class="file-upload-info">
                     <span class="file-upload-title">Subir DNI Frente</span>
@@ -3492,15 +3628,17 @@
 
             <!-- DNI Dorso -->
             <div class="field">
-              <label class="field-label" for="regDniBack"><span><span class="ix">/10</span> DNI Dorso</span><span class="req">*</span></label>
+              <label class="field-label" for="regDniBack"><span><span class="ix">/10</span> DNI Dorso</span><span
+                  class="req">*</span></label>
               <div class="file-upload-box" id="boxRegDniBack">
                 <input type="file" id="regDniBack" class="file-input-hidden" accept="image/*" />
                 <div class="file-upload-content">
-                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <rect x="3" y="4" width="18" height="16" rx="2"/>
-                    <line x1="7" y1="8" x2="17" y2="8"/>
-                    <line x1="7" y1="12" x2="17" y2="12"/>
-                    <line x1="7" y1="16" x2="13" y2="16"/>
+                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8">
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <line x1="7" y1="8" x2="17" y2="8" />
+                    <line x1="7" y1="12" x2="17" y2="12" />
+                    <line x1="7" y1="16" x2="13" y2="16" />
                   </svg>
                   <div class="file-upload-info">
                     <span class="file-upload-title">Subir DNI Dorso</span>
@@ -3512,19 +3650,22 @@
 
             <!-- Dirección de Residencia -->
             <div class="field">
-              <label class="field-label" for="regAddress"><span><span class="ix">/11</span> Dirección de residencia</span><span class="req">*</span></label>
+              <label class="field-label" for="regAddress"><span><span class="ix">/11</span> Dirección de
+                  residencia</span><span class="req">*</span></label>
               <input type="text" id="regAddress" class="field-input" placeholder="Av. Corrientes 1234" />
             </div>
 
             <!-- Localidad / Ciudad -->
             <div class="field">
-              <label class="field-label" for="regCity"><span><span class="ix">/12</span> Localidad / Ciudad</span><span class="req">*</span></label>
+              <label class="field-label" for="regCity"><span><span class="ix">/12</span> Localidad / Ciudad</span><span
+                  class="req">*</span></label>
               <input type="text" id="regCity" class="field-input" placeholder="CABA / La Plata" />
             </div>
 
             <!-- Provincia -->
             <div class="field">
-              <label class="field-label" for="regProvince"><span><span class="ix">/13</span> Provincia</span><span class="req">*</span></label>
+              <label class="field-label" for="regProvince"><span><span class="ix">/13</span> Provincia</span><span
+                  class="req">*</span></label>
               <select id="regProvince" class="field-input">
                 <option value="Buenos Aires">Buenos Aires</option>
                 <option value="CABA" selected>CABA</option>
@@ -3557,11 +3698,16 @@
           <label class="field-check">
             <input type="checkbox" id="regTerms" />
             <span class="box"></span>
-            <span class="lbl">Acepto los <a href="#">Términos y Condiciones</a> y la <a href="#">Política de
-                Privacidad</a>.</span>
+            <span class="lbl">Acepto los <a href="terminos.html" target="_blank" rel="noopener">Términos y Condiciones</a>.</span>
           </label>
 
-          <button type="submit" class="auth-submit">Crear cuenta <span class="arrow"></span></button>
+          <label class="field-check">
+            <input type="checkbox" id="regPrivacy" />
+            <span class="box"></span>
+            <span class="lbl">Leí la <a href="privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a>.</span>
+          </label>
+
+          <button type="submit" class="auth-submit" id="registerSubmitBtn" disabled>Crear cuenta <span class="arrow"></span></button>
 
           <div class="auth-divider">o registrarte con</div>
           <div class="auth-social">
@@ -3622,6 +3768,7 @@
 
   <script src="scripts/supabase.min.js"></script>
   <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/legal-versions.js"></script>
   <script src="scripts/01-auth.js"></script>
   <script>
     (function () {
@@ -3815,9 +3962,9 @@
         input.classList.add('bad');
         input.addEventListener('input', () => { if (field) field.classList.remove('invalid'); input.classList.remove('bad'); }, { once: true });
       }
-      function clearForm(form) { 
-        $$('.field', form).forEach(f => f.classList.remove('invalid')); 
-        $$('.field-input', form).forEach(i => i.classList.remove('bad')); 
+      function clearForm(form) {
+        $$('.field', form).forEach(f => f.classList.remove('invalid'));
+        $$('.field-input', form).forEach(i => i.classList.remove('bad'));
         $$('.file-upload-box', form).forEach(box => {
           if (box.dataset.defaultTitle) {
             const titleEl = box.querySelector('.file-upload-title');
@@ -3853,12 +4000,23 @@
         }
       });
 
+      // Términos + Privacidad: las dos casillas son independientes y las
+      // dos tienen que estar tildadas para habilitar "Crear cuenta".
+      (function initRegisterConsentGate() {
+        const termsCb = $('#regTerms'), privacyCb = $('#regPrivacy'), submitBtn = $('#registerSubmitBtn');
+        if (!termsCb || !privacyCb || !submitBtn) return;
+        const update = () => { submitBtn.disabled = !(termsCb.checked && privacyCb.checked); };
+        termsCb.addEventListener('change', update);
+        privacyCb.addEventListener('change', update);
+        update();
+      })();
+
       // REGISTER submit — usa Auth.register() de Supabase
       $('#registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         clearForm(e.target);
         let ok = true;
-        const fn = $('#regName'), ln = $('#regLast'), email = $('#regEmail'), phone = $('#regPhone'), pass = $('#regPass'), terms = $('#regTerms');
+        const fn = $('#regName'), ln = $('#regLast'), email = $('#regEmail'), phone = $('#regPhone'), pass = $('#regPass'), terms = $('#regTerms'), privacy = $('#regPrivacy');
         if (fn.value.trim().length < 2) { fieldFail(fn); ok = false; }
         if (ln.value.trim().length < 2) { fieldFail(ln); ok = false; }
         if (!isEmail(email.value)) { fieldFail(email); ok = false; }
@@ -3917,11 +4075,12 @@
         }
 
         if (pass.value.length < 8) { fieldFail(pass); ok = false; }
-        if (!terms.checked) { toast('err', 'Falta un paso', 'Tenés que aceptar los términos para crear la cuenta.'); ok = false; }
+        if (!terms.checked || !privacy.checked) { toast('err', 'Falta un paso', 'Tenés que aceptar los Términos y leer la Política de Privacidad para crear la cuenta.'); ok = false; }
         if (!ok) return;
 
         const btn = e.target.querySelector('.auth-submit');
         btn.classList.add('loading');
+        const aceptadoEn = new Date().toISOString();
         try {
           await Auth.register({
             firstName: fn.value.trim(),
@@ -3939,7 +4098,11 @@
             province: proData.province,
             avatarFile: proData.avatarFile,
             dniFrontFile: proData.dniFrontFile,
-            dniBackFile: proData.dniBackFile
+            dniBackFile: proData.dniBackFile,
+            terminosVersion: window.BRICKO_LEGAL.terminos.version,
+            terminosAceptadoEn: aceptadoEn,
+            privacidadVersion: window.BRICKO_LEGAL.privacidad.version,
+            privacidadLeidaEn: aceptadoEn
           });
         } catch (err) {
           btn.classList.remove('loading');

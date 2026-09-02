@@ -460,13 +460,14 @@ async function loadObraSection() {
 
   let participantes = [];
   if (OBRA.hitos.length) {
-    const { data: parts } = await sb.from('hito_participantes').select('*').in('hito_id', OBRA.hitos.map(h => h.id)).order('created_at', { ascending: true });
+    const { data: parts } = await sb.from('participantes').select('*').in('hito_id', OBRA.hitos.map(h => h.id)).order('created_at', { ascending: true });
     participantes = parts || [];
   }
   OBRA.participantes = participantes;
 
   const { data: documentos } = await sb.from('obra_documentos').select('*').eq('request_id', REQ_ID).order('created_at', { ascending: false });
   OBRA.documentos = documentos || [];
+  await attachDocSignedUrls(OBRA.documentos);
 
   const { data: prep } = await sb.from('obra_preparacion').select('gate_habilitada').eq('request_id', REQ_ID).maybeSingle();
   OBRA.prep = prep;
@@ -574,6 +575,16 @@ function renderObraPagos() {
       : ''}`;
 }
 
+async function attachDocSignedUrls(documentos) {
+  await Promise.all(documentos.map(async (d) => {
+    if (!d.storage_path) { d.url = null; return; }
+    try {
+      const { data } = await sb.storage.from('obra-docs').createSignedUrl(d.storage_path, 3600);
+      d.url = data?.signedUrl || null;
+    } catch (e) { d.url = null; }
+  }));
+}
+
 function renderObraDocumentos() {
   const el = document.getElementById('obraDocumentos');
   if (!el) return;
@@ -582,7 +593,10 @@ function renderObraDocumentos() {
     ? OBRA.documentos.map(d => `
         <div class="pj-doc-row">
           <div><strong>${escapeHTML(d.nombre || DOC_TIPO_LABEL[d.tipo] || d.tipo)}</strong><small>${DOC_TIPO_LABEL[d.tipo] || d.tipo}</small></div>
-          <span class="pj-status ${d.estado === 'firmado' || d.estado === 'vigente' ? 'ok' : d.estado === 'borrador' ? 'warn' : ''}">${d.estado}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="pj-status ${d.estado === 'firmado' || d.estado === 'vigente' ? 'ok' : d.estado === 'borrador' ? 'warn' : ''}">${d.estado}</span>
+            ${d.url ? `<a class="pj-btn" href="${d.url}" target="_blank" rel="noopener">Ver</a>` : ''}
+          </div>
         </div>
       `).join('')
     : '<p class="pj-small">Todavía no hay documentos cargados.</p>';
@@ -610,7 +624,7 @@ function renderObraCarpeta() {
       <section class="pj-panel pj-panel-pad">
         <div class="pj-kicker">Carpeta digital de obra</div>
         <p class="pj-small" style="margin-top:8px">Reúne contrato, plan por hitos, equipo asignado y comprobantes de esta obra en un solo lugar.</p>
-        <div class="pj-doc-row"><div><strong>Contrato + anexos</strong><small>${anexos.length + (contrato ? 1 : 0)} documento(s)</small></div><span class="pj-status ${contrato ? 'ok' : 'warn'}">${contrato ? 'Cargado' : 'Pendiente'}</span></div>
+        <div class="pj-doc-row"><div><strong>Contrato + anexos</strong><small>${anexos.length + (contrato ? 1 : 0)} documento(s)</small></div><div style="display:flex;align-items:center;gap:8px"><span class="pj-status ${contrato ? 'ok' : 'warn'}">${contrato ? 'Cargado' : 'Pendiente'}</span>${contrato?.url ? `<a class="pj-btn" href="${contrato.url}" target="_blank" rel="noopener">Ver</a>` : ''}</div></div>
         <div class="pj-doc-row"><div><strong>Plan por hitos</strong><small>${OBRA.hitos.length} hitos · $ ${money(montoHitos)}</small></div><span class="pj-status ${OBRA.hitos.length ? 'ok' : 'warn'}">${OBRA.hitos.length ? 'Definido' : 'Pendiente'}</span></div>
         <div class="pj-doc-row"><div><strong>Equipo asignado</strong><small>${OBRA.participantes.length} responsable(s)</small></div><span class="pj-status ${OBRA.participantes.length ? 'ok' : 'warn'}">${OBRA.participantes.length ? 'Asignado' : 'Pendiente'}</span></div>
         <div class="pj-doc-row"><div><strong>Evidencias de avance</strong><small>${evidencias.length} archivo(s)</small></div><span class="pj-status ${evidencias.length ? 'ok' : ''}">${evidencias.length ? 'Cargadas' : 'Sin evidencias'}</span></div>

@@ -14,6 +14,14 @@ const MODALIDAD_ROLE_CLASS = {
   contratista:'contratista', colaborador_independiente:'padic',
   dependiente:'dep', subcontratista:'sub', profesional:'pro'
 };
+const CONTRATO_ESTADO_LABEL = {
+  null: 'Borrador', enviado: 'Enviado', aceptado_cliente: 'Aceptado por el cliente',
+  aceptado_contratista: 'Aceptado por vos', firmado: 'Firmado', invalidado: 'Borrador'
+};
+const ESTADO_PARTICIPANTE_LABEL = { completo: 'Completo', registrado: 'Registrado', revisar: 'Revisar' };
+const ESTADO_PARTICIPANTE_CLASS = { completo: 'ok', registrado: 'orange', revisar: 'warn' };
+const DOC_ESTADO_CLASS = { vigente: 'ok', por_vencer: 'orange', vencido: 'warn', faltante: 'warn' };
+const PENDING_DOC_FILES = {};
 
 function getSession(){
   try {
@@ -26,7 +34,7 @@ let SESSION = null;
 let REQ_ID = null;
 let UI_GATE = 1;
 let GATE_FROM_URL = false;
-const STATE = { request:null, prep:null, hitos:[], participantes:[], equipo:[] };
+const STATE = { request:null, prep:null, hitos:[], participantes:[], participanteDocs:[], equipo:[], documentosCount:0, contrato:null, planHitos:null, qr:null };
 
 document.addEventListener('DOMContentLoaded', async () => {
   SESSION = getSession();
@@ -89,11 +97,21 @@ async function loadAll(){
   let participantes = [];
   if (hitos && hitos.length){
     const { data: parts } = await sb
-      .from('hito_participantes')
+      .from('participantes')
       .select('*')
       .in('hito_id', hitos.map(h => h.id))
       .order('created_at', { ascending: true });
     participantes = parts || [];
+  }
+
+  let participanteDocs = [];
+  if (participantes.length){
+    const { data: docs } = await sb
+      .from('participante_documentos')
+      .select('*')
+      .in('participante_id', participantes.map(p => p.id));
+    participanteDocs = docs || [];
+    await attachParticipanteDocSignedUrls(participanteDocs);
   }
 
   const { data: equipo } = await sb
@@ -113,11 +131,80 @@ async function loadAll(){
   STATE.montoAdjudicado = quote?.amount || 0;
   STATE.hitos = hitos || [];
   STATE.participantes = participantes;
+  STATE.participanteDocs = participanteDocs;
   STATE.equipo = equipo || [];
   STATE.documentosCount = documentos?.length || 0;
 
+  await loadContratoState();
+  await loadPlanHitosState();
+  await loadQrState();
+
   if (firstLoad && !GATE_FROM_URL) UI_GATE = prep.current_gate || 2;
   render();
+}
+
+/* ── Plan por hitos: versión activa (confirmado/invalidado) ─────────── */
+async function loadPlanHitosState(){
+  const { data: version } = await sb
+    .from('plan_hitos_versiones')
+    .select('*')
+    .eq('request_id', REQ_ID)
+    .neq('estado', 'invalidado')
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  STATE.planHitos = { version };
+}
+
+/* ── QR de la carpeta pública: último token + su historial de accesos ── */
+async function loadQrState(){
+  const { data: tokens } = await sb
+    .from('qr_tokens')
+    .select('*')
+    .eq('obra_id', REQ_ID)
+    .order('creado_en', { ascending: false })
+    .limit(1);
+  const token = tokens?.[0] || null;
+
+  let accesos = [];
+  if (token){
+    const { data: acc } = await sb
+      .from('qr_accesos')
+      .select('*')
+      .eq('token', token.token)
+      .order('accedido_en', { ascending: false })
+      .limit(50);
+    accesos = acc || [];
+  }
+  STATE.qr = { token, accesos };
+}
+
+/* ── Contrato: payload+hash en vivo, reconciliación y versión activa ── */
+async function loadContratoState(){
+  const { payload, hash } = await window.buildContractPayload(REQ_ID);
+  const faltantes = await window.validateContractData(REQ_ID);
+
+  await sb.rpc('contrato_invalidar_si_cambio', { p_request_id: REQ_ID, p_hash_actual: hash });
+
+  const { data: version } = await sb
+    .from('contrato_versiones')
+    .select('*')
+    .eq('request_id', REQ_ID)
+    .neq('estado', 'invalidado')
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let aceptaciones = [];
+  if (version){
+    const { data: acept } = await sb
+      .from('contrato_aceptaciones')
+      .select('*')
+      .eq('contrato_version_id', version.id);
+    aceptaciones = acept || [];
+  }
+
+  STATE.contrato = { payload, hash, faltantes, version, aceptaciones };
 }
 
 /* ── Render ──────────────────────────────────────────── */
@@ -149,12 +236,10 @@ function render(){
   setStatusPill('comisionStatus', prep.gate_comision, 'Acreditada', 'Pendiente');
   document.getElementById('btnToggleComision').textContent = prep.gate_comision ? 'Marcar pendiente' : 'Marcar acreditada';
 
-  setStatusPill('docContratoStatus', prep.gate_contrato, 'Firmado', 'Pendiente');
-  setStatusPill('docAnexoStatus', prep.gate_contrato, 'Firmado', 'Pendiente');
+  renderContrato();
   setStatusPill('contratoStatus', prep.gate_contrato, 'Contrato firmado', 'Pendiente');
-  document.getElementById('btnToggleContrato').textContent = prep.gate_contrato ? 'Marcar como borrador' : 'Marcar contrato firmado';
 
-  renderMilestones();
+  renderPlanHitos();
   setStatusPill('hitosStatus', prep.gate_hitos, 'Plan confirmado', 'Pendiente');
 
   renderEquipoSelect();
@@ -163,12 +248,35 @@ function render(){
   participantsStatus.textContent = prep.gate_participantes ? 'Participantes validados' : 'Revisión pendiente';
   participantsStatus.className = 'pj-status ' + (prep.gate_participantes ? 'ok' : 'warn');
 
-  setStatusPill('finalComision', prep.gate_comision, 'OK', 'Pendiente');
-  setStatusPill('finalContrato', prep.gate_contrato, 'OK', 'Pendiente');
-  setStatusPill('finalMilestones', prep.gate_hitos, 'OK', 'Pendiente');
-  setStatusPill('finalParticipants', prep.gate_participantes, 'OK', 'Pendiente');
+  renderGate6();
+}
 
-  const ready = prep.gate_comision && prep.gate_contrato && prep.gate_hitos && prep.gate_participantes;
+/* ── Gate 6: checklist calculado + carpeta + QR ──────────────────────── */
+function tokenStatus(t){
+  if (!t) return 'ninguno';
+  if (t.revocado_en) return 'revocado';
+  if (t.vence_en && new Date(t.vence_en) < new Date()) return 'vencido';
+  return 'vigente';
+}
+
+function renderGate6(){
+  const prep = STATE.prep;
+
+  const contratoFirmado = STATE.contrato?.version?.estado === 'firmado';
+  const hitosConfirmado = !!STATE.planHitos?.version;
+  const participantesIncompletos = STATE.participantes.filter(p => p.estado !== 'completo');
+  const participantesOk = STATE.participantes.length > 0 && participantesIncompletos.length === 0;
+
+  setStatusPill('finalComision', prep.gate_comision, 'OK', 'Pendiente');
+  setStatusPill('finalContrato', contratoFirmado, 'OK', 'Pendiente');
+  setStatusPill('finalMilestones', hitosConfirmado, 'OK', 'Pendiente');
+  setStatusPill('finalParticipants', participantesOk, 'OK', 'Pendiente');
+
+  document.getElementById('finalParticipantsDetail').innerHTML = participantesIncompletos.length
+    ? `<div class="pj-small" style="margin-top:8px">Falta: ${participantesIncompletos.map(p => escapeHTML(p.nombre) + ' (' + (ESTADO_PARTICIPANTE_LABEL[p.estado] || p.estado) + ')').join(', ')}</div>`
+    : '';
+
+  const ready = prep.gate_comision && contratoFirmado && hitosConfirmado && participantesOk;
   const enableBtn = document.getElementById('enableProject');
   const enableStatus = document.getElementById('enableStatus');
   enableBtn.disabled = !ready || prep.gate_habilitada;
@@ -179,10 +287,42 @@ function render(){
   document.getElementById('shareLink').value = window.location.origin + '/client-solicitud.html?req=' + REQ_ID;
 
   const resumen = document.getElementById('carpetaResumen');
-  if (resumen){
-    const montoHitos = STATE.hitos.reduce((s, h) => s + Number(h.monto || 0), 0);
-    resumen.textContent = `${STATE.hitos.length} hitos ($ ${money(montoHitos)}) · ${STATE.participantes.length} participantes asignados · ${STATE.documentosCount} documentos.`;
+  const montoHitos = STATE.hitos.reduce((s, h) => s + Number(h.monto || 0), 0);
+  resumen.textContent = `${STATE.hitos.length} hitos ($ ${money(montoHitos)}) · ${STATE.participantes.length} participantes asignados · ${STATE.documentosCount} documentos.`;
+
+  const t = STATE.qr?.token;
+  const estado = tokenStatus(t);
+  const pill = document.getElementById('qrEstadoPill');
+  const titulo = document.getElementById('qrEstadoTitulo');
+  const detalle = document.getElementById('qrEstadoDetalle');
+  const linkBox = document.getElementById('qrLinkBox');
+  const labelMap = { ninguno: 'Sin generar', vigente: 'Vigente', vencido: 'Vencido', revocado: 'Revocado' };
+
+  if (!t){
+    titulo.textContent = 'Sin QR generado';
+    detalle.textContent = '';
+    linkBox.style.display = 'none';
+  } else {
+    titulo.textContent = `Token generado ${new Date(t.creado_en).toLocaleString('es-AR')}`;
+    detalle.textContent = t.vence_en ? `Vence ${new Date(t.vence_en).toLocaleDateString('es-AR')}` : 'Sin vencimiento';
+    if (estado === 'vigente'){
+      linkBox.style.display = '';
+      document.getElementById('qrLink').value = `${window.location.origin}/carpeta.html?t=${t.token}`;
+    } else {
+      linkBox.style.display = 'none';
+    }
   }
+  pill.textContent = labelMap[estado];
+  pill.className = 'pj-status ' + (estado === 'vigente' ? 'ok' : 'warn');
+
+  document.getElementById('btnRevocarQr').disabled = estado !== 'vigente';
+  document.getElementById('btnVerInspector').disabled = estado !== 'vigente';
+
+  const body = document.getElementById('qrAccesosBody');
+  const accesos = STATE.qr?.accesos || [];
+  body.innerHTML = accesos.length
+    ? accesos.map(a => `<tr><td>${new Date(a.accedido_en).toLocaleString('es-AR')}</td><td class="pj-small">${escapeHTML(a.user_agent || '—')}</td><td class="pj-small">${escapeHTML(a.ip || '—')}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="pj-small">Sin accesos todavía.</td></tr>';
 }
 
 function setStatusPill(id, done, okLabel, pendingLabel){
@@ -192,12 +332,58 @@ function setStatusPill(id, done, okLabel, pendingLabel){
   el.className = 'pj-status ' + (done ? 'ok' : 'warn');
 }
 
-function renderMilestones(){
+function renderContrato(){
+  const c = STATE.contrato;
+  if (!c) return;
+
+  const estado = c.version ? c.version.estado : null;
+  const pill = document.getElementById('contratoEstadoPill');
+  pill.textContent = CONTRATO_ESTADO_LABEL[estado] ?? estado;
+  pill.className = 'pj-status ' + (estado === 'firmado' ? 'ok' : estado ? 'orange' : 'warn');
+
+  const info = document.getElementById('contratoVersionInfo');
+  info.textContent = c.version
+    ? `Versión ${c.version.version} · enviado ${new Date(c.version.enviado_at).toLocaleString('es-AR')}`
+      + (c.version.firmado_at ? ` · firmado ${new Date(c.version.firmado_at).toLocaleString('es-AR')}` : '')
+    : 'Sin generar todavía';
+
+  // Un faltante de perfil_cliente no es navegable desde acá: es la
+  // pantalla del cliente (client-perfil.html), y esta página es
+  // pro-only -- ir ahí solo rebotaría al pro de vuelta a pro.html.
+  const esCorregibleAqui = (f) => !!f.pantalla && f.origen !== 'perfil_cliente';
+
+  const faltantesEl = document.getElementById('contratoFaltantes');
+  faltantesEl.innerHTML = c.faltantes.length ? `
+    <div class="pj-panel pj-panel-pad" style="margin-top:14px">
+      <div class="pj-kicker">Faltan ${c.faltantes.length} dato(s) para generar el contrato</div>
+      ${c.faltantes.map(f => `
+        <div class="pj-doc-row">
+          <div><strong>[${f.id}] ${escapeHTML(f.label || 'Campo por definir')}</strong><small>${escapeHTML(f.nota || (f.motivo === 'vacio' ? (f.origen === 'perfil_cliente' ? 'Todavía no lo cargó el cliente en su perfil.' : 'Todavía no se cargó.') : 'Sin pantalla de origen todavía.'))}</small></div>
+          ${esCorregibleAqui(f) ? `<a class="pj-btn" href="${f.pantalla}" target="_blank" rel="noopener">Corregir</a>` : ''}
+        </div>
+      `).join('')}
+    </div>` : '';
+
+  const yaFirmeYo = c.aceptaciones.some(a => a.rol === 'contratista');
+
+  document.getElementById('btnCorregirDatos').disabled = !c.faltantes.some(esCorregibleAqui);
+  document.getElementById('btnEnviarContrato').disabled = c.faltantes.length > 0 || !!estado;
+  document.getElementById('btnFirmarContrato').disabled = !estado || estado === 'firmado' || yaFirmeYo;
+  document.getElementById('btnDescargarFinal').disabled = estado !== 'firmado';
+}
+
+function renderPlanHitos(){
+  const confirmado = !!STATE.planHitos?.version;
+
+  renderResponsableSelect();
+
   const list = document.getElementById('milestonesList');
   if (!STATE.hitos.length){
     list.innerHTML = '<div class="pj-empty">Todavía no agregaste hitos.</div>';
   } else {
-    list.innerHTML = STATE.hitos.map(h => `
+    list.innerHTML = STATE.hitos.map(h => {
+      const plazoDias = h.plazo_propio ? h.plazo_observacion_dias : STATE.prep.plazo_observacion_dias_default;
+      return `
       <article class="pj-milestone">
         <div class="pj-milestone-head">
           <div class="pj-milestone-num">${String(h.numero).padStart(2,'0')}</div>
@@ -207,18 +393,57 @@ function renderMilestones(){
         <div class="pj-milestone-body">
           <div class="pj-milestone-meta">
             <div><small>Monto</small><strong>$ ${money(h.monto)}</strong></div>
-            <div><small>Fecha</small><strong>${h.fecha_estimada ? new Date(h.fecha_estimada + 'T00:00:00').toLocaleDateString('es-AR') : '—'}</strong></div>
+            <div><small>Fecha objetivo</small><strong>${h.fecha_estimada ? new Date(h.fecha_estimada + 'T00:00:00').toLocaleDateString('es-AR') : '—'}</strong></div>
+            <div><small>Criterio de aceptación</small><strong>${escapeHTML(h.criterio_aceptacion || '—')}</strong></div>
+            <div><small>Responsable</small><strong>${escapeHTML(h.responsable_nombre || '—')}</strong></div>
+            <div><small>Plazo de observación</small><strong>${plazoDias ? plazoDias + ' días' + (h.plazo_propio ? ' (propio)' : '') : '—'}</strong></div>
             <div><small>Avance</small><strong>${h.avance_pct}%</strong></div>
             <div><small>Pago</small><strong>${{pending:'Pendiente',approved:'Aprobado',paid:'Pagado'}[h.pago_estado] || h.pago_estado}</strong></div>
           </div>
-          ${h.status === 'pending' ? `<div class="pj-actions" style="margin-top:12px"><button class="pj-btn" data-delete-hito="${h.id}">Eliminar</button></div>` : ''}
+          ${h.status === 'pending' && !confirmado ? `<div class="pj-actions" style="margin-top:12px"><button class="pj-btn" data-delete-hito="${h.id}">Eliminar</button></div>` : ''}
         </div>
       </article>
-    `).join('');
+    `;
+    }).join('');
   }
 
   const select = document.getElementById('pHito');
   select.innerHTML = STATE.hitos.map(h => `<option value="${h.id}">${String(h.numero).padStart(2,'0')} · ${escapeHTML(h.titulo)}</option>`).join('');
+
+  // Monto adjudicado vs. suma de hitos (delta en vivo)
+  const montoHitos = STATE.hitos.reduce((s, h) => s + Number(h.monto || 0), 0);
+  const delta = montoHitos - STATE.montoAdjudicado;
+  const deltaEl = document.getElementById('montoDeltaInfo');
+  deltaEl.textContent = delta === 0
+    ? `$ ${money(montoHitos)} = monto adjudicado`
+    : `$ ${money(montoHitos)} vs. $ ${money(STATE.montoAdjudicado)} (${delta > 0 ? '+' : ''}${money(delta)})`;
+  deltaEl.className = 'pj-status ' + (delta === 0 ? 'ok' : 'warn');
+
+  // Fechas objetivo en orden creciente (advertencia, no bloqueo)
+  const fechas = STATE.hitos.map(h => h.fecha_estimada).filter(Boolean);
+  const enOrden = fechas.every((f, i) => i === 0 || f >= fechas[i - 1]);
+  document.getElementById('fechaOrdenWarning').style.display = (fechas.length > 1 && !enOrden) ? '' : 'none';
+
+  // Plazo de observación por defecto (obra)
+  const plazoDefaultInput = document.getElementById('mPlazoDefault');
+  if (document.activeElement !== plazoDefaultInput) plazoDefaultInput.value = STATE.prep.plazo_observacion_dias_default || '';
+  plazoDefaultInput.disabled = confirmado;
+
+  // Bloquear el form de alta y mostrar Editar/Reabrir en vez de Confirmar
+  document.getElementById('newMilestoneForm').style.display = confirmado ? 'none' : '';
+  document.getElementById('confirmMilestones').style.display = confirmado ? 'none' : '';
+  document.getElementById('btnReabrirPlan').style.display = confirmado ? '' : 'none';
+}
+
+function renderResponsableSelect(){
+  const select = document.getElementById('mResponsable');
+  if (!select) return;
+  const current = select.value;
+  const yo = ((SESSION.firstName || '') + ' ' + (SESSION.lastName || '')).trim() || 'Yo (el contratista)';
+  select.innerHTML = `<option value="">Seleccioná un responsable</option>
+    <option value="__yo__">${escapeHTML(yo)} (vos)</option>
+    ${STATE.equipo.map(p => `<option value="${p.id}">${escapeHTML(p.nombre)}${p.especialidad ? ' · ' + escapeHTML(p.especialidad) : ''}</option>`).join('')}`;
+  select.value = current;
 }
 
 function renderEquipoSelect(){
@@ -234,26 +459,127 @@ function renderEquipoSelect(){
   if (hint) hint.style.display = STATE.equipo.length ? 'none' : '';
 }
 
+/* ── Documentación tipada por modalidad [29]-[30] ────────────────────
+   Espejo en JS de public.documento_estado() -- solo para mostrar en el
+   momento; la fuente de verdad real es participantes.estado,
+   calculado en la base por recalcular_estado_participante(). */
+function docEstadoLocal(doc){
+  if (!doc || !doc.storage_path) return 'faltante';
+  if (!doc.fecha_vencimiento) return 'vigente';
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const venc = new Date(doc.fecha_vencimiento + 'T00:00:00');
+  const dias = Math.round((venc - hoy) / 86400000);
+  if (dias < 0) return 'vencido';
+  if (dias <= 30) return 'por_vencer';
+  return 'vigente';
+}
+
+async function attachParticipanteDocSignedUrls(docs){
+  await Promise.all(docs.map(async (d) => {
+    if (!d.storage_path){ d.url = null; return; }
+    try {
+      const { data } = await sb.storage.from('participante-docs').createSignedUrl(d.storage_path, 3600);
+      d.url = data?.signedUrl || null;
+    } catch(e){ d.url = null; }
+  }));
+}
+
 function renderParticipants(){
-  const tbody = document.querySelector('#participantsTable tbody');
+  const listEl = document.getElementById('participantsList');
   if (!STATE.participantes.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="pj-small" style="padding:16px 11px">Todavía no asignaste participantes.</td></tr>';
+    listEl.innerHTML = '<div class="pj-empty">Todavía no asignaste participantes.</div>';
     return;
   }
+
   const hitoById = {};
   STATE.hitos.forEach(h => { hitoById[h.id] = h; });
-  tbody.innerHTML = STATE.participantes.map(p => {
+  const docsByParticipante = {};
+  STATE.participanteDocs.forEach(d => { (docsByParticipante[d.participante_id] ||= []).push(d); });
+
+  listEl.innerHTML = STATE.participantes.map(p => {
     const h = hitoById[p.hito_id];
+    const requisitos = window.REQUISITOS_POR_MODALIDAD[p.modalidad] || [];
+    const docsMap = {};
+    (docsByParticipante[p.id] || []).forEach(d => { docsMap[d.tipo] = d; });
+
+    const filas = requisitos.length ? requisitos.map(req => {
+      const doc = docsMap[req.tipo];
+      const estadoDoc = docEstadoLocal(doc);
+      const key = `${p.id}::${req.tipo}`;
+      const inputId = `docfile_${p.id}_${req.tipo}`;
+      return `
+        <tr>
+          <td><strong>${escapeHTML(req.label)}</strong></td>
+          <td>
+            ${doc?.url ? `<a class="pj-btn" href="${doc.url}" target="_blank" rel="noopener">Ver</a>` : ''}
+            <input type="file" id="${inputId}" data-doc-file="${key}" accept=".pdf,image/*" hidden />
+            <label class="pj-btn" for="${inputId}" style="cursor:pointer">${doc?.storage_path ? 'Reemplazar' : 'Subir'}</label>
+          </td>
+          <td><input type="date" class="form-input" data-doc-emision="${key}" value="${doc?.fecha_emision || ''}" /></td>
+          <td><input type="date" class="form-input" data-doc-vencimiento="${key}" value="${doc?.fecha_vencimiento || ''}" /></td>
+          <td><span class="pj-status ${DOC_ESTADO_CLASS[estadoDoc]}">${window.DOC_ESTADO_LABEL[estadoDoc]}</span></td>
+          <td><button class="pj-btn" data-save-doc="${key}">Guardar</button></td>
+        </tr>
+      `;
+    }).join('') : `<tr><td colspan="6" class="pj-small">Modalidad sin requisitos definidos.</td></tr>`;
+
     return `
-      <tr>
-        <td><strong>${h ? String(h.numero).padStart(2,'0') + ' · ' + escapeHTML(h.titulo) : '—'}</strong><small>${escapeHTML(p.especialidad || '')}</small></td>
-        <td><strong>${escapeHTML(p.nombre)}</strong>${p.equipo_id ? '<small>Mi equipo</small>' : ''}</td>
-        <td><span class="pj-role ${MODALIDAD_ROLE_CLASS[p.modalidad] || ''}">${MODALIDAD_LABEL[p.modalidad] || p.modalidad}</span></td>
-        <td><small>${escapeHTML(p.documentacion_nota || '—')}</small></td>
-        <td><button class="pj-btn" data-delete-participant="${p.id}">Quitar</button></td>
-      </tr>
+      <article class="pj-milestone">
+        <div class="pj-milestone-head">
+          <div>
+            <div class="pj-small">${h ? String(h.numero).padStart(2, '0') + ' · ' + escapeHTML(h.titulo) : 'Hito eliminado'}</div>
+            <h3>${escapeHTML(p.nombre)}</h3>
+            <div class="pj-small"><span class="pj-role ${MODALIDAD_ROLE_CLASS[p.modalidad] || ''}">${MODALIDAD_LABEL[p.modalidad] || p.modalidad}</span> ${escapeHTML(p.especialidad || '')}</div>
+          </div>
+          <span class="pj-status ${ESTADO_PARTICIPANTE_CLASS[p.estado] || 'warn'}">${ESTADO_PARTICIPANTE_LABEL[p.estado] || p.estado}</span>
+        </div>
+        <div class="pj-milestone-body">
+          <div class="pj-table-wrap" style="margin-top:6px">
+            <table class="pj-table">
+              <thead><tr><th>Documento [30]</th><th>Adjunto</th><th>Emisión</th><th>Vencimiento</th><th>Estado</th><th></th></tr></thead>
+              <tbody>${filas}</tbody>
+            </table>
+          </div>
+          <div class="pj-field" style="margin-top:14px">
+            <label class="pj-small">Observaciones</label>
+            <input class="form-input" data-observaciones-input="${p.id}" value="${escapeHTML(p.observaciones || '')}" placeholder="Notas libres (no reemplaza a los documentos)" />
+          </div>
+          <div class="pj-actions" style="margin-top:12px">
+            <button class="pj-btn" data-save-observaciones="${p.id}">Guardar observaciones</button>
+            <button class="pj-btn" data-delete-participant="${p.id}">Quitar</button>
+          </div>
+        </div>
+      </article>
     `;
   }).join('');
+}
+
+async function saveParticipanteDocumento(key){
+  const [participanteId, tipo] = key.split('::');
+  const emisionInput = document.querySelector(`[data-doc-emision="${key}"]`);
+  const vencimientoInput = document.querySelector(`[data-doc-vencimiento="${key}"]`);
+  const update = {
+    participante_id: participanteId,
+    tipo,
+    fecha_emision: emisionInput.value || null,
+    fecha_vencimiento: vencimientoInput.value || null
+  };
+
+  const file = PENDING_DOC_FILES[key];
+  if (file){
+    const ext = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
+    const path = `${REQ_ID}/${participanteId}/${tipo}-${Date.now()}.${ext}`;
+    const { error: upErr } = await sb.storage.from('participante-docs').upload(path, file, { contentType: file.type, cacheControl: '3600' });
+    if (upErr){ toast('err', 'No se pudo subir el archivo', upErr.message); return; }
+    update.storage_path = path;
+  }
+
+  const { error } = await sb.from('participante_documentos').upsert(update, { onConflict: 'participante_id,tipo' });
+  if (error){ toast('err', 'No se pudo guardar el documento', error.message); return; }
+
+  delete PENDING_DOC_FILES[key];
+  toast('ok', 'Documento guardado', '');
+  await loadAll();
 }
 
 /* ── Eventos ─────────────────────────────────────────── */
@@ -271,17 +597,82 @@ function initEvents(){
       return;
     }
 
-    if (e.target.closest('#btnToggleContrato')){
-      await sb.from('obra_preparacion').update({ gate_contrato: !STATE.prep.gate_contrato }).eq('request_id', REQ_ID);
+    if (e.target.closest('#btnVerBorrador')){
+      openContratoPreview(STATE.contrato.payload, 'Vista previa — borrador en vivo');
+      return;
+    }
+
+    if (e.target.closest('#btnCorregirDatos')){
+      const destino = STATE.contrato.faltantes.find(f => f.pantalla && f.origen !== 'perfil_cliente');
+      if (destino) window.open(destino.pantalla, '_blank', 'noopener');
+      return;
+    }
+
+    if (e.target.closest('#btnEnviarContrato')){
+      const { payload, hash } = STATE.contrato;
+      const { error } = await sb.rpc('contrato_enviar', { p_request_id: REQ_ID, p_payload: payload, p_hash: hash });
+      if (error){ toast('err', 'No se pudo enviar', error.message); return; }
+      toast('ok', 'Contrato enviado', 'Quedó congelada esta versión. Ahora falta que cliente y contratista lo firmen.');
       await loadAll();
       return;
     }
 
-    if (e.target.closest('#confirmMilestones')){
-      const { error } = await sb.rpc('confirm_milestones_plan', { p_request_id: REQ_ID });
-      if (error){ toast('err', 'No se pudo confirmar', error.message); return; }
-      toast('ok', 'Plan por hitos confirmado', 'Ya podés pasar a participantes.');
+    if (e.target.closest('#btnFirmarContrato')){
+      const versionId = STATE.contrato.version?.id;
+      if (!versionId) return;
+      const { data, error } = await sb.rpc('contrato_aceptar', { p_version_id: versionId });
+      if (error){ toast('err', 'No se pudo firmar', error.message); return; }
+      if (data?.estado === 'firmado'){
+        const { error: confirmErr } = await sb.rpc('confirm_contrato', { p_request_id: REQ_ID });
+        if (confirmErr) console.warn('confirm_contrato:', confirmErr.message);
+        toast('ok', 'Contrato firmado', 'Las dos partes aceptaron esta versión. Ya podés pasar al plan de hitos.');
+      } else {
+        toast('ok', 'Firma registrada', 'Falta que la otra parte también firme para que quede firmado.');
+      }
       await loadAll();
+      return;
+    }
+
+    if (e.target.closest('#btnDescargarFinal')){
+      const v = STATE.contrato.version;
+      if (v?.estado === 'firmado') downloadContratoFinal(v);
+      return;
+    }
+
+    if (e.target.closest('[data-close-contrato-modal]') || e.target.id === 'contratoPreviewModal'){
+      document.getElementById('contratoPreviewModal').classList.remove('open');
+      return;
+    }
+
+    if (e.target.closest('#confirmMilestones')){
+      const { payload, hash } = await buildPlanHitosPayload();
+      const { error } = await sb.rpc('plan_hitos_confirmar', { p_request_id: REQ_ID, p_payload: payload, p_hash: hash });
+      if (error){ toast('err', 'No se pudo confirmar', error.message); return; }
+      toast('ok', 'Plan por hitos confirmado', 'Los hitos quedaron de solo lectura. Ya podés pasar a participantes.');
+      await loadAll();
+      return;
+    }
+
+    if (e.target.closest('#btnReabrirPlan')){
+      const contratoFirmado = STATE.contrato?.version?.estado === 'firmado';
+      document.getElementById('reabrirPlanText').textContent = contratoFirmado
+        ? 'El contrato ya está FIRMADO por las dos partes. Si reabrís el plan por hitos para editarlo, la próxima vez que se detecte el cambio el contrato firmado va a quedar invalidado y va a haber que enviarlo y firmarlo de nuevo. ¿Confirmás que querés reabrir igual?'
+        : 'Vas a poder volver a editar los hitos. La versión confirmada actual queda como historial. ¿Confirmás?';
+      document.getElementById('reabrirPlanModal').classList.add('open');
+      return;
+    }
+
+    if (e.target.closest('#btnConfirmReabrir')){
+      const { error } = await sb.rpc('plan_hitos_reabrir', { p_request_id: REQ_ID });
+      document.getElementById('reabrirPlanModal').classList.remove('open');
+      if (error){ toast('err', 'No se pudo reabrir', error.message); return; }
+      toast('ok', 'Plan reabierto', 'Ya podés volver a editar los hitos.');
+      await loadAll();
+      return;
+    }
+
+    if (e.target.closest('[data-close-reabrir-modal]') || e.target.id === 'reabrirPlanModal'){
+      document.getElementById('reabrirPlanModal').classList.remove('open');
       return;
     }
 
@@ -301,10 +692,34 @@ function initEvents(){
       return;
     }
 
-    if (e.target.closest('#btnCopyLink')){
+    if (e.target.closest('#btnGenerarCarpeta')){
       const input = document.getElementById('shareLink');
       input.select();
-      navigator.clipboard?.writeText(input.value).then(() => toast('ok', 'Copiado', 'Link de la obra copiado.')).catch(() => {});
+      navigator.clipboard?.writeText(input.value).then(() => toast('ok', 'Carpeta generada', 'Link privado copiado al portapapeles.')).catch(() => {});
+      return;
+    }
+
+    if (e.target.closest('#btnGenerarQr')){
+      const { error } = await sb.rpc('generar_qr_obra', { p_request_id: REQ_ID });
+      if (error){ toast('err', 'No se pudo generar el QR', error.message); return; }
+      toast('ok', 'QR generado', 'Ya podés compartir el link de la carpeta pública.');
+      await loadAll();
+      return;
+    }
+
+    if (e.target.closest('#btnRevocarQr')){
+      const token = STATE.qr?.token?.token;
+      if (!token) return;
+      const { error } = await sb.rpc('revocar_qr_obra', { p_token: token });
+      if (error){ toast('err', 'No se pudo revocar', error.message); return; }
+      toast('ok', 'QR revocado', 'El link público dejó de funcionar. Generá uno nuevo si hace falta.');
+      await loadAll();
+      return;
+    }
+
+    if (e.target.closest('#btnVerInspector')){
+      const token = STATE.qr?.token?.token;
+      if (token) window.open(`carpeta.html?t=${token}`, '_blank', 'noopener');
       return;
     }
 
@@ -318,27 +733,76 @@ function initEvents(){
 
     const delPart = e.target.closest('[data-delete-participant]');
     if (delPart){
-      const { error } = await sb.from('hito_participantes').delete().eq('id', delPart.dataset.deleteParticipant);
+      const { error } = await sb.from('participantes').delete().eq('id', delPart.dataset.deleteParticipant);
       if (error){ toast('err', 'No se pudo quitar', error.message); return; }
       await loadAll();
       return;
     }
+
+    const saveDocBtn = e.target.closest('[data-save-doc]');
+    if (saveDocBtn){
+      await saveParticipanteDocumento(saveDocBtn.dataset.saveDoc);
+      return;
+    }
+
+    const saveObsBtn = e.target.closest('[data-save-observaciones]');
+    if (saveObsBtn){
+      const participanteId = saveObsBtn.dataset.saveObservaciones;
+      const input = document.querySelector(`[data-observaciones-input="${participanteId}"]`);
+      const { error } = await sb.from('participantes').update({ observaciones: input.value.trim() || null }).eq('id', participanteId);
+      if (error){ toast('err', 'No se pudo guardar', error.message); return; }
+      toast('ok', 'Observaciones guardadas', '');
+      await loadAll();
+      return;
+    }
+  });
+
+  document.getElementById('mPlazoPropio').addEventListener('change', (e) => {
+    document.getElementById('mPlazoPropioField').style.display = e.target.checked ? '' : 'none';
+  });
+
+  document.getElementById('mPlazoDefault').addEventListener('change', async (e) => {
+    const dias = e.target.value ? Number(e.target.value) : null;
+    const { error } = await sb.from('obra_preparacion').update({ plazo_observacion_dias_default: dias }).eq('request_id', REQ_ID);
+    if (error){ toast('err', 'No se pudo guardar el plazo', error.message); return; }
+    STATE.prep.plazo_observacion_dias_default = dias;
+    toast('ok', 'Plazo por defecto actualizado', dias ? `${dias} días` : 'Sin definir');
+    renderPlanHitos();
   });
 
   document.getElementById('newMilestoneForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const titulo = document.getElementById('mTitulo').value.trim();
     const descripcion = document.getElementById('mDescripcion').value.trim();
+    const criterioAceptacion = document.getElementById('mCriterioAceptacion').value.trim();
     const monto = Number(document.getElementById('mMonto').value);
     const fecha = document.getElementById('mFecha').value || null;
+    const responsableValue = document.getElementById('mResponsable').value;
+    const plazoPropio = document.getElementById('mPlazoPropio').checked;
+    const plazoDias = document.getElementById('mPlazoDias').value ? Number(document.getElementById('mPlazoDias').value) : null;
+
     if (!titulo || !monto){ toast('err', 'Faltan datos', 'Título y monto son obligatorios.'); return; }
+    if (!descripcion){ toast('err', 'Falta el resultado esperado', 'Es obligatorio.'); return; }
+    if (!criterioAceptacion){ toast('err', 'Falta el criterio de aceptación', 'Es obligatorio.'); return; }
+    if (!responsableValue){ toast('err', 'Falta el responsable', 'Elegí quién responde por este hito.'); return; }
+    if (plazoPropio && !plazoDias){ toast('err', 'Falta el plazo propio', 'Cargá los días o destildá "plazo propio".'); return; }
+
+    const equipoMember = responsableValue === '__yo__' ? null : STATE.equipo.find(p => p.id === responsableValue);
+    const responsableNombre = responsableValue === '__yo__'
+      ? (((SESSION.firstName || '') + ' ' + (SESSION.lastName || '')).trim() || 'Contratista')
+      : (equipoMember?.nombre || '');
+    const responsableEquipoId = responsableValue === '__yo__' ? null : responsableValue;
 
     const numero = (STATE.hitos[STATE.hitos.length - 1]?.numero || 0) + 1;
     const { error } = await sb.from('hitos').insert({
-      request_id: REQ_ID, numero, titulo, descripcion: descripcion || null, monto, fecha_estimada: fecha
+      request_id: REQ_ID, numero, titulo, descripcion, monto, fecha_estimada: fecha,
+      criterio_aceptacion: criterioAceptacion,
+      responsable_nombre: responsableNombre, responsable_equipo_id: responsableEquipoId,
+      plazo_propio: plazoPropio, plazo_observacion_dias: plazoPropio ? plazoDias : null
     });
     if (error){ toast('err', 'No se pudo agregar', error.message); return; }
     e.target.reset();
+    document.getElementById('mPlazoPropioField').style.display = 'none';
     toast('ok', 'Hito agregado', titulo);
     await loadAll();
   });
@@ -349,15 +813,15 @@ function initEvents(){
     const nombreInput = document.getElementById('pNombre');
     const espInput = document.getElementById('pEspecialidad');
     const modInput = document.getElementById('pModalidad');
-    const notaInput = document.getElementById('pNota');
+    const obsInput = document.getElementById('pObservaciones');
     if (member){
       nombreInput.value = member.nombre;
       espInput.value = member.especialidad || '';
-      modInput.value = member.modalidad;
-      notaInput.value = member.documentacion_nota || '';
+      if (['dependiente', 'subcontratista', 'colaborador_independiente', 'profesional'].includes(member.modalidad)) modInput.value = member.modalidad;
+      obsInput.value = member.documentacion_nota || '';
       nombreInput.readOnly = true; espInput.readOnly = true; modInput.disabled = true;
     } else {
-      nombreInput.value = ''; espInput.value = ''; notaInput.value = '';
+      nombreInput.value = ''; espInput.value = ''; obsInput.value = '';
       nombreInput.readOnly = false; espInput.readOnly = false; modInput.disabled = false;
     }
   });
@@ -369,12 +833,13 @@ function initEvents(){
     const nombre = document.getElementById('pNombre').value.trim();
     const especialidad = document.getElementById('pEspecialidad').value.trim();
     const modalidad = document.getElementById('pModalidad').value;
-    const documentacion_nota = document.getElementById('pNota').value.trim();
+    const observaciones = document.getElementById('pObservaciones').value.trim();
     if (!hito_id){ toast('err', 'Falta el hito', 'Agregá al menos un hito antes de asignar participantes.'); return; }
     if (!nombre){ toast('err', 'Falta el nombre', ''); return; }
+    if (!modalidad){ toast('err', 'Falta la modalidad', 'Elegí una de las cuatro opciones.'); return; }
 
-    const { error } = await sb.from('hito_participantes').insert({
-      hito_id, equipo_id, nombre, especialidad: especialidad || null, modalidad, documentacion_nota: documentacion_nota || null
+    const { error } = await sb.from('participantes').insert({
+      hito_id, equipo_id, nombre, especialidad: especialidad || null, modalidad, observaciones: observaciones || null
     });
     if (error){ toast('err', 'No se pudo agregar', error.message); return; }
     e.target.reset();
@@ -384,6 +849,47 @@ function initEvents(){
     toast('ok', 'Participante agregado', nombre);
     await loadAll();
   });
+
+  document.addEventListener('change', (e) => {
+    const fileInput = e.target.closest('[data-doc-file]');
+    if (fileInput){
+      const file = fileInput.files?.[0];
+      if (file) PENDING_DOC_FILES[fileInput.dataset.docFile] = file;
+    }
+  });
+}
+
+/* ── Contrato: preview modal y descarga final ────────────────────────── */
+function openContratoPreview(payload, titulo){
+  document.getElementById('contratoPreviewTitle').textContent = titulo;
+  document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(payload);
+  document.getElementById('contratoPreviewModal').classList.add('open');
+}
+
+function downloadContratoFinal(version){
+  const meta = `Versión ${version.version} · Firmado ${new Date(version.firmado_at).toLocaleString('es-AR')} · Hash ${version.hash.slice(0, 16)}…`;
+  const html = window.renderContratoHTML(version.payload, meta);
+  const win = window.open('', '_blank');
+  if (!win){ toast('err', 'No se pudo abrir la vista', 'Habilitá los pop-ups para descargar el contrato final.'); return; }
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Contrato firmado — v${version.version}</title></head><body>${html}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 300);
+}
+
+/* ── Plan por hitos: payload + hash (mismo mecanismo que el contrato) ── */
+async function buildPlanHitosPayload(){
+  const payload = {
+    plazo_observacion_dias_default: STATE.prep.plazo_observacion_dias_default,
+    hitos: STATE.hitos.map(h => ({
+      numero: h.numero, titulo: h.titulo, descripcion: h.descripcion, monto: h.monto,
+      fecha_estimada: h.fecha_estimada, criterio_aceptacion: h.criterio_aceptacion,
+      responsable_nombre: h.responsable_nombre, responsable_equipo_id: h.responsable_equipo_id,
+      plazo_propio: h.plazo_propio, plazo_observacion_dias: h.plazo_observacion_dias
+    }))
+  };
+  const hash = await window.sha256Hex(window.canonicalStringify(payload));
+  return { payload, hash };
 }
 
 /* ── Nav / UI compartida ─────────────────────────────── */

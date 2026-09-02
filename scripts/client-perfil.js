@@ -136,8 +136,8 @@ async function loadProfile(uid){
   try {
     const { data: profile, error } = await sb.from('profiles')
       .select(`first_name, last_name, phone, city, province, address, avatar_url,
-        razon_social, tipo_persona, dni, cuit, usa_domicilio_alt, domicilio_contractual_alt,
-        caracter_inmueble, caracter_inmueble_aclaracion,
+        razon_social, tipo_persona, dni, cuit, usa_domicilio_alt, domicilio_contractual,
+        caracter_inmueble, caracter_inmueble_detalle,
         terminos_version, terminos_aceptado_en, privacidad_version, privacidad_leida_en`)
       .eq('id', uid).single();
     if (error) throw error;
@@ -155,11 +155,11 @@ async function loadProfile(uid){
     set('fDni', profile.dni);
     set('fCuit', profile.cuit);
     set('fCaracterInmueble', profile.caracter_inmueble);
-    set('fCaracterAclaracion', profile.caracter_inmueble_aclaracion);
+    set('fCaracterAclaracion', profile.caracter_inmueble_detalle);
 
     document.getElementById('fUsaDomicilioAlt').checked = !!profile.usa_domicilio_alt;
     document.getElementById('domicilioAltField').hidden = !profile.usa_domicilio_alt;
-    if (profile.domicilio_contractual_alt) document.getElementById('fDomicilioAlt').value = profile.domicilio_contractual_alt;
+    if (profile.domicilio_contractual) document.getElementById('fDomicilioAlt').value = profile.domicilio_contractual;
 
     applyTipoPersonaVisibility();
     applyCaracterVisibility();
@@ -234,9 +234,9 @@ async function save(){
       dni: tipoPersona === 'juridica' ? null : (document.getElementById('fDni').value.replace(/\D/g, '') || null),
       cuit: document.getElementById('fCuit').value.replace(/\D/g, '') || null,
       usa_domicilio_alt: usaDomicilioAlt,
-      domicilio_contractual_alt: usaDomicilioAlt ? (document.getElementById('fDomicilioAlt').value.trim() || null) : null,
+      domicilio_contractual: usaDomicilioAlt ? (document.getElementById('fDomicilioAlt').value.trim() || null) : null,
       caracter_inmueble: caracter || null,
-      caracter_inmueble_aclaracion: caracter !== 'propietario' ? (document.getElementById('fCaracterAclaracion').value.trim() || null) : null
+      caracter_inmueble_detalle: caracter !== 'propietario' ? (document.getElementById('fCaracterAclaracion').value.trim() || null) : null
     };
 
     if (pendingAvatar){

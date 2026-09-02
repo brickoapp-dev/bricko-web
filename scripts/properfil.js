@@ -196,8 +196,8 @@ async function loadProfile(uid){
 
     const { data: verif } = await sb.from('professional_verification')
       .select(`dni_front_url, dni_back_url, direccion, dni_number, cuit, condicion_fiscal,
-        usa_domicilio_alt, domicilio_contractual_alt,
-        matricula_entidad, matricula_numero, matricula_vencimiento, matricula_adjunto_path`)
+        usa_domicilio_alt, domicilio_contractual,
+        matricula_entidad, matricula_numero, matricula_vencimiento, matricula_adjunto`)
       .eq('id', uid).maybeSingle();
 
     if (verif){
@@ -212,10 +212,10 @@ async function loadProfile(uid){
 
       document.getElementById('fUsaDomicilioAlt').checked = !!verif.usa_domicilio_alt;
       document.getElementById('domicilioAltField').hidden = !verif.usa_domicilio_alt;
-      if (verif.domicilio_contractual_alt) document.getElementById('fDomicilioAlt').value = verif.domicilio_contractual_alt;
+      if (verif.domicilio_contractual) document.getElementById('fDomicilioAlt').value = verif.domicilio_contractual;
 
-      if (verif.matricula_adjunto_path){
-        const nombreArchivo = verif.matricula_adjunto_path.split('/').pop();
+      if (verif.matricula_adjunto){
+        const nombreArchivo = verif.matricula_adjunto.split('/').pop();
         const nameEl = document.getElementById('matriculaFileName');
         if (nameEl) nameEl.textContent = `Archivo cargado: ${nombreArchivo}`;
       }
@@ -312,7 +312,7 @@ async function save(){
       id: uid,
       direccion: document.getElementById('fDireccion').value.trim() || null,
       usa_domicilio_alt: usaDomicilioAlt,
-      domicilio_contractual_alt: usaDomicilioAlt ? (document.getElementById('fDomicilioAlt').value.trim() || null) : null,
+      domicilio_contractual: usaDomicilioAlt ? (document.getElementById('fDomicilioAlt').value.trim() || null) : null,
       dni_number: document.getElementById('fDni').value.replace(/\D/g, '') || null,
       cuit: document.getElementById('fCuit').value.replace(/\D/g, '') || null,
       condicion_fiscal: document.getElementById('fCondicionFiscal').value || null,
@@ -331,7 +331,7 @@ async function save(){
     }
     if (pending.matricula){
       const ext = (pending.matricula.name.split('.').pop() || 'pdf').toLowerCase();
-      verifUpsert.matricula_adjunto_path = await uploadFile('matricula', `${uid}/matricula.${ext}`, pending.matricula);
+      verifUpsert.matricula_adjunto = await uploadFile('matricula', `${uid}/matricula.${ext}`, pending.matricula);
     }
 
     // 4) Persistir en la base

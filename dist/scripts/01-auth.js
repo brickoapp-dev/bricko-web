@@ -72,7 +72,11 @@ const Auth = {
     avatarFile = null,
     dniFrontFile = null,
     dniBackFile = null,
-    oficio = null
+    oficio = null,
+    terminosVersion = null,
+    terminosAceptadoEn = null,
+    privacidadVersion = null,
+    privacidadLeidaEn = null
   }) {
     const sb = window.supabase_client;
 
@@ -124,7 +128,11 @@ const Auth = {
       address: address || '',
       province: province || '',
       username: username || email.split('@')[0],
-      avatar_url: avatarUrl
+      avatar_url: avatarUrl,
+      terminos_version: terminosVersion,
+      terminos_aceptado_en: terminosAceptadoEn,
+      privacidad_version: privacidadVersion,
+      privacidad_leida_en: privacidadLeidaEn
     }, { onConflict: 'id' });
     if (profileError) console.warn('Error creando perfil:', profileError.message);
 

@@ -97,7 +97,7 @@ async function loadAll(){
   let participantes = [];
   if (hitos && hitos.length){
     const { data: parts } = await sb
-      .from('hito_participantes')
+      .from('participantes')
       .select('*')
       .in('hito_id', hitos.map(h => h.id))
       .order('created_at', { ascending: true });
@@ -159,7 +159,7 @@ async function loadPlanHitosState(){
 /* ── QR de la carpeta pública: último token + su historial de accesos ── */
 async function loadQrState(){
   const { data: tokens } = await sb
-    .from('obra_qr_tokens')
+    .from('qr_tokens')
     .select('*')
     .eq('obra_id', REQ_ID)
     .order('creado_en', { ascending: false })
@@ -461,7 +461,7 @@ function renderEquipoSelect(){
 
 /* ── Documentación tipada por modalidad [29]-[30] ────────────────────
    Espejo en JS de public.documento_estado() -- solo para mostrar en el
-   momento; la fuente de verdad real es hito_participantes.estado,
+   momento; la fuente de verdad real es participantes.estado,
    calculado en la base por recalcular_estado_participante(). */
 function docEstadoLocal(doc){
   if (!doc || !doc.storage_path) return 'faltante';
@@ -733,7 +733,7 @@ function initEvents(){
 
     const delPart = e.target.closest('[data-delete-participant]');
     if (delPart){
-      const { error } = await sb.from('hito_participantes').delete().eq('id', delPart.dataset.deleteParticipant);
+      const { error } = await sb.from('participantes').delete().eq('id', delPart.dataset.deleteParticipant);
       if (error){ toast('err', 'No se pudo quitar', error.message); return; }
       await loadAll();
       return;
@@ -749,7 +749,7 @@ function initEvents(){
     if (saveObsBtn){
       const participanteId = saveObsBtn.dataset.saveObservaciones;
       const input = document.querySelector(`[data-observaciones-input="${participanteId}"]`);
-      const { error } = await sb.from('hito_participantes').update({ observaciones: input.value.trim() || null }).eq('id', participanteId);
+      const { error } = await sb.from('participantes').update({ observaciones: input.value.trim() || null }).eq('id', participanteId);
       if (error){ toast('err', 'No se pudo guardar', error.message); return; }
       toast('ok', 'Observaciones guardadas', '');
       await loadAll();
@@ -838,7 +838,7 @@ function initEvents(){
     if (!nombre){ toast('err', 'Falta el nombre', ''); return; }
     if (!modalidad){ toast('err', 'Falta la modalidad', 'Elegí una de las cuatro opciones.'); return; }
 
-    const { error } = await sb.from('hito_participantes').insert({
+    const { error } = await sb.from('participantes').insert({
       hito_id, equipo_id, nombre, especialidad: especialidad || null, modalidad, observaciones: observaciones || null
     });
     if (error){ toast('err', 'No se pudo agregar', error.message); return; }
