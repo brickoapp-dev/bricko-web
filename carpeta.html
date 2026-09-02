@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Brickø · Carpeta de obra</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0A0A0A; --bg-1: #0F0F10; --bg-2: #151517;
+      --ink: #F7F7F8; --ink-2: #D6D6DA; --muted: #98989F; --muted-2: #5E5E66;
+      --line: rgba(255,255,255,.08); --line-strong: rgba(255,255,255,.15);
+      --orange: #F25C18; --ok: #3FB950; --warn: #E7BD61; --err: #E54E10;
+      --display: 'Archivo', sans-serif; --body: 'Manrope', sans-serif; --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--ink); font-family: var(--body); line-height: 1.6; min-height: 100vh; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 18px; letter-spacing: -.02em; text-transform: uppercase; margin-bottom: 40px; }
+    .brand .cube { width: 24px; height: 24px; }
+    .brand .o { color: var(--orange); }
+    .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; color: var(--orange); text-transform: uppercase; }
+    h1 { font-family: var(--display); font-weight: 800; font-size: clamp(24px, 5vw, 34px); letter-spacing: -.03em; text-transform: uppercase; margin: 8px 0 24px; }
+    .card { background: var(--bg-1); border: 1px solid var(--line-strong); border-radius: 4px; padding: 22px; margin-bottom: 18px; }
+    .card-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; color: var(--muted-2); text-transform: uppercase; margin-bottom: 14px; }
+    .status-pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 5px 11px; border-radius: 100px; border: 1px solid var(--line-strong); color: var(--muted); }
+    .status-pill.ok { color: var(--ok); border-color: rgba(63,185,80,.35); }
+    .status-pill.warn { color: var(--warn); border-color: rgba(231,189,97,.35); }
+    .status-pill.err { color: var(--err); border-color: rgba(229,78,16,.35); }
+    .hito-row, .part-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+    .hito-row:last-child, .part-row:last-child { border-bottom: 0; }
+    .hito-row strong, .part-row strong { display: block; font-size: 14px; }
+    .hito-row small, .part-row small { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+    .invalido { text-align: center; padding: 120px 20px; }
+    .invalido h1 { margin-bottom: 8px; }
+    .invalido p { color: var(--muted); }
+    .footer-note { color: var(--muted-2); font-size: 11.5px; margin-top: 30px; text-align: center; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <a href="index.html" class="brand">
+      <svg class="cube" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+        <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C" />
+        <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A" />
+      </svg>
+      <span>BRICK<span class="o">Ø</span></span>
+    </a>
+
+    <div id="content">
+      <p class="empty">Cargando…</p>
+    </div>
+  </div>
+
+  <script src="scripts/supabase.min.js"></script>
+  <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/carpeta.js"></script>
+</body>
+
+</html>

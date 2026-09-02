@@ -34,7 +34,7 @@ let SESSION = null;
 let REQ_ID = null;
 let UI_GATE = 1;
 let GATE_FROM_URL = false;
-const STATE = { request:null, prep:null, hitos:[], participantes:[], participanteDocs:[], equipo:[], documentosCount:0, contrato:null, planHitos:null };
+const STATE = { request:null, prep:null, hitos:[], participantes:[], participanteDocs:[], equipo:[], documentosCount:0, contrato:null, planHitos:null, qr:null };
 
 document.addEventListener('DOMContentLoaded', async () => {
   SESSION = getSession();
@@ -137,6 +137,7 @@ async function loadAll(){
 
   await loadContratoState();
   await loadPlanHitosState();
+  await loadQrState();
 
   if (firstLoad && !GATE_FROM_URL) UI_GATE = prep.current_gate || 2;
   render();
@@ -153,6 +154,29 @@ async function loadPlanHitosState(){
     .limit(1)
     .maybeSingle();
   STATE.planHitos = { version };
+}
+
+/* ── QR de la carpeta pública: último token + su historial de accesos ── */
+async function loadQrState(){
+  const { data: tokens } = await sb
+    .from('obra_qr_tokens')
+    .select('*')
+    .eq('obra_id', REQ_ID)
+    .order('creado_en', { ascending: false })
+    .limit(1);
+  const token = tokens?.[0] || null;
+
+  let accesos = [];
+  if (token){
+    const { data: acc } = await sb
+      .from('qr_accesos')
+      .select('*')
+      .eq('token', token.token)
+      .order('accedido_en', { ascending: false })
+      .limit(50);
+    accesos = acc || [];
+  }
+  STATE.qr = { token, accesos };
 }
 
 /* ── Contrato: payload+hash en vivo, reconciliación y versión activa ── */
@@ -224,12 +248,35 @@ function render(){
   participantsStatus.textContent = prep.gate_participantes ? 'Participantes validados' : 'Revisión pendiente';
   participantsStatus.className = 'pj-status ' + (prep.gate_participantes ? 'ok' : 'warn');
 
-  setStatusPill('finalComision', prep.gate_comision, 'OK', 'Pendiente');
-  setStatusPill('finalContrato', prep.gate_contrato, 'OK', 'Pendiente');
-  setStatusPill('finalMilestones', prep.gate_hitos, 'OK', 'Pendiente');
-  setStatusPill('finalParticipants', prep.gate_participantes, 'OK', 'Pendiente');
+  renderGate6();
+}
 
-  const ready = prep.gate_comision && prep.gate_contrato && prep.gate_hitos && prep.gate_participantes;
+/* ── Gate 6: checklist calculado + carpeta + QR ──────────────────────── */
+function tokenStatus(t){
+  if (!t) return 'ninguno';
+  if (t.revocado_en) return 'revocado';
+  if (t.vence_en && new Date(t.vence_en) < new Date()) return 'vencido';
+  return 'vigente';
+}
+
+function renderGate6(){
+  const prep = STATE.prep;
+
+  const contratoFirmado = STATE.contrato?.version?.estado === 'firmado';
+  const hitosConfirmado = !!STATE.planHitos?.version;
+  const participantesIncompletos = STATE.participantes.filter(p => p.estado !== 'completo');
+  const participantesOk = STATE.participantes.length > 0 && participantesIncompletos.length === 0;
+
+  setStatusPill('finalComision', prep.gate_comision, 'OK', 'Pendiente');
+  setStatusPill('finalContrato', contratoFirmado, 'OK', 'Pendiente');
+  setStatusPill('finalMilestones', hitosConfirmado, 'OK', 'Pendiente');
+  setStatusPill('finalParticipants', participantesOk, 'OK', 'Pendiente');
+
+  document.getElementById('finalParticipantsDetail').innerHTML = participantesIncompletos.length
+    ? `<div class="pj-small" style="margin-top:8px">Falta: ${participantesIncompletos.map(p => escapeHTML(p.nombre) + ' (' + (ESTADO_PARTICIPANTE_LABEL[p.estado] || p.estado) + ')').join(', ')}</div>`
+    : '';
+
+  const ready = prep.gate_comision && contratoFirmado && hitosConfirmado && participantesOk;
   const enableBtn = document.getElementById('enableProject');
   const enableStatus = document.getElementById('enableStatus');
   enableBtn.disabled = !ready || prep.gate_habilitada;
@@ -240,10 +287,42 @@ function render(){
   document.getElementById('shareLink').value = window.location.origin + '/client-solicitud.html?req=' + REQ_ID;
 
   const resumen = document.getElementById('carpetaResumen');
-  if (resumen){
-    const montoHitos = STATE.hitos.reduce((s, h) => s + Number(h.monto || 0), 0);
-    resumen.textContent = `${STATE.hitos.length} hitos ($ ${money(montoHitos)}) · ${STATE.participantes.length} participantes asignados · ${STATE.documentosCount} documentos.`;
+  const montoHitos = STATE.hitos.reduce((s, h) => s + Number(h.monto || 0), 0);
+  resumen.textContent = `${STATE.hitos.length} hitos ($ ${money(montoHitos)}) · ${STATE.participantes.length} participantes asignados · ${STATE.documentosCount} documentos.`;
+
+  const t = STATE.qr?.token;
+  const estado = tokenStatus(t);
+  const pill = document.getElementById('qrEstadoPill');
+  const titulo = document.getElementById('qrEstadoTitulo');
+  const detalle = document.getElementById('qrEstadoDetalle');
+  const linkBox = document.getElementById('qrLinkBox');
+  const labelMap = { ninguno: 'Sin generar', vigente: 'Vigente', vencido: 'Vencido', revocado: 'Revocado' };
+
+  if (!t){
+    titulo.textContent = 'Sin QR generado';
+    detalle.textContent = '';
+    linkBox.style.display = 'none';
+  } else {
+    titulo.textContent = `Token generado ${new Date(t.creado_en).toLocaleString('es-AR')}`;
+    detalle.textContent = t.vence_en ? `Vence ${new Date(t.vence_en).toLocaleDateString('es-AR')}` : 'Sin vencimiento';
+    if (estado === 'vigente'){
+      linkBox.style.display = '';
+      document.getElementById('qrLink').value = `${window.location.origin}/carpeta.html?t=${t.token}`;
+    } else {
+      linkBox.style.display = 'none';
+    }
   }
+  pill.textContent = labelMap[estado];
+  pill.className = 'pj-status ' + (estado === 'vigente' ? 'ok' : 'warn');
+
+  document.getElementById('btnRevocarQr').disabled = estado !== 'vigente';
+  document.getElementById('btnVerInspector').disabled = estado !== 'vigente';
+
+  const body = document.getElementById('qrAccesosBody');
+  const accesos = STATE.qr?.accesos || [];
+  body.innerHTML = accesos.length
+    ? accesos.map(a => `<tr><td>${new Date(a.accedido_en).toLocaleString('es-AR')}</td><td class="pj-small">${escapeHTML(a.user_agent || '—')}</td><td class="pj-small">${escapeHTML(a.ip || '—')}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="pj-small">Sin accesos todavía.</td></tr>';
 }
 
 function setStatusPill(id, done, okLabel, pendingLabel){
@@ -613,10 +692,34 @@ function initEvents(){
       return;
     }
 
-    if (e.target.closest('#btnCopyLink')){
+    if (e.target.closest('#btnGenerarCarpeta')){
       const input = document.getElementById('shareLink');
       input.select();
-      navigator.clipboard?.writeText(input.value).then(() => toast('ok', 'Copiado', 'Link de la obra copiado.')).catch(() => {});
+      navigator.clipboard?.writeText(input.value).then(() => toast('ok', 'Carpeta generada', 'Link privado copiado al portapapeles.')).catch(() => {});
+      return;
+    }
+
+    if (e.target.closest('#btnGenerarQr')){
+      const { error } = await sb.rpc('generar_qr_obra', { p_request_id: REQ_ID });
+      if (error){ toast('err', 'No se pudo generar el QR', error.message); return; }
+      toast('ok', 'QR generado', 'Ya podés compartir el link de la carpeta pública.');
+      await loadAll();
+      return;
+    }
+
+    if (e.target.closest('#btnRevocarQr')){
+      const token = STATE.qr?.token?.token;
+      if (!token) return;
+      const { error } = await sb.rpc('revocar_qr_obra', { p_token: token });
+      if (error){ toast('err', 'No se pudo revocar', error.message); return; }
+      toast('ok', 'QR revocado', 'El link público dejó de funcionar. Generá uno nuevo si hace falta.');
+      await loadAll();
+      return;
+    }
+
+    if (e.target.closest('#btnVerInspector')){
+      const token = STATE.qr?.token?.token;
+      if (token) window.open(`carpeta.html?t=${token}`, '_blank', 'noopener');
       return;
     }
 

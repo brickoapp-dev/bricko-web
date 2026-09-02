@@ -283,17 +283,41 @@
 
               <div class="pj-doc-grid">
                 <section class="pj-panel pj-panel-pad">
-                  <div class="pj-kicker">Checklist de habilitación</div>
+                  <div class="pj-kicker">Checklist de habilitación (calculado, no se tilda a mano)</div>
                   <div class="pj-doc-row"><div><strong>Comisión acreditada</strong></div><span class="pj-status" id="finalComision">Pendiente</span></div>
-                  <div class="pj-doc-row"><div><strong>Contrato firmado</strong></div><span class="pj-status" id="finalContrato">Pendiente</span></div>
-                  <div class="pj-doc-row"><div><strong>Plan por hitos</strong></div><span class="pj-status" id="finalMilestones">Pendiente</span></div>
-                  <div class="pj-doc-row"><div><strong>Participantes documentados</strong></div><span class="pj-status" id="finalParticipants">Pendiente</span></div>
+                  <div class="pj-doc-row"><div><strong>Contrato firmado (misma versión)</strong></div><span class="pj-status" id="finalContrato">Pendiente</span></div>
+                  <div class="pj-doc-row"><div><strong>Plan por hitos confirmado [22]-[27],[31]</strong></div><span class="pj-status" id="finalMilestones">Pendiente</span></div>
+                  <div class="pj-doc-row"><div><strong>Participantes [29]-[30] completos y vigentes</strong></div><span class="pj-status" id="finalParticipants">Pendiente</span></div>
+                  <div id="finalParticipantsDetail"></div>
                 </section>
                 <section class="pj-panel pj-panel-pad">
-                  <div class="pj-kicker">Carpeta de obra</div>
+                  <div class="pj-kicker">Carpeta digital de obra</div>
                   <p class="pj-small" style="margin-top:10px" id="carpetaResumen">Cargando…</p>
-                  <p class="pj-small" style="margin-top:10px">Link para que el cliente (y vos, durante la ejecución) sigan hitos, equipo, pagos y documentos desde la carpeta de obra.</p>
-                  <div class="pj-share-box"><input type="text" id="shareLink" readonly /><button class="pj-btn" id="btnCopyLink">Copiar</button></div>
+
+                  <div class="pj-small" style="margin-top:16px">Link privado (cliente + contratista)</div>
+                  <div class="pj-share-box"><input type="text" id="shareLink" readonly /></div>
+
+                  <div class="pj-small" style="margin-top:18px">Carpeta pública (QR)</div>
+                  <div class="pj-doc-row">
+                    <div><strong id="qrEstadoTitulo">Sin QR generado</strong><small id="qrEstadoDetalle"></small></div>
+                    <span class="pj-status warn" id="qrEstadoPill">—</span>
+                  </div>
+                  <div class="pj-share-box" id="qrLinkBox" style="display:none"><input type="text" id="qrLink" readonly /></div>
+
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+                    <button class="pj-btn primary" id="btnGenerarCarpeta">Generar carpeta</button>
+                    <button class="pj-btn primary" id="btnGenerarQr">Generar QR</button>
+                    <button class="pj-btn" id="btnRevocarQr" disabled>Revocar QR</button>
+                    <button class="pj-btn" id="btnVerInspector" disabled>Ver vista inspector</button>
+                  </div>
+
+                  <div class="pj-small" style="margin-top:18px">Historial de accesos</div>
+                  <div class="pj-table-wrap" style="margin-top:8px">
+                    <table class="pj-table">
+                      <thead><tr><th>Fecha/hora</th><th>User-agent</th><th>IP</th></tr></thead>
+                      <tbody id="qrAccesosBody"><tr><td colspan="3" class="pj-small">Sin accesos todavía.</td></tr></tbody>
+                    </table>
+                  </div>
                 </section>
               </div>
 
