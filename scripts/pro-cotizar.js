@@ -60,11 +60,17 @@ async function loadRequest(reqId){
   try {
     const { data, error } = await sb
       .from('requests')
-      .select('id, ticket_id, user_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, fotos, profiles!requests_user_id_fkey(first_name, last_name, city)')
+      .select('id, ticket_id, user_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, fotos')
       .eq('id', reqId)
       .single();
     if (error || !data) return null;
-    return normalize(data);
+
+    // profiles_select_own no deja leer el perfil del cliente vía un embed
+    // normal -- get_request_owners() es la RPC SECURITY DEFINER equivalente.
+    const { data: owners, error: ownerErr } = await sb.rpc('get_request_owners', { p_request_ids: [reqId] });
+    if (ownerErr) console.warn('Error cargando datos del cliente:', ownerErr);
+
+    return normalize(data, owners?.[0]);
   } catch(e){ return null; }
 }
 
@@ -97,9 +103,9 @@ function parseDescripcion(raw){
   return { text, modoPago, embeddedFiles };
 }
 
-function normalize(row){
-  const fn = row.profiles?.first_name || '';
-  const ln = row.profiles?.last_name?.[0] ? row.profiles.last_name[0] + '.' : '';
+function normalize(row, owner){
+  const fn = owner?.first_name || '';
+  const ln = owner?.last_name?.[0] ? owner.last_name[0] + '.' : '';
   const clientName = (fn + ' ' + ln).trim() || 'Cliente';
   const { text: descripcion, modoPago, embeddedFiles } = parseDescripcion(row.descripcion);
   return {
@@ -120,7 +126,7 @@ function normalize(row){
     createdAt: row.created_at,
     fotosPaths: row.fotos || [],
     clientName,
-    clientCity: row.profiles?.city || '',
+    clientCity: owner?.city || '',
     primaryRubro: row.rubros?.[0] || 'multi-gremio'
   };
 }

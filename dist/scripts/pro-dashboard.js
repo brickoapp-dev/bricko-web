@@ -159,17 +159,30 @@ async function loadRequests(){
   try {
     const { data, error } = await sb
       .from('requests')
-      .select('id, ticket_id, user_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at, profiles!requests_user_id_fkey(first_name, last_name, city, province)')
+      .select('id, ticket_id, user_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at')
       .in('status', ['pending','quoted'])
       .order('created_at', { ascending: false });
-    if (error){ console.error('Error cargando solicitudes:', error); ALL_REQUESTS = []; }
-    else { ALL_REQUESTS = (data || []).map(normalize); }
+    if (error){ console.error('Error cargando solicitudes:', error); ALL_REQUESTS = []; render(); return; }
+
+    // profiles_select_own no deja leer el perfil del cliente vía un embed
+    // normal (PostgREST lo devuelve null, no error) -- get_request_owners()
+    // es la RPC SECURITY DEFINER que expone nombre/ciudad/provincia solo
+    // para las requests que este profesional ya puede ver.
+    const ids = (data || []).map(r => r.id);
+    let owners = new Map();
+    if (ids.length){
+      const { data: ownersData, error: ownersErr } = await sb.rpc('get_request_owners', { p_request_ids: ids });
+      if (ownersErr) console.warn('Error cargando datos del cliente:', ownersErr);
+      else (ownersData || []).forEach(o => owners.set(o.request_id, o));
+    }
+
+    ALL_REQUESTS = (data || []).map(row => normalize(row, owners.get(row.id)));
   } catch(err){ console.error('Excepción cargando solicitudes:', err); ALL_REQUESTS = []; }
   render();
 }
 
-function normalize(row){
-  const clientName = ((row.profiles?.first_name || '') + ' ' + (row.profiles?.last_name?.[0] || '') + '.').trim() || 'Cliente';
+function normalize(row, owner){
+  const clientName = ((owner?.first_name || '') + ' ' + (owner?.last_name?.[0] || '') + '.').trim() || 'Cliente';
   return {
     id: row.id,
     ticketId: row.ticket_id || ('SOL-' + row.id?.slice(0,4)),
@@ -185,8 +198,8 @@ function normalize(row){
     status: row.status,
     createdAt: row.created_at,
     clientName,
-    clientCity: row.profiles?.city || '',
-    clientProvince: row.profiles?.province || '',
+    clientCity: owner?.city || '',
+    clientProvince: owner?.province || '',
     primaryRubro: row.rubros?.[0] || 'multi-gremio'
   };
 }
