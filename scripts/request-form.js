@@ -28,6 +28,23 @@ const URG_LABELS = {
 let uploadedFiles = [];
 let pendingPayload = null;
 
+/* ── Toast (mismo patrón que el resto del sitio) ─────── */
+const TICONS = {
+  ok:   '<path d="M20 6L9 17l-5-5"/>',
+  err:  '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 8v.5M12 11v5"/>'
+};
+function toast(type, title, msg){
+  const stack = document.getElementById('toastStack');
+  if (!stack) return;
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type === 'ok' ? 'ok' : type === 'err' ? 'err' : '');
+  el.innerHTML = `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor">${TICONS[type] || TICONS.info}</svg><div><div class="t">${title}</div><div class="m">${msg}</div></div>`;
+  stack.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+  setTimeout(() => { el.classList.remove('in'); setTimeout(() => el.remove(), 400); }, 4200);
+}
+
 /* ── Page protection ─────────────────────────────────── */
 function getSession(){
   try {
@@ -276,7 +293,7 @@ function setGeolocLoading(btn, loading){
 function handleUseLocation(){
   const btn = document.getElementById('btnUseLocation');
   if (!('geolocation' in navigator)){
-    alert('Tu navegador no permite acceder a la ubicación del dispositivo.');
+    toast('err', 'No disponible', 'Tu navegador no permite acceder a la ubicación del dispositivo.');
     return;
   }
   setGeolocLoading(btn, true);
@@ -286,7 +303,7 @@ function handleUseLocation(){
         await applyGeolocatedAddress(pos.coords.latitude, pos.coords.longitude);
       } catch(err){
         console.error('Error al obtener la dirección desde la ubicación:', err);
-        alert('No pudimos completar la dirección automáticamente. Completá los campos manualmente.');
+        toast('err', 'No pudimos completar la dirección', 'Completá los campos manualmente.');
       } finally {
         setGeolocLoading(btn, false);
       }
@@ -298,7 +315,7 @@ function handleUseLocation(){
         2: 'No pudimos determinar tu ubicación. Intentá de nuevo o completá la dirección manualmente.',
         3: 'La solicitud de ubicación tardó demasiado. Intentá de nuevo.'
       };
-      alert(messages[err.code] || 'No pudimos acceder a tu ubicación.');
+      toast('err', 'No pudimos acceder a tu ubicación', messages[err.code] || 'Intentá de nuevo.');
     },
     { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
   );
@@ -426,6 +443,8 @@ function handleFormSubmit(e){
     descripcion: desc,
     urgencia,                                // 'baja' | 'media' | 'alta'
     direccion: addr,
+    ciudad: ciudad || null,
+    provincia: provincia || null,
     etapa,
     tipo_construccion: tipoConstruccion,
     superficie: superficie ? parseInt(superficie) : null,
@@ -500,7 +519,7 @@ async function handleConfirmPublish(){
     const { data, error } = await sb.from('requests').insert(dbPayload).select('id, ticket_id').single();
     if (error){
       console.error('Error al guardar en Supabase:', error);
-      alert('No pudimos publicar la solicitud. Revisá tu conexión e intentá de nuevo.\n\nDetalle: ' + error.message);
+      toast('err', 'No pudimos publicar la solicitud', error.message || 'Revisá tu conexión e intentá de nuevo.');
       if (btnConfirm) btnConfirm.disabled = false;
       return;
     }
@@ -508,7 +527,7 @@ async function handleConfirmPublish(){
     requestId = data?.id || '';
   } catch(err){
     console.error('Excepción al guardar:', err);
-    alert('No pudimos guardar la solicitud. Intentá de nuevo.');
+    toast('err', 'No pudimos guardar la solicitud', 'Intentá de nuevo.');
     if (btnConfirm) btnConfirm.disabled = false;
     return;
   }
