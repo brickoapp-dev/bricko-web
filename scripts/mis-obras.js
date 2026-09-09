@@ -470,6 +470,9 @@ function obraCardHTML(o){
 
       <h2 class="obra-title">${escapeHTML(o.titulo)}</h2>
 
+      ${o.statusKey === 'preparing' ? `
+        <a href="client-solicitud.html?req=${escapeHTML(o.id)}" class="btn-new-obra" style="display:inline-flex;margin-bottom:16px">Ver preparación de la obra →</a>
+      ` : ''}
       ${o.statusKey === 'active' || o.statusKey === 'done' ? `
         <a href="client-solicitud.html?req=${escapeHTML(o.id)}" class="btn-new-obra" style="display:inline-flex;margin-bottom:16px">Ver hitos y pagos →</a>
       ` : ''}

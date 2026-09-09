@@ -5,6 +5,7 @@ const sb = window.supabase_client;
 const STATUS_DB_TO_UI = {
   pending:   { key: 'pendiente', label: 'Pendiente' },
   quoted:    { key: 'cotizando', label: 'Cotizando' },
+  preparing: { key: 'cotizando', label: 'Preparando obra' },
   active:    { key: 'activo',    label: 'En curso' },
   done:      { key: 'completado', label: 'Finalizada' },
   cancelled: { key: 'cancelado', label: 'Cancelada' }
@@ -58,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const quotes = await loadQuotes(REQ_ID);
   renderQuotes(quotes, req, session);
 
-  if (req.status === 'active' || req.status === 'done') {
+  if (req.status === 'preparing' || req.status === 'active' || req.status === 'done') {
     initObraSection();
     await loadObraSection();
   }
@@ -402,7 +403,11 @@ const MODALIDAD_ROLE_CLASS = {
 };
 const DOC_TIPO_LABEL = { contrato: 'Contrato marco de obra', anexo: 'Anexo', evidencia: 'Evidencia de avance', factura: 'Factura' };
 
-const OBRA = { hitos: [], participantes: [], documentos: [], prep: null };
+const OBRA = { hitos: [], participantes: [], documentos: [], prep: null, contrato: null };
+const CONTRATO_ESTADO_LABEL = {
+  enviado: 'Enviado -- falta tu firma', aceptado_contratista: 'Firmado por el contratista -- falta tu firma',
+  aceptado_cliente: 'Firmado por vos -- falta el contratista', firmado: 'Firmado por las dos partes'
+};
 
 function initObraSection() {
   document.getElementById('obraTabs')?.addEventListener('click', (e) => {
@@ -411,6 +416,38 @@ function initObraSection() {
     const name = tab.dataset.obraTab;
     document.querySelectorAll('[data-obra-tab]').forEach(b => b.classList.toggle('active', b === tab));
     document.querySelectorAll('[data-obra-panel]').forEach(p => { p.hidden = p.dataset.obraPanel !== name; });
+  });
+
+  document.getElementById('obraContrato')?.addEventListener('click', async (e) => {
+    if (e.target.closest('#btnVerContrato')) {
+      const c = OBRA.contrato;
+      if (!c?.version) return;
+      document.getElementById('contratoPreviewTitle').textContent = `Contrato -- versión ${c.version.version}`;
+      document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(c.version.payload);
+      document.getElementById('contratoPreviewModal').classList.add('open');
+      return;
+    }
+    if (e.target.closest('#btnFirmarContratoCliente')) {
+      const versionId = OBRA.contrato?.version?.id;
+      if (!versionId) return;
+      const { data, error } = await sb.rpc('contrato_aceptar', { p_version_id: versionId });
+      if (error) { toast('err', 'No se pudo firmar', error.message); return; }
+      toast('ok', data?.estado === 'firmado' ? 'Contrato firmado' : 'Firma registrada',
+        data?.estado === 'firmado' ? 'Las dos partes aceptaron esta versión.' : 'Falta que el contratista también firme para que quede firmado.');
+      await loadObraSection();
+      return;
+    }
+    if (e.target.closest('#btnDescargarContratoCliente')) {
+      const v = OBRA.contrato?.version;
+      if (v?.estado === 'firmado') downloadContratoFinal(v);
+      return;
+    }
+  });
+
+  document.getElementById('contratoPreviewModal')?.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close-contrato-modal]') || e.target.id === 'contratoPreviewModal') {
+      document.getElementById('contratoPreviewModal').classList.remove('open');
+    }
   });
 
   document.getElementById('obraHitos')?.addEventListener('click', async (e) => {
@@ -472,6 +509,15 @@ async function loadObraSection() {
   const { data: prep } = await sb.from('obra_preparacion').select('gate_habilitada').eq('request_id', REQ_ID).maybeSingle();
   OBRA.prep = prep;
 
+  const { data: version } = await sb.from('contrato_versiones').select('*').eq('request_id', REQ_ID).neq('estado', 'invalidado').order('version', { ascending: false }).limit(1).maybeSingle();
+  let aceptaciones = [];
+  if (version) {
+    const { data: acept } = await sb.from('contrato_aceptaciones').select('rol').eq('contrato_version_id', version.id);
+    aceptaciones = acept || [];
+  }
+  OBRA.contrato = { version, aceptaciones };
+
+  renderObraContrato();
   renderObraHitos();
   renderObraEquipo();
   renderObraPagos();
@@ -483,7 +529,48 @@ async function loadObraSection() {
     const wantedTab = new URLSearchParams(window.location.search).get('tab');
     const wantedBtn = wantedTab && document.querySelector(`[data-obra-tab="${wantedTab}"]`);
     if (wantedBtn) wantedBtn.click();
+    else if (!OBRA.prep?.gate_habilitada) document.querySelector('[data-obra-tab="contrato"]')?.click();
   }
+}
+
+function renderObraContrato() {
+  const el = document.getElementById('obraContrato');
+  if (!el) return;
+  const c = OBRA.contrato;
+
+  if (!c?.version) {
+    el.innerHTML = '<p class="pj-small">El contratista todavía no generó el contrato de esta obra.</p>';
+    return;
+  }
+
+  const yaFirmeYo = c.aceptaciones.some(a => a.rol === 'cliente');
+  const firmado = c.version.estado === 'firmado';
+  const puedeFirmar = !firmado && !yaFirmeYo;
+
+  el.innerHTML = `
+    <div class="pj-doc-row">
+      <div><strong>Estado del contrato</strong><small>Versión ${c.version.version} · ${escapeHTML(CONTRATO_ESTADO_LABEL[c.version.estado] || c.version.estado)}</small></div>
+      <span class="pj-status ${firmado ? 'ok' : 'warn'}">${firmado ? 'Firmado' : 'Pendiente'}</span>
+    </div>
+    <div class="pj-gate-footer" style="flex-wrap:wrap;row-gap:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="pj-btn" id="btnVerContrato">Ver contrato</button>
+        ${puedeFirmar ? '<button class="pj-btn primary" id="btnFirmarContratoCliente">Firmar</button>' : ''}
+        ${firmado ? '<button class="pj-btn" id="btnDescargarContratoCliente">Descargar final</button>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+function downloadContratoFinal(version) {
+  const meta = `Versión ${version.version} · Firmado ${new Date(version.firmado_at).toLocaleString('es-AR')} · Hash ${version.hash.slice(0, 16)}…`;
+  const html = window.renderContratoHTML(version.payload, meta);
+  const win = window.open('', '_blank');
+  if (!win) { toast('err', 'No se pudo abrir la vista', 'Habilitá los pop-ups para descargar el contrato final.'); return; }
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Contrato firmado — v${version.version}</title></head><body>${html}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 300);
 }
 
 function renderObraHitos() {

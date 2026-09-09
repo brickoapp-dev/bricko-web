@@ -106,12 +106,14 @@
         <!-- Obra en curso: hitos / equipo / pagos / documentos (llenada por JS) -->
         <div id="obraSection" style="display:none;margin-top:32px">
           <div class="pj-tabs" id="obraTabs">
+            <button class="pj-tab" data-obra-tab="contrato">Contrato</button>
             <button class="pj-tab active" data-obra-tab="hitos">Hitos</button>
             <button class="pj-tab" data-obra-tab="equipo">Equipo asignado</button>
             <button class="pj-tab" data-obra-tab="pagos">Pagos</button>
             <button class="pj-tab" data-obra-tab="documentos">Documentos</button>
             <button class="pj-tab" data-obra-tab="carpeta">Carpeta de obra</button>
           </div>
+          <div class="pj-tab-body" data-obra-panel="contrato" id="obraContrato" hidden></div>
           <div class="pj-tab-body" data-obra-panel="hitos" id="obraHitos"></div>
           <div class="pj-tab-body" data-obra-panel="equipo" id="obraEquipo" hidden></div>
           <div class="pj-tab-body" data-obra-panel="pagos" id="obraPagos" hidden></div>
@@ -123,11 +125,20 @@
     </div>
   </main>
 
+  <!-- Modal: vista previa del contrato -->
+  <div class="modal-overlay" id="contratoPreviewModal">
+    <div class="modal" style="max-width:820px">
+      <div class="modal-head"><span id="contratoPreviewTitle">Vista previa del contrato</span><button class="modal-close" data-close-contrato-modal aria-label="Cerrar"></button></div>
+      <div class="modal-body" id="contratoPreviewBody" style="padding:0;max-height:70vh;overflow-y:auto"></div>
+    </div>
+  </div>
+
   <div class="toast-stack" id="toastStack"></div>
 
   <script src="scripts/supabase.min.js"></script>
   <script src="scripts/00-supabase.js"></script>
   <script src="scripts/01-auth.js" defer></script>
+  <script src="scripts/contract-render.js"></script>
   <script src="scripts/client-solicitud.js"></script>
 
 </body>

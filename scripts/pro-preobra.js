@@ -623,8 +623,6 @@ function initEvents(){
       const { data, error } = await sb.rpc('contrato_aceptar', { p_version_id: versionId });
       if (error){ toast('err', 'No se pudo firmar', error.message); return; }
       if (data?.estado === 'firmado'){
-        const { error: confirmErr } = await sb.rpc('confirm_contrato', { p_request_id: REQ_ID });
-        if (confirmErr) console.warn('confirm_contrato:', confirmErr.message);
         toast('ok', 'Contrato firmado', 'Las dos partes aceptaron esta versión. Ya podés pasar al plan de hitos.');
       } else {
         toast('ok', 'Firma registrada', 'Falta que la otra parte también firme para que quede firmado.');
