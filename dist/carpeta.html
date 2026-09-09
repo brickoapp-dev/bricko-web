@@ -42,6 +42,10 @@
     .invalido h1 { margin-bottom: 8px; }
     .invalido p { color: var(--muted); }
     .footer-note { color: var(--muted-2); font-size: 11.5px; margin-top: 30px; text-align: center; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; font-family: var(--body); font-weight: 600; font-size: 13.5px; color: var(--ink); background: var(--bg-2); border: 1px solid var(--line-strong); border-radius: 4px; padding: 11px 18px; cursor: pointer; text-decoration: none; }
+    .btn:hover { border-color: var(--orange); }
+    .btn.primary { background: var(--orange); color: #0A0A0A; border-color: var(--orange); }
+    .card-sub { color: var(--muted); font-size: 12.5px; margin: -6px 0 14px; }
   </style>
 </head>
 
@@ -63,6 +67,7 @@
 
   <script src="scripts/supabase.min.js"></script>
   <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/contract-render.js"></script>
   <script src="scripts/carpeta.js"></script>
 </body>
 
