@@ -244,11 +244,22 @@ const Auth = {
 
   async logout(){
     const sb = window.supabase_client;
-    await sb.auth.signOut();
+    try { await sb.auth.signOut(); } catch(e){}
     try { localStorage.removeItem(this.STORAGE_KEY); } catch(e){}
     try { sessionStorage.removeItem(this.STORAGE_KEY); } catch(e){}
     try { localStorage.removeItem(this.USER_KEY); } catch(e){}
     try { sessionStorage.removeItem(this.USER_KEY); } catch(e){}
+    // sb.auth.signOut() limpia la sesión en memoria del cliente, pero en
+    // este proyecto el token persistido en localStorage (sb-<ref>-auth-token,
+    // lo escribe/borra el SDK de Supabase, no esta app) puede sobrevivir
+    // la llamada -- Auth.init() lo encuentra en la carga de index.html y
+    // vuelve a loguear solo, como si "cerrar sesión" no hubiera hecho nada.
+    // Se lo borra a mano como red de seguridad, sin depender de que
+    // signOut() lo haya limpiado.
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token')).forEach(k => localStorage.removeItem(k));
+      Object.keys(sessionStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token')).forEach(k => sessionStorage.removeItem(k));
+    } catch(e){}
     window.location.replace('index.html');
   },
 

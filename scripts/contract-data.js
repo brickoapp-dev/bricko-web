@@ -104,20 +104,26 @@ async function getContractData(obraId) {
   if (prepErr || !prep) throw new Error(`La obra ${obraId} todavía no tiene una propuesta aceptada`);
 
   const [
-    { data: clientProfile },
+    { data: clientProfileRows },
     { data: proProfile },
     { data: proVerif },
-    { data: hitos }
+    { data: hitos },
+    { data: emails }
   ] = await Promise.all([
-    sb.from('profiles')
-      .select('first_name, last_name, razon_social, tipo_persona, dni, cuit, address, usa_domicilio_alt, domicilio_contractual, caracter_inmueble, caracter_inmueble_detalle')
-      .eq('id', request.user_id).single(),
+    // No es un SELECT directo a "profiles": profiles_select_own solo deja
+    // leer el propio perfil, y esta función la llama el profesional para
+    // leer el perfil del CLIENTE (mismo problema que ya se había resuelto
+    // para nombre/ciudad en pro-dashboard.js vía get_request_owners()).
+    sb.rpc('get_contract_client_profile', { p_request_id: obraId }),
     sb.from('profiles').select('first_name, last_name, razon_social').eq('id', prep.pro_id).single(),
     sb.from('professional_verification')
       .select('dni_number, cuit, condicion_fiscal, direccion, usa_domicilio_alt, domicilio_contractual, matricula_entidad, matricula_numero, matricula_vencimiento, matricula_adjunto')
       .eq('id', prep.pro_id).maybeSingle(),
-    sb.from('hitos').select('*').eq('request_id', obraId).order('numero', { ascending: true })
+    sb.from('hitos').select('*').eq('request_id', obraId).order('numero', { ascending: true }),
+    sb.rpc('get_contract_parties_email', { p_request_id: obraId })
   ]);
+
+  const clientProfile = clientProfileRows?.[0] || null;
 
   const hitosList = hitos || [];
 
@@ -147,12 +153,14 @@ async function getContractData(obraId) {
     cliente_nombre_completo: clientProfile?.razon_social || joinName(clientProfile?.first_name, clientProfile?.last_name),
     cliente_dni_cuit: dniCuitLabel(clientProfile),
     cliente_domicilio: domicilioContractual(clientProfile),
+    cliente_email: emails?.cliente_email || null,
     caracter_inmueble: caracterInmuebleLabel(clientProfile),
 
     // PARTES — contratista [6]-[11]
     contratista_nombre_completo: proProfile?.razon_social || joinName(proProfile?.first_name, proProfile?.last_name),
     contratista_dni_cuit: dniCuitLabelPro(proVerif),
     contratista_domicilio: domicilioContractualPro(proVerif),
+    contratista_email: emails?.contratista_email || null,
     contratista_condicion_fiscal: proVerif?.condicion_fiscal || null,
     contratista_matricula: matriculaResumen(proVerif),
 

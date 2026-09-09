@@ -352,10 +352,19 @@ function renderContrato(){
   // pro-only -- ir ahí solo rebotaría al pro de vuelta a pro.html.
   const esCorregibleAqui = (f) => !!f.pantalla && f.origen !== 'perfil_cliente';
 
+  // motivo 'no_definido' ([12]-[21],[28]) es producto pendiente a propósito
+  // (el PDF los referencia pero nadie definió el texto legal todavía, ver
+  // contract-fields.js) -- no bloquea el envío, solo queda marcado "falta"
+  // en el documento generado. Lo que sí bloquea es lo que HOY se puede
+  // completar y no se completó ('vacio'/'no_expuesto').
+  const bloqueantes = c.faltantes.filter(f => f.motivo !== 'no_definido');
+
   const faltantesEl = document.getElementById('contratoFaltantes');
   faltantesEl.innerHTML = c.faltantes.length ? `
     <div class="pj-panel pj-panel-pad" style="margin-top:14px">
-      <div class="pj-kicker">Faltan ${c.faltantes.length} dato(s) para generar el contrato</div>
+      <div class="pj-kicker">${bloqueantes.length
+        ? `Faltan ${bloqueantes.length} dato(s) para poder enviar el contrato`
+        : `El contrato se puede enviar -- quedan ${c.faltantes.length} sección(es) marcadas "pendiente" (no bloquean el envío)`}</div>
       ${c.faltantes.map(f => `
         <div class="pj-doc-row">
           <div><strong>[${f.id}] ${escapeHTML(f.label || 'Campo por definir')}</strong><small>${escapeHTML(f.nota || (f.motivo === 'vacio' ? (f.origen === 'perfil_cliente' ? 'Todavía no lo cargó el cliente en su perfil.' : 'Todavía no se cargó.') : 'Sin pantalla de origen todavía.'))}</small></div>
@@ -367,7 +376,7 @@ function renderContrato(){
   const yaFirmeYo = c.aceptaciones.some(a => a.rol === 'contratista');
 
   document.getElementById('btnCorregirDatos').disabled = !c.faltantes.some(esCorregibleAqui);
-  document.getElementById('btnEnviarContrato').disabled = c.faltantes.length > 0 || !!estado;
+  document.getElementById('btnEnviarContrato').disabled = bloqueantes.length > 0 || !!estado;
   document.getElementById('btnFirmarContrato').disabled = !estado || estado === 'firmado' || yaFirmeYo;
   document.getElementById('btnDescargarFinal').disabled = estado !== 'firmado';
 }

@@ -97,10 +97,15 @@ window.BRICKO_FIELDS = [
     tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
     fuente: { tabla: 'profiles', columnas: ['address', 'usa_domicilio_alt', 'domicilio_contractual'] }
   },
-  stubField(4, 'existe_no_expuesto', {
-    clave: 'cliente_email', label: 'Correo del comitente', origen: 'perfil_cliente', alimenta: 'contrato',
-    todo: 'TODO (PARTES): el cliente ya dio su email al registrarse (auth.users.email), pero profiles no lo guarda y un profesional no puede leer auth.users de otro usuario por RLS. Exponerlo (ej. columna profiles.email poblada por handle_new_user + backfill) en vez de pedirlo de nuevo.'
-  }),
+  // Resuelto: profiles.email (poblada por handle_new_user + backfill) y
+  // expuesta entre las dos partes de una obra vía get_contract_parties_email()
+  // -- ver …_expone_email_contrato.sql. Antes era 'existe_no_expuesto'.
+  {
+    id: 4, estado: 'definido', clave: 'cliente_email',
+    label: 'Correo del comitente', origen: 'perfil_cliente',
+    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'profiles', columnas: ['email'] }
+  },
   // T1: client-perfil.html agrega caracter_inmueble (select obligatorio) +
   // caracter_inmueble_detalle (obligatoria si no es "propietario").
   // Corrige el origen respecto de la primera versión de este diccionario:
@@ -131,10 +136,13 @@ window.BRICKO_FIELDS = [
     tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
     fuente: { tabla: 'professional_verification', columnas: ['direccion', 'usa_domicilio_alt', 'domicilio_contractual'] }
   },
-  stubField(9, 'existe_no_expuesto', {
-    clave: 'contratista_email', label: 'Correo del contratista', origen: 'perfil_profesional', alimenta: 'contrato',
-    todo: 'TODO (PARTES): mismo caso que [4] -- el pro ya dio su email al registrarse pero no está expuesto vía profiles/professionals para que el cliente (u otro contexto) lo lea. Exponerlo en vez de pedirlo de nuevo.'
-  }),
+  // Resuelto: mismo mecanismo que [4].
+  {
+    id: 9, estado: 'definido', clave: 'contratista_email',
+    label: 'Correo del contratista', origen: 'perfil_profesional',
+    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'profiles', columnas: ['email'] }
+  },
   {
     id: 10, estado: 'definido', clave: 'contratista_condicion_fiscal',
     label: 'Condición fiscal del contratista', origen: 'perfil_profesional',
