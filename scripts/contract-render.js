@@ -19,6 +19,20 @@ function campo(data, clave, label) {
 
 function money(n) { return n == null || n === '' ? '' : Number(n).toLocaleString('es-AR'); }
 
+function campoMoney(data, clave, label) {
+  const v = data ? data[clave] : null;
+  if (v === null || v === undefined || v === '') return `<mark class="cf-falta">falta: ${escapeHTML(label)}</mark>`;
+  return `<strong>${money(v)}</strong>`;
+}
+
+/* Nota común a las cláusulas resueltas con datos de la oferta (Objeto,
+   Precio, Plazo) -- la REDACCIÓN LEGAL definitiva de estas cláusulas
+   sigue sujeta al documento 01 de la serie (BRICKO_01_Contrato_Tipo_Referencias.pdf)
+   cuando exista; hasta entonces se muestran los datos reales acordados
+   entre las partes con esta aclaración, en vez del bloque "PENDIENTE" que
+   usaba el contrato antes de tener estos datos. */
+const NOTA_REDACCION_LEGAL = '<em style="font-size:12px;color:#7a3e00">(sujeto a redacción legal final)</em>';
+
 const CONTRACT_CSS = `
   .contrato-doc { font-family: Georgia, 'Times New Roman', serif; color: #1a1a1a; background: #fff; padding: 40px 48px; max-width: 760px; margin: 0 auto; line-height: 1.65; font-size: 14.5px; }
   .contrato-doc h1 { font-size: 20px; text-align: center; margin-bottom: 24px; letter-spacing: .02em; }
@@ -32,8 +46,10 @@ const CONTRACT_CSS = `
   @media print { .contrato-doc { padding: 0; } }
 `;
 
-function renderContratoHTML(data, meta) {
+function renderContratoHTML(data, meta, templateId) {
   data = data || {};
+  const plantilla = (window.BRICKO_CONTRACT_TEMPLATES || []).find(t => t.id === templateId);
+  const aperturaObjeto = plantilla ? plantilla.aperturaObjeto : 'ejecutar';
   const hitoCount = (data.hito_titulo || []).length;
   const hitoCelda = (arr, i, fmt) => {
     const v = arr?.[i];
@@ -89,13 +105,18 @@ function renderContratoHTML(data, meta) {
       en adelante el "CONTRATISTA", se celebra el presente contrato de obra.</p>
 
       <h2>1. OBJETO</h2>
-      <p><mark class="cf-falta">PENDIENTE [12]-[15]: el PDF de referencias menciona estos campos pero no define el texto de esta cláusula -- falta el documento 01 de la serie (cuerpo del contrato marco). No se redacta un texto propio para no inventar la cláusula.</mark></p>
+      <p>El CONTRATISTA se obliga a ${escapeHTML(aperturaObjeto)} el trabajo de ${campo(data, 'objeto_rubro', '[13] Tipo/rubro del trabajo')}
+      en el inmueble ubicado en ${campo(data, 'objeto_direccion', '[12] Dirección del inmueble')},
+      con el siguiente alcance: ${campo(data, 'objeto_alcance', '[14] Alcance contratado')}. ${NOTA_REDACCION_LEGAL}</p>
+      <p><mark class="cf-falta">PENDIENTE [15]: exclusiones del alcance contratado -- no existe todavía ningún campo para cargarlas.</mark></p>
 
       <h2>2. PRECIO Y FORMA DE PAGO</h2>
-      <p><mark class="cf-falta">PENDIENTE [16]-[19]: mismo caso que la sección 1 -- falta el documento 01 de la serie.</mark></p>
+      <p>El precio total de la obra es de $ ${campoMoney(data, 'precio_total', '[16] Precio total')}. ${NOTA_REDACCION_LEGAL}</p>
+      <p><mark class="cf-falta">PENDIENTE [17]-[19]: moneda, tratamiento de impuestos y anticipo -- falta el documento 01 de la serie (cuerpo del contrato marco).</mark></p>
 
       <h2>3. PLAZO</h2>
-      <p><mark class="cf-falta">PENDIENTE [20]-[21]: mismo caso que la sección 1 -- falta el documento 01 de la serie.</mark></p>
+      <p>Plazo estimado de ejecución: ${campo(data, 'plazo_estimado', '[20]-[21] Plazo estimado de ejecución')}, a contar desde el inicio efectivo de la obra
+      (fecha de inicio y de finalización exactas a coordinar entre las partes al habilitarse la obra). ${NOTA_REDACCION_LEGAL}</p>
 
       <h2>4. HITOS Y ENTREGABLES</h2>
       <table class="contrato-tabla">

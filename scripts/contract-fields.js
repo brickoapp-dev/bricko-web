@@ -28,7 +28,13 @@ window.BRICKO_ORIGEN_SCREENS = {
   perfil_profesional: () => 'properfil.html',
   obra: (obraId) => `pro-preobra.html?req=${obraId}`,
   plan_hitos: (obraId) => `pro-preobra.html?req=${obraId}&gate=4`,
-  participantes: (obraId) => `pro-preobra.html?req=${obraId}&gate=5`
+  participantes: (obraId) => `pro-preobra.html?req=${obraId}&gate=5`,
+  // [12]-[14],[16],[20]-[21]: se completan al cotizar (pro-cotizar.html),
+  // no en una pantalla propia del contrato -- casi nunca deberían faltar
+  // (pro-cotizar.js ya exige monto/descripción antes de dejar enviar la
+  // oferta). Si post-adjudicación llegaran a faltar no hay pantalla real
+  // que los corrija (la oferta ya está aceptada y congelada).
+  oferta: (obraId) => `pro-preobra.html?req=${obraId}`
 };
 
 function stubField(id, estado, { clave = null, label = null, origen = null, alimenta = null, todo }) {
@@ -162,36 +168,48 @@ window.BRICKO_FIELDS = [
   },
 
   // ── 1. OBJETO — [12]-[15] ───────────────────────────────────────────
-  // [12]-[14] (cuerpo del contrato marco): BRICKO_01_Contrato_Tipo_Referencias.pdf
-  // referencia estos números pero no los define -- la definición (qué
-  // cuenta como "alcance", cómo se redacta la dirección/rubro dentro de
-  // la cláusula, etc.) tiene que salir del documento 01 de la serie, que
-  // todavía no fue provisto. Antes había un mapeo directo a requests.* acá:
-  // se revirtió a pendiente para no inventar el criterio de redacción.
-  stubField(12, 'pendiente', {
-    origen: 'obra', alimenta: 'contrato',
-    todo: 'TODO (OBJETO): dirección del inmueble. El PDF referencia [12] pero no lo define -- falta el documento 01 de la serie (cuerpo del contrato marco).'
-  }),
-  stubField(13, 'pendiente', {
-    origen: 'obra', alimenta: 'contrato',
-    todo: 'TODO (OBJETO): tipo/rubro del trabajo. El PDF referencia [13] pero no lo define -- falta el documento 01 de la serie (cuerpo del contrato marco).'
-  }),
-  stubField(14, 'pendiente', {
-    origen: 'obra', alimenta: 'contrato',
-    todo: 'TODO (OBJETO): alcance contratado. El PDF referencia [14] pero no lo define -- falta el documento 01 de la serie (cuerpo del contrato marco).'
-  }),
+  // [12]-[14]: resuelto -- el profesional ya carga dirección (viene de la
+  // solicitud), rubro/tipo (idem) y alcance (lo que él mismo describe al
+  // cotizar, quotes.description) al momento de ofertar. La REDACCIÓN
+  // LEGAL final de esta cláusula sigue sujeta al documento 01 de la serie
+  // (BRICKO_01_Contrato_Tipo_Referencias.pdf) cuando exista -- por eso el
+  // render muestra estos valores con una nota de "sujeto a redacción legal
+  // final", no como texto contractual cerrado. [15] (exclusiones) sigue
+  // sin ninguna fuente de datos -- queda pendiente.
+  {
+    id: 12, estado: 'definido', clave: 'objeto_direccion',
+    label: 'Dirección del inmueble', origen: 'oferta',
+    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'requests', columnas: ['direccion'] }
+  },
+  {
+    id: 13, estado: 'definido', clave: 'objeto_rubro',
+    label: 'Tipo/rubro del trabajo', origen: 'oferta',
+    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'requests', columnas: ['tipo', 'rubros'] }
+  },
+  {
+    id: 14, estado: 'definido', clave: 'objeto_alcance',
+    label: 'Alcance contratado', origen: 'oferta',
+    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'quotes', columnas: ['description'] }
+  },
   stubField(15, 'pendiente', {
     origen: 'obra', alimenta: 'contrato',
     todo: 'TODO (OBJETO): exclusiones del alcance contratado. No existe ningún campo de "exclusiones" en requests/quotes hoy.'
   }),
 
   // ── 2. PRECIO Y FORMA DE PAGO — [16]-[19] ───────────────────────────
-  // [16]-[17]: mismo caso que [12]-[14] -- referenciados pero no definidos
-  // en el PDF disponible. Falta el documento 01 de la serie.
-  stubField(16, 'pendiente', {
-    origen: 'obra', alimenta: 'contrato',
-    todo: 'TODO (PRECIO): precio total. El PDF referencia [16] pero no lo define -- falta el documento 01 de la serie (cuerpo del contrato marco).'
-  }),
+  // [16]: resuelto -- monto de la oferta (quotes.amount). [17]-[19] no
+  // tienen fuente de datos todavía (moneda siempre fue implícitamente
+  // ARS pero nunca se pidió como campo explícito; impuestos/anticipo no
+  // se recolectan en ninguna pantalla) -- quedan pendientes.
+  {
+    id: 16, estado: 'definido', clave: 'precio_total',
+    label: 'Precio total', origen: 'oferta',
+    tipo: 'number', requerido: true, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'quotes', columnas: ['amount'] }
+  },
   stubField(17, 'pendiente', {
     origen: 'obra', alimenta: 'contrato',
     todo: 'TODO (PRECIO): moneda. El PDF referencia [17] pero no lo define -- falta el documento 01 de la serie (cuerpo del contrato marco).'
@@ -206,14 +224,25 @@ window.BRICKO_FIELDS = [
   }),
 
   // ── 3. PLAZO — [20]-[21] ────────────────────────────────────────────
-  stubField(20, 'pendiente', {
-    origen: 'obra', alimenta: 'contrato',
-    todo: 'TODO (PLAZO): fecha estimada de inicio de la obra. No confundir con la fecha_estimada de cada hito -- no hay un campo obra-level para esto en obra_preparacion/requests.'
-  }),
-  stubField(21, 'pendiente', {
-    origen: 'obra', alimenta: 'contrato',
-    todo: 'TODO (PLAZO): fecha estimada de finalización de la obra. Mismo caso que [20] -- no derivar del máximo de fecha_estimada de los hitos sin confirmar que sea correcto.'
-  }),
+  // Resuelto de forma aproximada: pro-cotizar.js solo recolecta un plazo
+  // en TEXTO LIBRE (ej. "15 días", "2 semanas"), no fechas calendario
+  // reales -- no existe ningún date-picker de inicio/fin de obra hoy. En
+  // vez de inventar dos fechas exactas que nadie cargó, [20] y [21]
+  // muestran el mismo texto de plazo propuesto por el profesional
+  // (quotes.features[0]), con la aclaración de que las fechas concretas
+  // se coordinan al iniciar. Ver contract-render.js sección PLAZO.
+  {
+    id: 20, estado: 'definido', clave: 'plazo_estimado',
+    label: 'Plazo estimado de ejecución', origen: 'oferta',
+    tipo: 'text', requerido: true, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'quotes', columnas: ['features'] }
+  },
+  {
+    id: 21, estado: 'definido', clave: 'plazo_estimado',
+    label: 'Plazo estimado de ejecución', origen: 'oferta',
+    tipo: 'text', requerido: false, alimenta: 'contrato', lista: false,
+    fuente: { tabla: 'quotes', columnas: ['features'] }
+  },
 
   // ── 4. HITOS Y ENTREGABLES — [22]-[27] (se repiten por hito) ───────
   {
