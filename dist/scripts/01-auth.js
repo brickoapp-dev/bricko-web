@@ -436,6 +436,16 @@ const Auth = {
       let remembered = true;
       try { remembered = localStorage.getItem(window.BRICKO_REMEMBER_KEY) !== '0'; } catch(e){}
       this._setSession(user, remembered);
+    } else if (!session && this.getSession()) {
+      // Sesión de la app huérfana: no hay token real de Supabase detrás
+      // (expiró, se invalidó del lado del servidor, o quedó de una prueba
+      // manual). Sin este chequeo, el redirect de más abajo confía
+      // ciegamente en este storage y manda a alguien no autenticado al
+      // dashboard como si hubiera iniciado sesión.
+      try { localStorage.removeItem(this.STORAGE_KEY); } catch(e){}
+      try { sessionStorage.removeItem(this.STORAGE_KEY); } catch(e){}
+      try { localStorage.removeItem(this.USER_KEY); } catch(e){}
+      try { sessionStorage.removeItem(this.USER_KEY); } catch(e){}
     }
 
     this._render();
