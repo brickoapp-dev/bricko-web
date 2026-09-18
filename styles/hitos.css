@@ -216,6 +216,7 @@ label.pj-small { display: block; margin-bottom: 7px; font-weight: 600; }
 
 /* ===== Documentos / carpeta de obra ===== */
 .pj-doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.pj-doc-grid > * { min-width: 0; }
 @media (max-width: 780px) { .pj-doc-grid { grid-template-columns: 1fr; } }
 .pj-doc-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--line); }
 .pj-doc-row:last-child { border-bottom: 0; }
