@@ -423,7 +423,7 @@ function initObraSection() {
       const c = OBRA.contrato;
       if (!c?.version) return;
       document.getElementById('contratoPreviewTitle').textContent = `Contrato -- versión ${c.version.version}`;
-      document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(c.version.payload);
+      document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(c.version.payload, null, OBRA.contrato.templateId);
       document.getElementById('contratoPreviewModal').classList.add('open');
       return;
     }
@@ -511,11 +511,16 @@ async function loadObraSection() {
 
   const { data: version } = await sb.from('contrato_versiones').select('*').eq('request_id', REQ_ID).neq('estado', 'invalidado').order('version', { ascending: false }).limit(1).maybeSingle();
   let aceptaciones = [];
+  let templateId = null;
   if (version) {
     const { data: acept } = await sb.from('contrato_aceptaciones').select('rol').eq('contrato_version_id', version.id);
     aceptaciones = acept || [];
+    if (version.quote_id) {
+      const { data: q } = await sb.from('quotes').select('template_id').eq('id', version.quote_id).maybeSingle();
+      templateId = q?.template_id || null;
+    }
   }
-  OBRA.contrato = { version, aceptaciones };
+  OBRA.contrato = { version, aceptaciones, templateId };
 
   renderObraContrato();
   renderObraHitos();
@@ -562,15 +567,9 @@ function renderObraContrato() {
   `;
 }
 
-function downloadContratoFinal(version) {
+async function downloadContratoFinal(version) {
   const meta = `Versión ${version.version} · Firmado ${new Date(version.firmado_at).toLocaleString('es-AR')} · Hash ${version.hash.slice(0, 16)}…`;
-  const html = window.renderContratoHTML(version.payload, meta);
-  const win = window.open('', '_blank');
-  if (!win) { toast('err', 'No se pudo abrir la vista', 'Habilitá los pop-ups para descargar el contrato final.'); return; }
-  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Contrato firmado — v${version.version}</title></head><body>${html}</body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => win.print(), 300);
+  await window.descargarContratoPDF(version.payload, meta, OBRA.contrato?.templateId, `contrato-v${version.version}.pdf`);
 }
 
 function renderObraHitos() {

@@ -90,6 +90,8 @@ label.pj-small { display: block; margin-bottom: 7px; font-weight: 600; }
 .pj-status.orange:before { background: var(--orange); }
 .pj-status.warn { color: #e7bd61; border-color: rgba(231,189,97,.35); }
 .pj-status.warn:before { background: #e7bd61; }
+.pj-status.err { color: #E54E10; border-color: rgba(229,78,16,.35); }
+.pj-status.err:before { background: #E54E10; }
 
 .pj-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
@@ -182,6 +184,14 @@ label.pj-small { display: block; margin-bottom: 7px; font-weight: 600; }
 .pj-gate-card h2 { font: 800 clamp(24px,3.4vw,34px)/1.05 var(--display); text-transform: uppercase; letter-spacing: -.03em; margin: 6px 0 10px; }
 .pj-gate-card > .lead { margin: 0 0 18px; color: var(--muted); line-height: 1.7; font-size: 14px; }
 .pj-gate-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+
+/* Paso bloqueado: los gates anteriores todavía no se cumplieron */
+.pj-gate-readonly-note {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 18px;
+  padding: 10px 14px; border: 1px solid var(--orange-line); background: var(--orange-soft);
+  color: var(--orange); font: 700 11.5px var(--mono); letter-spacing: .04em; text-transform: uppercase;
+}
+.form-input:disabled, select.form-input:disabled { opacity: .5; cursor: not-allowed; background: var(--bg-2); }
 
 .pj-normative { margin: 18px 0; }
 .pj-normative-head h3 { font: 800 20px var(--display); text-transform: uppercase; margin: 6px 0 8px; letter-spacing: -.02em; }

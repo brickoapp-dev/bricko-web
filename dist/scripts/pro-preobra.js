@@ -196,15 +196,20 @@ async function loadContratoState(){
     .maybeSingle();
 
   let aceptaciones = [];
+  let templateId = null;
   if (version){
     const { data: acept } = await sb
       .from('contrato_aceptaciones')
       .select('*')
       .eq('contrato_version_id', version.id);
     aceptaciones = acept || [];
+    if (version.quote_id){
+      const { data: q } = await sb.from('quotes').select('template_id').eq('id', version.quote_id).maybeSingle();
+      templateId = q?.template_id || null;
+    }
   }
 
-  STATE.contrato = { payload, hash, faltantes, version, aceptaciones };
+  STATE.contrato = { payload, hash, faltantes, version, aceptaciones, templateId };
 }
 
 /* ── Render ──────────────────────────────────────────── */
@@ -869,19 +874,13 @@ function initEvents(){
 /* ── Contrato: preview modal y descarga final ────────────────────────── */
 function openContratoPreview(payload, titulo){
   document.getElementById('contratoPreviewTitle').textContent = titulo;
-  document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(payload);
+  document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(payload, null, STATE.contrato?.templateId);
   document.getElementById('contratoPreviewModal').classList.add('open');
 }
 
-function downloadContratoFinal(version){
+async function downloadContratoFinal(version){
   const meta = `Versión ${version.version} · Firmado ${new Date(version.firmado_at).toLocaleString('es-AR')} · Hash ${version.hash.slice(0, 16)}…`;
-  const html = window.renderContratoHTML(version.payload, meta);
-  const win = window.open('', '_blank');
-  if (!win){ toast('err', 'No se pudo abrir la vista', 'Habilitá los pop-ups para descargar el contrato final.'); return; }
-  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Contrato firmado — v${version.version}</title></head><body>${html}</body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => win.print(), 300);
+  await window.descargarContratoPDF(version.payload, meta, STATE.contrato?.templateId, `contrato-v${version.version}.pdf`);
 }
 
 /* ── Plan por hitos: payload + hash (mismo mecanismo que el contrato) ── */

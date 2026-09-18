@@ -1,0 +1,15 @@
+-- Agrega 'preparing' al enum request_status, entre 'quoted' y 'active'.
+--
+-- Flujo correcto de una solicitud: pending → quoted → preparing → active → done.
+-- Hoy accept_quote()/cascade_on_quote_accepted() saltean directo a 'active',
+-- dejando el wizard de preparación de obra (obra_preparacion, 6 pasos) como
+-- algo puramente decorativo: "habilitar obra" no cambiaba ningún estado real
+-- de requests. A partir de esta migración, aceptar una cotización deja la
+-- solicitud en 'preparing'; sólo enable_obra() (gate 6) la pasa a 'active'.
+--
+-- ALTER TYPE ... ADD VALUE no puede usarse dentro de la misma transacción en
+-- la que se referencia el valor nuevo (ver docs de Postgres), así que esta
+-- migración sólo agrega el valor al enum. El uso real (accept_quote,
+-- cascade_on_quote_accepted, enable_obra, backfill) va en la siguiente
+-- migración, en su propia transacción.
+ALTER TYPE public.request_status ADD VALUE IF NOT EXISTS 'preparing' AFTER 'quoted';

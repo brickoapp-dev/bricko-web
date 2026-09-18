@@ -38,11 +38,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadAll(){
   const { data: request } = await sb.from('requests').select('id, ticket_id, titulo, direccion').eq('id', REQ_ID).single();
+  const { data: prep } = await sb.from('obra_preparacion').select('gate_habilitada').eq('request_id', REQ_ID).single();
   const { data: hitos, error } = await sb.from('hitos').select('*').eq('request_id', REQ_ID).order('numero', { ascending: true });
 
   if (error || !request){
     toast('err', 'No encontrada', 'Volviendo a la cartelera…');
     setTimeout(() => window.location.replace('pro.html'), 1800);
+    return;
+  }
+
+  if (prep && !prep.gate_habilitada){
+    window.location.replace('pro-preobra.html?req=' + REQ_ID);
     return;
   }
 

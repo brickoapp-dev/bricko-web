@@ -15,6 +15,12 @@ let MY_QUOTES = new Map();
 let PRO_PROFILE = null;
 let FILTERS = { zone:'myzone', rubro:'all', tipo:'all', urgencia:'all' };
 
+let PREPS = [];
+let MIS_OBRAS_FILTER = 'all'; // 'all' | 'preparacion' | 'activas'
+let REQUESTS_ERROR = false;
+let QUOTES_ERROR = false;
+let PREPS_ERROR = false;
+
 function getSession(){
   try {
     const s = localStorage.getItem('bricko-session') || sessionStorage.getItem('bricko-session');
@@ -32,28 +38,65 @@ document.addEventListener('DOMContentLoaded', async () => {
   initLogout();
   initThemeToggle();
   initCursorGlow();
+  initKpiButtons();
+  initMisObrasFilterClear();
 
   await loadMyQuotes(session.userId);
-  await loadRequests();
+  await Promise.all([loadRequests(), loadPreps()]);
   updateStats();
-  await loadMisObras();
+  renderMisObras();
 });
 
 /* ── Mis obras: preparación / ejecución (hitos) ─────────── */
-async function loadMisObras(){
-  const wrap = document.getElementById('misObrasWrap');
-  const list = document.getElementById('misObrasList');
-  if (!wrap || !list) return;
-
+async function loadPreps(){
   const { data: preps, error } = await sb
     .from('obra_preparacion')
     .select('request_id, gate_habilitada, requests(ticket_id, titulo, status)')
     .order('created_at', { ascending: false });
 
-  if (error || !preps || !preps.length){ wrap.style.display = 'none'; return; }
+  PREPS_ERROR = !!error;
+  PREPS = error ? [] : (preps || []);
+}
 
+function renderMisObras(){
+  const wrap = document.getElementById('misObrasWrap');
+  const list = document.getElementById('misObrasList');
+  const note = document.getElementById('misObrasFilterNote');
+  if (!wrap || !list) return;
+
+  if (PREPS_ERROR){
+    wrap.style.display = '';
+    if (note) note.style.display = 'none';
+    list.innerHTML = '<div class="pj-empty">No se pudieron cargar tus obras. Reintentá más tarde.</div>';
+    return;
+  }
+
+  if (!PREPS.length){ wrap.style.display = 'none'; return; }
   wrap.style.display = '';
-  list.innerHTML = preps.map(p => {
+
+  if (note){
+    if (MIS_OBRAS_FILTER === 'all'){
+      note.style.display = 'none';
+      note.innerHTML = '';
+    } else {
+      note.style.display = '';
+      const label = MIS_OBRAS_FILTER === 'preparacion' ? 'Adjudicadas en preparación' : 'Obras activas';
+      note.innerHTML = `Mostrando: ${label} · <button type="button" class="pj-filter-clear" id="misObrasClearFilter">Ver todas</button>`;
+    }
+  }
+
+  const filtered = PREPS.filter(p => {
+    if (MIS_OBRAS_FILTER === 'preparacion') return !p.gate_habilitada;
+    if (MIS_OBRAS_FILTER === 'activas') return p.gate_habilitada && p.requests?.status !== 'done';
+    return true;
+  });
+
+  if (!filtered.length){
+    list.innerHTML = '<div class="pj-empty">No tenés obras en esta categoría.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(p => {
     const req = p.requests;
     const enCurso = p.gate_habilitada && req?.status !== 'done';
     const label = !p.gate_habilitada ? 'Preparar obra adjudicada' : (req?.status === 'done' ? 'Obra finalizada' : 'Obra en ejecución');
@@ -67,6 +110,42 @@ async function loadMisObras(){
       </div>
     `;
   }).join('');
+}
+
+function initMisObrasFilterClear(){
+  document.getElementById('misObrasWrap')?.addEventListener('click', (e) => {
+    if (e.target.id === 'misObrasClearFilter'){
+      MIS_OBRAS_FILTER = 'all';
+      renderMisObras();
+    }
+  });
+}
+
+/* ── KPIs clicables (cartelera) ──────────────────────── */
+function initKpiButtons(){
+  document.querySelectorAll('#kpiStrip [data-kpi]').forEach(btn => {
+    const go = () => handleKpiClick(btn.dataset.kpi);
+    btn.addEventListener('click', go);
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); }
+    });
+  });
+}
+
+function handleKpiClick(kpi){
+  if (kpi === 'oportunidades'){
+    document.getElementById('requestsFeed')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  if (kpi === 'ofertas'){
+    window.location.href = 'pro-ofertas.html';
+    return;
+  }
+  if (kpi === 'preparacion' || kpi === 'activas'){
+    MIS_OBRAS_FILTER = kpi;
+    renderMisObras();
+    document.getElementById('misObrasWrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 /* ── Cargar Perfil Profesional Completo ─────────────────── */
@@ -148,10 +227,11 @@ function renderProfileUI(){
 async function loadMyQuotes(proId){
   try {
     const { data, error } = await sb.from('quotes').select('id, request_id, amount, status').eq('pro_id', proId);
-    if (error){ console.warn('Error cargando mis quotes:', error); return; }
+    if (error){ console.warn('Error cargando mis quotes:', error); QUOTES_ERROR = true; return; }
+    QUOTES_ERROR = false;
     MY_QUOTES = new Map();
     (data || []).forEach(q => MY_QUOTES.set(q.request_id, q));
-  } catch(err){ console.warn('Excepción cargando mis quotes:', err); }
+  } catch(err){ console.warn('Excepción cargando mis quotes:', err); QUOTES_ERROR = true; }
 }
 
 /* ── Solicitudes abiertas ───────────────────────────── */
@@ -162,7 +242,7 @@ async function loadRequests(){
       .select('id, ticket_id, user_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at')
       .in('status', ['pending','quoted'])
       .order('created_at', { ascending: false });
-    if (error){ console.error('Error cargando solicitudes:', error); ALL_REQUESTS = []; render(); return; }
+    if (error){ console.error('Error cargando solicitudes:', error); ALL_REQUESTS = []; REQUESTS_ERROR = true; render(); return; }
 
     // profiles_select_own no deja leer el perfil del cliente vía un embed
     // normal (PostgREST lo devuelve null, no error) -- get_request_owners()
@@ -177,7 +257,8 @@ async function loadRequests(){
     }
 
     ALL_REQUESTS = (data || []).map(row => normalize(row, owners.get(row.id)));
-  } catch(err){ console.error('Excepción cargando solicitudes:', err); ALL_REQUESTS = []; }
+    REQUESTS_ERROR = false;
+  } catch(err){ console.error('Excepción cargando solicitudes:', err); ALL_REQUESTS = []; REQUESTS_ERROR = true; }
   render();
 }
 
@@ -322,17 +403,42 @@ function cardHTML(r, i){
   `;
 }
 
-/* ── Stats del nav ──────────────────────────────────── */
+/* ── Stats del nav + KPIs: única fuente de verdad ────── */
+function computeCounters(){
+  const quotes = [...MY_QUOTES.values()];
+  return {
+    oportunidades: ALL_REQUESTS.filter(r => !MY_QUOTES.has(r.id)).length,
+    ofertas:       quotes.filter(q => q.status==='pending' || q.status==='negotiating').length,
+    preparacion:   PREPS.filter(p => !p.gate_habilitada).length,
+    activas:       PREPS.filter(p => p.gate_habilitada && p.requests?.status !== 'done').length,
+  };
+}
+
 function updateStats(){
-  const newCount = ALL_REQUESTS.filter(r => !MY_QUOTES.has(r.id)).length;
-  const myAccepted = [...MY_QUOTES.values()].filter(q => q.status === 'accepted').length;
-  const myPending = [...MY_QUOTES.values()].filter(q => q.status === 'pending').length;
+  const kpiStrip = document.getElementById('kpiStrip');
+  const navStats = document.getElementById('navStats');
   const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
-  set('statNew', newCount);
-  set('statActive', myAccepted);
-  set('kpiOportunidades', ALL_REQUESTS.length);
-  set('kpiEvaluacion', myPending);
-  set('kpiAdjudicadas', myAccepted);
+
+  kpiStrip?.classList.remove('is-loading');
+  navStats?.classList.remove('is-loading');
+
+  if (REQUESTS_ERROR || QUOTES_ERROR || PREPS_ERROR){
+    kpiStrip?.classList.add('is-error');
+    navStats?.classList.add('is-error');
+    ['statNew','statActive','kpiOportunidades','kpiOfertas','kpiPreparacion','kpiActivas'].forEach(id => set(id, '—'));
+    return;
+  }
+
+  kpiStrip?.classList.remove('is-error');
+  navStats?.classList.remove('is-error');
+
+  const c = computeCounters();
+  set('statNew', c.oportunidades);
+  set('statActive', c.activas);
+  set('kpiOportunidades', c.oportunidades);
+  set('kpiOfertas', c.ofertas);
+  set('kpiPreparacion', c.preparacion);
+  set('kpiActivas', c.activas);
 }
 
 /* ── Logout ─────────────────────────────────────────── */

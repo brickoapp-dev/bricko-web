@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     showExistingQuote(existingQuote);
   } else {
     initForm(req, session);
+    initContratoUI(req, session);
   }
 });
 
@@ -448,6 +449,7 @@ async function submitQuote(req, session){
   const amount = parseFloat(document.getElementById('quoteMonto')?.value || '0');
   const description = document.getElementById('quoteDesc')?.value.trim() || '';
   const plazo = document.getElementById('quoteDias')?.value.trim() || '';
+  const templateId = document.getElementById('quotePlantilla')?.value || null;
 
   if (!amount || amount <= 0){ toast('err', 'Monto inválido', 'Ingresá un monto mayor a cero.'); return; }
   if (!description){ toast('err', 'Falta descripción', 'Describí qué incluye el presupuesto.'); return; }
@@ -462,7 +464,8 @@ async function submitQuote(req, session){
       amount,
       description,
       features: plazo ? [plazo] : [],
-      status: 'pending'
+      status: 'pending',
+      template_id: templateId
     };
     const { data, error } = await sb.from('quotes').insert(payload).select().single();
     if (error){
@@ -472,13 +475,190 @@ async function submitQuote(req, session){
     }
     // La transición pending -> quoted la hace un trigger en la DB al insertar
     // la quote (el pro no es dueño de la request y RLS bloqueaba este update).
+
+    await enviarContratoDeOferta(data.id);
+
     const fmt = Number(amount).toLocaleString('es-AR');
-    toast('ok', 'Presupuesto enviado', `$${fmt} enviado correctamente.`);
+    toast('ok', 'Presupuesto enviado', `$${fmt} + contrato enviados correctamente.`);
     setTimeout(() => showExistingQuote(data), 600);
   } catch(err){
     console.error('Error enviando quote:', err);
     toast('err', 'Error al enviar', 'No pudimos enviar el presupuesto.');
     if (btn){ btn.disabled = false; btn.classList.remove('loading'); }
+  }
+}
+
+/* ── Hitos preliminares + contrato de la oferta ──────────────────────
+   El profesional propone un cronograma de pagos/etapas al cotizar, para
+   que viaje dentro del contrato que el cliente ve por cada oferta (ver
+   plan del feature). Se guarda en memoria hasta el submit; recién ahí se
+   insertan como filas de "hitos" con quote_id, y se envía el contrato
+   con contrato_oferta_enviar(). */
+let HITOS_PRELIMINARES = [];
+
+function initContratoUI(req, session){
+  const select = document.getElementById('quotePlantilla');
+  if (select && window.BRICKO_CONTRACT_TEMPLATES){
+    select.innerHTML = window.BRICKO_CONTRACT_TEMPLATES.map(t => `<option value="${t.id}">${escapeHTML(t.label)}</option>`).join('');
+    const sugerida = window.sugerirPlantillaContrato?.(req.tipo);
+    if (sugerida) select.value = sugerida.id;
+  }
+
+  renderHitosPreliminares();
+  document.getElementById('btnAddHito')?.addEventListener('click', () => {
+    HITOS_PRELIMINARES.push({ titulo: '', descripcion: '', monto: '', fecha_estimada: '', criterio_aceptacion: '', responsable_nombre: '' });
+    renderHitosPreliminares();
+  });
+
+  document.getElementById('quoteHitosList')?.addEventListener('click', (e) => {
+    const del = e.target.closest('[data-del-hito]');
+    if (!del) return;
+    HITOS_PRELIMINARES.splice(Number(del.dataset.delHito), 1);
+    renderHitosPreliminares();
+  });
+
+  document.getElementById('quoteHitosList')?.addEventListener('input', (e) => {
+    const field = e.target.closest('[data-hito-field]');
+    if (!field) return;
+    const idx = Number(field.dataset.hitoIndex);
+    if (HITOS_PRELIMINARES[idx]) HITOS_PRELIMINARES[idx][field.dataset.hitoField] = field.value;
+  });
+
+  document.getElementById('btnPreviewContrato')?.addEventListener('click', () => previewContrato(req, session));
+
+  document.getElementById('contratoPreviewModal')?.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close-contrato-modal]') || e.target.id === 'contratoPreviewModal'){
+      document.getElementById('contratoPreviewModal').classList.remove('open');
+    }
+  });
+}
+
+function renderHitosPreliminares(){
+  const list = document.getElementById('quoteHitosList');
+  if (!list) return;
+  if (!HITOS_PRELIMINARES.length){
+    list.innerHTML = '<div class="pj-empty">Todavía no agregaste hitos propuestos.</div>';
+    return;
+  }
+  list.innerHTML = HITOS_PRELIMINARES.map((h, i) => `
+    <div class="pj-panel pj-panel-pad" style="margin-top:10px;position:relative">
+      <button type="button" class="pj-btn" data-del-hito="${i}" style="position:absolute;top:10px;right:10px">Eliminar</button>
+      <div class="qf-field"><label class="qf-label">Título</label>
+        <input class="form-input" data-hito-index="${i}" data-hito-field="titulo" value="${escapeHTML(h.titulo)}" /></div>
+      <div class="qf-field"><label class="qf-label">Resultado verificable</label>
+        <input class="form-input" data-hito-index="${i}" data-hito-field="descripcion" value="${escapeHTML(h.descripcion)}" /></div>
+      <div class="qf-field"><label class="qf-label">Monto</label>
+        <input type="number" class="form-input" data-hito-index="${i}" data-hito-field="monto" value="${escapeHTML(String(h.monto))}" /></div>
+      <div class="qf-field"><label class="qf-label">Fecha objetivo</label>
+        <input type="date" class="form-input" data-hito-index="${i}" data-hito-field="fecha_estimada" value="${escapeHTML(h.fecha_estimada)}" /></div>
+      <div class="qf-field"><label class="qf-label">Criterio de aceptación</label>
+        <input class="form-input" data-hito-index="${i}" data-hito-field="criterio_aceptacion" value="${escapeHTML(h.criterio_aceptacion)}" /></div>
+      <div class="qf-field"><label class="qf-label">Responsable</label>
+        <input class="form-input" data-hito-index="${i}" data-hito-field="responsable_nombre" value="${escapeHTML(h.responsable_nombre)}" /></div>
+    </div>
+  `).join('');
+}
+
+/* Arma el mismo objeto de datos que getContractDataForQuote() (misma
+   forma de claves) pero a partir de los valores todavía no guardados
+   del form -- solo para el preview en vivo, antes de tener una quote
+   real. dniCuitLabel/domicilioContractual/etc. son funciones globales
+   de contract-data.js (cargado antes que este archivo). */
+async function buildDraftContractData(req, session){
+  const [{ data: clientProfileRows }, { data: proProfile }, { data: proVerif }, { data: emails }] = await Promise.all([
+    sb.rpc('get_contract_client_profile', { p_request_id: req.id }),
+    sb.from('profiles').select('first_name, last_name, razon_social').eq('id', session.userId).single(),
+    sb.from('professional_verification')
+      .select('dni_number, cuit, condicion_fiscal, direccion, usa_domicilio_alt, domicilio_contractual, matricula_entidad, matricula_numero, matricula_vencimiento, matricula_adjunto')
+      .eq('id', session.userId).maybeSingle(),
+    sb.rpc('get_contract_parties_email', { p_request_id: req.id })
+  ]);
+  const clientProfile = clientProfileRows?.[0] || null;
+
+  const amount = parseFloat(document.getElementById('quoteMonto')?.value || '0');
+  const description = document.getElementById('quoteDesc')?.value.trim() || '';
+  const plazo = document.getElementById('quoteDias')?.value.trim() || '';
+
+  return {
+    cliente_nombre_completo: clientProfile?.razon_social || [clientProfile?.first_name, clientProfile?.last_name].filter(Boolean).join(' ') || null,
+    cliente_dni_cuit: window.dniCuitLabel ? window.dniCuitLabel(clientProfile) : null,
+    cliente_domicilio: window.domicilioContractual ? window.domicilioContractual(clientProfile) : null,
+    cliente_email: emails?.cliente_email || null,
+    caracter_inmueble: window.caracterInmuebleLabel ? window.caracterInmuebleLabel(clientProfile) : null,
+
+    contratista_nombre_completo: proProfile?.razon_social || [proProfile?.first_name, proProfile?.last_name].filter(Boolean).join(' ') || null,
+    contratista_dni_cuit: window.dniCuitLabelPro ? window.dniCuitLabelPro(proVerif) : null,
+    contratista_domicilio: window.domicilioContractualPro ? window.domicilioContractualPro(proVerif) : null,
+    contratista_email: emails?.contratista_email || null,
+    contratista_condicion_fiscal: proVerif?.condicion_fiscal || null,
+    contratista_matricula: window.matriculaResumen ? window.matriculaResumen(proVerif) : null,
+
+    objeto_direccion: req.direccion || null,
+    objeto_rubro: (() => {
+      const tipoLabel = TIPO_LABEL[req.tipo] || req.tipo;
+      const rubrosText = (req.rubros || []).map(r => RUBRO_LABELS[r] || r).join(', ');
+      return rubrosText ? `${tipoLabel} — ${rubrosText}` : (tipoLabel || null);
+    })(),
+    objeto_alcance: description || null,
+    precio_total: amount || null,
+    plazo_estimado: plazo || null,
+
+    hito_titulo: HITOS_PRELIMINARES.map(h => h.titulo || null),
+    hito_resultado_verificable: HITOS_PRELIMINARES.map(h => h.descripcion || null),
+    hito_monto: HITOS_PRELIMINARES.map(h => h.monto || null),
+    hito_fecha_objetivo: HITOS_PRELIMINARES.map(h => h.fecha_estimada || null),
+    hito_criterio_aceptacion: HITOS_PRELIMINARES.map(h => h.criterio_aceptacion || null),
+    hito_responsable: HITOS_PRELIMINARES.map(h => h.responsable_nombre || null),
+    plazo_observacion_dias: HITOS_PRELIMINARES.map(() => 10),
+
+    participantes_listado: [],
+    participantes_documentacion: []
+  };
+}
+
+async function previewContrato(req, session){
+  try {
+    const data = await buildDraftContractData(req, session);
+    const templateId = document.getElementById('quotePlantilla')?.value || null;
+    document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(data, 'Borrador -- todavía no enviado', templateId);
+    document.getElementById('contratoPreviewModal').classList.add('open');
+  } catch(err){
+    console.error('Error armando el borrador del contrato:', err);
+    toast('err', 'No se pudo armar el borrador', 'Revisá tu perfil profesional y volvé a intentar.');
+  }
+}
+
+/* Al confirmar la oferta: inserta los hitos preliminares (con quote_id)
+   y envía el contrato de esta oferta -- ver contrato_oferta_enviar()
+   (migración 20260909100000_contrato_por_oferta.sql). Si algo de esto
+   falla, la oferta ya quedó enviada (insert previo) -- se avisa pero no
+   se revierte, mismo criterio pragmático que el resto de flujos
+   multi-paso de este proyecto (ej. pro-preobra.js). */
+async function enviarContratoDeOferta(quoteId){
+  const hitosValidos = HITOS_PRELIMINARES.filter(h => h.titulo && h.monto);
+  if (hitosValidos.length){
+    const { data: quoteRow } = await sb.from('quotes').select('request_id').eq('id', quoteId).single();
+    const rows = hitosValidos.map((h, i) => ({
+      request_id: quoteRow.request_id,
+      quote_id: quoteId,
+      numero: i + 1,
+      titulo: h.titulo,
+      descripcion: h.descripcion || null,
+      monto: Number(h.monto),
+      fecha_estimada: h.fecha_estimada || null,
+      criterio_aceptacion: h.criterio_aceptacion || null,
+      responsable_nombre: h.responsable_nombre || null
+    }));
+    const { error: hitosErr } = await sb.from('hitos').insert(rows);
+    if (hitosErr) console.warn('No se pudieron guardar los hitos preliminares:', hitosErr);
+  }
+
+  try {
+    const { payload, hash } = await window.buildContractPayloadForQuote(quoteId);
+    const { error } = await sb.rpc('contrato_oferta_enviar', { p_quote_id: quoteId, p_payload: payload, p_hash: hash });
+    if (error) console.warn('No se pudo enviar el contrato de la oferta:', error);
+  } catch(err){
+    console.warn('No se pudo armar/enviar el contrato de la oferta:', err);
   }
 }
 

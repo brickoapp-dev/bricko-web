@@ -201,6 +201,30 @@ html.theme-anim * { transition: background-color .4s ease, border-color .4s ease
   .kpi-strip-4 .kpi:last-child { border-bottom: 0; }
 }
 
+/* KPI clicables */
+.kpi[role="button"] { cursor: pointer; transition: background-color .15s ease; }
+.kpi[role="button"]:hover { background: var(--bg-2); }
+.kpi[role="button"]:focus-visible { outline: 2px solid var(--orange); outline-offset: -2px; }
+
+/* Estado de carga / error de los contadores (KPI strip + nav-stats) */
+.kpi-strip.is-loading .kpi-n,
+.nav-stats.is-loading .n {
+  display: inline-block; min-width: 1.6em; height: .85em; border-radius: 4px;
+  background: var(--line-strong); color: transparent;
+  animation: skelPulse 1.5s ease-in-out infinite;
+}
+.kpi-strip.is-error .kpi-n,
+.nav-stats.is-error .n { color: #E54E10; }
+
+/* Filtro activo del panel "Mis obras" */
+.pj-filter-note {
+  margin: 6px 0 14px; font: 600 12px var(--body); color: var(--muted);
+}
+.pj-filter-clear {
+  background: none; border: 0; padding: 0; color: var(--orange);
+  font: 600 12px var(--body); text-decoration: underline; cursor: pointer;
+}
+
 /* MIS OFERTAS */
 .ofertas-head { margin-bottom: 8px; }
 .ofertas-table-wrap { overflow-x: auto; border: 1px solid var(--line-strong); background: var(--bg-1); }

@@ -28,15 +28,9 @@ function renderInvalido() {
     </div>`;
 }
 
-function downloadContratoFinal(contrato) {
+async function downloadContratoFinal(contrato) {
   const meta = `Versión ${contrato.version} · Firmado ${new Date(contrato.firmado_at).toLocaleString('es-AR')} · Hash ${contrato.hash.slice(0, 16)}…`;
-  const html = window.renderContratoHTML(contrato.payload, meta);
-  const win = window.open('', '_blank');
-  if (!win) { alert('Habilitá los pop-ups para ver/descargar el contrato.'); return; }
-  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Contrato firmado — v${contrato.version}</title></head><body>${html}</body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => win.print(), 300);
+  await window.descargarContratoPDF(contrato.payload, meta, null, `contrato-v${contrato.version}.pdf`);
 }
 
 function renderCarpeta(data) {

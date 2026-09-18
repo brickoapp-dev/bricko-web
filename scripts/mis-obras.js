@@ -12,6 +12,13 @@ const STATUS_MAP = {
   cancelled: { key: 'cancelled', label: 'Cancelada',      class: 'st-cancelled' }
 };
 
+// El toolbar solo tiene tabs para pending/quoted/active/done: 'preparing'
+// (cotización aceptada, profesional armando el arranque) se agrupa bajo
+// "En curso" para contar/filtrar, aunque su statusKey y label reales
+// sigan siendo 'preparing' — así el pill y el link a hitos/pagos (que
+// exigen o.statusKey === 'active') no aparecen antes de tiempo.
+const STATUS_GROUP = { pending: 'pending', quoted: 'quoted', preparing: 'active', active: 'active', done: 'done', cancelled: 'cancelled' };
+
 const URG_LABELS = {
   baja: 'Sin apuro',
   media: 'Este mes',

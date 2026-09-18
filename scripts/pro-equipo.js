@@ -12,6 +12,18 @@ const MODALIDAD_ROLE_CLASS = {
   dependiente:'dep', subcontratista:'sub', profesional:'pro'
 };
 
+// "estado" (columna vigente/revisar) queda sin usar acá: el pill de estado
+// se deriva de vencimiento, no del valor guardado.
+function vencimientoEstado(vencimiento){
+  if (!vencimiento) return { label:'Vigente', cls:'ok' };
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const venc = new Date(vencimiento + 'T00:00:00');
+  const en30 = new Date(hoy); en30.setDate(en30.getDate() + 30);
+  if (venc < hoy) return { label:'Vencido', cls:'err' };
+  if (venc <= en30) return { label:'Por vencer', cls:'orange' };
+  return { label:'Vigente', cls:'ok' };
+}
+
 function getSession(){
   try {
     const s = localStorage.getItem('bricko-session') || sessionStorage.getItem('bricko-session');
@@ -48,19 +60,23 @@ async function loadEquipo(){
 
   const tbody = document.getElementById('equipoTableBody');
   if (!data || !data.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="pj-small" style="padding:16px 11px">Todavía no agregaste participantes a tu equipo.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="pj-small" style="padding:16px 11px">Todavía no agregaste participantes a tu equipo.</td></tr>';
     return;
   }
-  tbody.innerHTML = data.map(p => `
+  tbody.innerHTML = data.map(p => {
+    const venc = vencimientoEstado(p.vencimiento);
+    return `
     <tr>
       <td><strong>${escapeHTML(p.nombre)}</strong><small>${escapeHTML(p.cuit || '')}</small></td>
       <td>${escapeHTML(p.especialidad || '—')}</td>
       <td><span class="pj-role ${MODALIDAD_ROLE_CLASS[p.modalidad] || ''}">${MODALIDAD_LABEL[p.modalidad] || p.modalidad}</span></td>
       <td><small>${escapeHTML(p.documentacion_nota || '—')}</small></td>
-      <td><span class="pj-status ${p.estado === 'vigente' ? 'ok' : 'warn'}">${p.estado === 'vigente' ? 'Vigente' : 'A revisar'}</span></td>
+      <td><small>${p.vencimiento ? new Date(p.vencimiento + 'T00:00:00').toLocaleDateString('es-AR') : '—'}</small></td>
+      <td><span class="pj-status ${venc.cls}">${venc.label}</span></td>
       <td><button class="pj-btn" data-delete-person="${p.id}">Quitar</button></td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function initModal(){
@@ -84,11 +100,12 @@ function initEvents(){
     const especialidad = document.getElementById('eEspecialidad').value.trim();
     const modalidad = document.getElementById('eModalidad').value;
     const documentacion_nota = document.getElementById('eNota').value.trim();
+    const vencimiento = document.getElementById('eVencimiento').value || null;
     if (!nombre){ toast('err', 'Falta el nombre', ''); return; }
 
     const { error } = await sb.from('pro_equipo').insert({
       pro_id: SESSION.userId, nombre, cuit: cuit || null, especialidad: especialidad || null,
-      modalidad, documentacion_nota: documentacion_nota || null
+      modalidad, documentacion_nota: documentacion_nota || null, vencimiento
     });
     if (error){ toast('err', 'No se pudo guardar', error.message); return; }
 

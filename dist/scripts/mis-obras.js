@@ -12,6 +12,13 @@ const STATUS_MAP = {
   cancelled: { key: 'cancelled', label: 'Cancelada',      class: 'st-cancelled' }
 };
 
+// El toolbar solo tiene tabs para pending/quoted/active/done: 'preparing'
+// (cotización aceptada, profesional armando el arranque) se agrupa bajo
+// "En curso" para contar/filtrar, aunque su statusKey y label reales
+// sigan siendo 'preparing' — así el pill y el link a hitos/pagos (que
+// exigen o.statusKey === 'active') no aparecen antes de tiempo.
+const STATUS_GROUP = { pending: 'pending', quoted: 'quoted', preparing: 'active', active: 'active', done: 'done', cancelled: 'cancelled' };
+
 const URG_LABELS = {
   baja: 'Sin apuro',
   media: 'Este mes',
@@ -38,6 +45,10 @@ const TICONS = {
 };
 
 let OBRAS_DATA = [];
+// Contrato (payload/version/estado + plantilla) de cada oferta, por quote_id
+// -- se completa en loadAll() y se usa desde los botones "Ver contrato"/
+// "Descargar PDF" de quoteItemHTML() (data-ver-contrato-oferta/data-descargar-contrato-oferta).
+let CONTRATO_OFERTA_BY_QUOTE = {};
 // null = sin filtro (se ven todas las obras); no hay botón "Todas" — es el
 // estado inicial antes de que el cliente elija un bucket.
 let CURRENT_STATUS_FILTER = null;
@@ -138,10 +149,29 @@ async function fetchClientObras(userId){
 
     const { data: quotes, error: quotesErr } = await sb
       .from('quotes')
-      .select('id, request_id, pro_id, amount, description, features, status, created_at, professionals!quotes_pro_id_fkey(rubro)')
+      .select('id, request_id, pro_id, amount, description, features, status, template_id, created_at, professionals!quotes_pro_id_fkey(rubro)')
       .in('request_id', reqIds)
       .order('created_at', { ascending: false });
     if (quotesErr) console.warn('Aviso cargando presupuestos:', quotesErr);
+
+    // Contrato de CADA oferta (no solo la aceptada) -- el cliente puede
+    // revisar/descargar el contrato de cualquier profesional que cotizó,
+    // antes de elegir. contrato_versiones_select ya deja leer cualquier
+    // hilo de una request propia, sin filtrar por quote.
+    if (quotes && quotes.length){
+      const { data: contratos, error: contratosErr } = await sb
+        .from('contrato_versiones')
+        .select('quote_id, version, payload, estado, hash')
+        .in('quote_id', quotes.map(q => q.id))
+        .order('version', { ascending: false });
+      if (contratosErr) console.warn('Aviso cargando contratos de las ofertas:', contratosErr);
+      const latestByQuote = {};
+      (contratos || []).forEach(c => { if (!latestByQuote[c.quote_id]) latestByQuote[c.quote_id] = c; });
+      quotes.forEach(q => {
+        q.contrato = latestByQuote[q.id] || null;
+        if (q.contrato) CONTRATO_OFERTA_BY_QUOTE[q.id] = { ...q.contrato, template_id: q.template_id || null };
+      });
+    }
 
     // profiles tiene RLS "solo propio perfil": se usa una función
     // SECURITY DEFINER que solo expone estos datos de pros que cotizaron
@@ -277,6 +307,12 @@ function updateCounters(){
 
 /* ── Eventos de filtros y búsqueda ───────────────────── */
 function initToolbarEvents(){
+  document.getElementById('contratoOfertaModal')?.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close-contrato-oferta-modal]') || e.target.id === 'contratoOfertaModal'){
+      document.getElementById('contratoOfertaModal').classList.remove('open');
+    }
+  });
+
   // Búsqueda
   const searchInput = document.getElementById('searchInput');
   if (searchInput){
@@ -368,6 +404,13 @@ function renderObras(){
 
   container.querySelectorAll('[data-reject-quote]').forEach(btn => {
     btn.addEventListener('click', () => handleRejectQuote(btn.dataset.rejectQuote));
+  });
+
+  container.querySelectorAll('[data-ver-contrato-oferta]').forEach(btn => {
+    btn.addEventListener('click', () => verContratoOferta(btn.dataset.verContratoOferta));
+  });
+  container.querySelectorAll('[data-descargar-contrato-oferta]').forEach(btn => {
+    btn.addEventListener('click', () => descargarContratoOferta(btn.dataset.descargarContratoOferta));
   });
 
   // Vincular apertura de imagen al hacer clic
@@ -584,9 +627,30 @@ function quoteItemHTML(q, hasAccepted){
         ${q.description ? `<p class="qitem-desc">${escapeHTML(q.description)}</p>` : ''}
       </div>
 
+      ${q.contrato ? `
+      <div class="qitem-actions" style="margin-top:10px">
+        <button class="btn-ghost" data-ver-contrato-oferta="${q.id}">Ver contrato</button>
+        <button class="btn-ghost" data-descargar-contrato-oferta="${q.id}">Descargar PDF</button>
+      </div>` : ''}
+
       ${actionBtns}
     </div>
   `;
+}
+
+/* ── Contrato de cada oferta (ver/descargar, antes de elegir) ────── */
+function verContratoOferta(quoteId){
+  const c = CONTRATO_OFERTA_BY_QUOTE[quoteId];
+  if (!c) return;
+  document.getElementById('contratoOfertaTitle').textContent = `Contrato -- versión ${c.version} (${c.estado})`;
+  document.getElementById('contratoOfertaBody').innerHTML = window.renderContratoHTML(c.payload, null, c.template_id);
+  document.getElementById('contratoOfertaModal')?.classList.add('open');
+}
+
+async function descargarContratoOferta(quoteId){
+  const c = CONTRATO_OFERTA_BY_QUOTE[quoteId];
+  if (!c) return;
+  await window.descargarContratoPDF(c.payload, `Versión ${c.version} · ${c.estado}`, c.template_id, `contrato-oferta-v${c.version}.pdf`);
 }
 
 /* ── Modal de confirmación (reemplaza confirm() nativo) ─ */
