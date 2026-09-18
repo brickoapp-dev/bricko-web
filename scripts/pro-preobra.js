@@ -7,12 +7,10 @@ const sb = window.supabase_client;
 const MILESTONE_STATUS_LABEL = { pending:'Pendiente', in_progress:'En curso', review:'A revisar', done:'Finalizado' };
 const MILESTONE_STATUS_CLASS = { pending:'', in_progress:'orange', review:'warn', done:'ok' };
 const MODALIDAD_LABEL = {
-  contratista:'Contratista', colaborador_independiente:'Colaborador independiente',
-  dependiente:'Dependiente', subcontratista:'Subcontratista', profesional:'Profesional'
+  colaborador_independiente:'Colaborador independiente', profesional:'Profesional'
 };
 const MODALIDAD_ROLE_CLASS = {
-  contratista:'contratista', colaborador_independiente:'padic',
-  dependiente:'dep', subcontratista:'sub', profesional:'pro'
+  colaborador_independiente:'padic', profesional:'pro'
 };
 const CONTRATO_ESTADO_LABEL = {
   null: 'Borrador', enviado: 'Enviado', aceptado_cliente: 'Aceptado por el cliente',
@@ -870,7 +868,7 @@ function initEvents(){
     if (member){
       nombreInput.value = member.nombre;
       espInput.value = member.especialidad || '';
-      if (['dependiente', 'subcontratista', 'colaborador_independiente', 'profesional'].includes(member.modalidad)) modInput.value = member.modalidad;
+      if (['colaborador_independiente', 'profesional'].includes(member.modalidad)) modInput.value = member.modalidad;
       obsInput.value = member.documentacion_nota || '';
       nombreInput.readOnly = true; espInput.readOnly = true; modInput.disabled = true;
     } else {
@@ -889,7 +887,7 @@ function initEvents(){
     const observaciones = document.getElementById('pObservaciones').value.trim();
     if (!hito_id){ toast('err', 'Falta el hito', 'Agregá al menos un hito antes de asignar participantes.'); return; }
     if (!nombre){ toast('err', 'Falta el nombre', ''); return; }
-    if (!modalidad){ toast('err', 'Falta la modalidad', 'Elegí una de las cuatro opciones.'); return; }
+    if (!modalidad){ toast('err', 'Falta la modalidad', 'Elegí una de las dos opciones.'); return; }
 
     const { error } = await sb.from('participantes').insert({
       hito_id, equipo_id, nombre, especialidad: especialidad || null, modalidad, observaciones: observaciones || null
