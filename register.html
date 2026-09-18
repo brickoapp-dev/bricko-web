@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('bricko-theme');
+      if (t === 'dark' || t === 'light' || t === 'blueprint')
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <meta name="description" content="Brickø — Creá tu cuenta como cliente o como profesional." />
+  <meta name="theme-color" content="#0A0A0A" />
+  <meta name="format-detection" content="telephone=no" />
+
+  <title>Brickø — Crear cuenta</title>
+
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 L22 7 L12 12 L2 7 Z' fill='%23F25C18'/%3E%3Cpath d='M2 7 L2 17 L12 22 L12 12 Z' fill='%231C1C1C'/%3E%3Cpath d='M22 7 L22 17 L12 22 L12 12 Z' fill='%232A2A2A'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles/auth.css" />
+</head>
+
+<body>
+
+  <div class="bg-grid"></div>
+
+  <!-- ====== NAV ====== -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand" aria-label="Brickø, volver al inicio">
+        <svg class="cube" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+          <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C" />
+          <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A" />
+        </svg>
+        <span style="display: flex; align-items: center;">BRICK<span class="o">Ø</span></span>
+      </a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path
+            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+        </svg>
+        <svg class="icon-plan" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ====== REGISTRO ====== -->
+  <main class="auth-page">
+    <div class="auth-modal" id="authRegister">
+      <header class="auth-head">
+        <span class="id">AUTH / REGISTER — 002</span>
+        <a class="auth-close" href="index.html" aria-label="Volver al inicio"></a>
+      </header>
+      <div class="auth-body">
+        <h2 class="auth-title" id="registerTitle">Creá tu<br>cuenta <em>Brickø.</em></h2>
+        <p class="auth-sub">Empezá a resolver tus obras en minutos. O sumate al equipo de profesionales.</p>
+
+        <form id="registerForm" novalidate>
+          <div class="role-tabs" data-role="cliente" id="regRoleTabs">
+            <span class="role-thumb"></span>
+            <button class="role-tab active" type="button" data-role="cliente">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 21V9l9-6 9 6v12h-6v-7h-6v7H3z" />
+              </svg> Soy cliente
+            </button>
+            <button class="role-tab" type="button" data-role="profesional">
+              <svg viewBox="0 0 24 24">
+                <path d="M2 10l3-5h14l3 5M2 10v9h20v-9M2 10h20M8 14h2M14 14h2" />
+              </svg> Soy profesional
+            </button>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label" for="regName"><span><span class="ix">/01</span> Nombre</span><span
+                  class="req">*</span></label>
+              <input type="text" id="regName" class="field-input" placeholder="Juan" autocomplete="given-name" />
+              <div class="field-msg">Requerido</div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="regLast"><span><span class="ix">/02</span> Apellido</span><span
+                  class="req">*</span></label>
+              <input type="text" id="regLast" class="field-input" placeholder="Pérez" autocomplete="family-name" />
+              <div class="field-msg">Requerido</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="regEmail"><span><span class="ix">/03</span> Email</span><span
+                class="req">*</span></label>
+            <input type="email" id="regEmail" class="field-input" placeholder="vos@ejemplo.com" autocomplete="email" />
+            <div class="field-msg">Ingresá un email válido</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="regPhone"><span><span class="ix">/04</span> Teléfono</span><span
+                class="req">*</span></label>
+            <input type="tel" id="regPhone" class="field-input" placeholder="+54 11 1234 5678" autocomplete="tel" />
+            <div class="field-msg">Ingresá un teléfono válido</div>
+          </div>
+
+          <!-- Campos para profesionales -->
+          <div class="pro-fields-wrapper hidden" id="regProFields">
+
+            <!-- Nombre de usuario -->
+            <div class="field">
+              <label class="field-label" for="regUsername"><span><span class="ix">/05</span> Nombre de
+                  usuario</span><span class="req">*</span></label>
+              <div class="field-wrap">
+                <span class="input-prefix"
+                  style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--accent,#F25C18); font-weight:600;">@</span>
+                <input type="text" id="regUsername" class="field-input" placeholder="miusuario"
+                  style="padding-left:28px;" />
+              </div>
+              <div class="field-msg">Ingresá tu nombre de usuario</div>
+            </div>
+
+            <!-- Rubros de Trabajo (múltiples) -->
+            <div class="field">
+              <label class="field-label"><span><span class="ix">/06</span> Rubros de trabajo</span><span
+                  class="req">*</span></label>
+              <div class="rubro-chips-select" id="regRubrosSelect">
+                <label class="rchip"><input type="checkbox" name="regRubro" value="plomeria">
+                  <span>Plomería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="gas"> <span>Gas</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="electricidad">
+                  <span>Electricidad</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="albanileria" checked>
+                  <span>Albañilería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="pintura">
+                  <span>Pintura</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="carpinteria">
+                  <span>Carpintería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="herreria">
+                  <span>Herrería</span></label>
+                <label class="rchip"><input type="checkbox" name="regRubro" value="jardineria">
+                  <span>Jardinería</span></label>
+              </div>
+              <div class="field-msg">Seleccioná al menos un rubro</div>
+            </div>
+
+            <!-- Número de DNI -->
+            <div class="field">
+              <label class="field-label" for="regDni"><span><span class="ix">/07</span> Número de DNI</span><span
+                  class="req">*</span></label>
+              <input type="text" id="regDni" class="field-input" placeholder="12345678" maxlength="10" />
+              <div class="field-msg">Ingresá tu DNI</div>
+            </div>
+
+            <!-- Foto de perfil -->
+            <div class="field">
+              <label class="field-label" for="regAvatar"><span><span class="ix">/08</span> Foto de perfil</span></label>
+              <div class="file-upload-box" id="boxRegAvatar">
+                <input type="file" id="regAvatar" class="file-input-hidden" accept="image/*" />
+                <div class="file-upload-content">
+                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  <div class="file-upload-info">
+                    <span class="file-upload-title">Subir foto de perfil</span>
+                    <span class="file-upload-hint">JPG, PNG o WEBP (Opcional)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DNI Frente -->
+            <div class="field">
+              <label class="field-label" for="regDniFront"><span><span class="ix">/09</span> DNI Frente</span><span
+                  class="req">*</span></label>
+              <div class="file-upload-box" id="boxRegDniFront">
+                <input type="file" id="regDniFront" class="file-input-hidden" accept="image/*" />
+                <div class="file-upload-content">
+                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8">
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <circle cx="9" cy="10" r="2" />
+                    <line x1="15" y1="8" x2="19" y2="8" />
+                    <line x1="15" y1="12" x2="19" y2="12" />
+                    <line x1="7" y1="16" x2="17" y2="16" />
+                  </svg>
+                  <div class="file-upload-info">
+                    <span class="file-upload-title">Subir DNI Frente</span>
+                    <span class="file-upload-hint">Imagen clara del frente del DNI</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DNI Dorso -->
+            <div class="field">
+              <label class="field-label" for="regDniBack"><span><span class="ix">/10</span> DNI Dorso</span><span
+                  class="req">*</span></label>
+              <div class="file-upload-box" id="boxRegDniBack">
+                <input type="file" id="regDniBack" class="file-input-hidden" accept="image/*" />
+                <div class="file-upload-content">
+                  <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8">
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <line x1="7" y1="8" x2="17" y2="8" />
+                    <line x1="7" y1="12" x2="17" y2="12" />
+                    <line x1="7" y1="16" x2="13" y2="16" />
+                  </svg>
+                  <div class="file-upload-info">
+                    <span class="file-upload-title">Subir DNI Dorso</span>
+                    <span class="file-upload-hint">Imagen clara del dorso del DNI</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dirección de Residencia -->
+            <div class="field">
+              <label class="field-label" for="regAddress"><span><span class="ix">/11</span> Dirección de
+                  residencia</span><span class="req">*</span></label>
+              <input type="text" id="regAddress" class="field-input" placeholder="Av. Corrientes 1234" />
+            </div>
+
+            <!-- Localidad / Ciudad -->
+            <div class="field">
+              <label class="field-label" for="regCity"><span><span class="ix">/12</span> Localidad / Ciudad</span><span
+                  class="req">*</span></label>
+              <input type="text" id="regCity" class="field-input" placeholder="CABA / La Plata" />
+            </div>
+
+            <!-- Provincia -->
+            <div class="field">
+              <label class="field-label" for="regProvince"><span><span class="ix">/13</span> Provincia</span><span
+                  class="req">*</span></label>
+              <select id="regProvince" class="field-input">
+                <option value="Buenos Aires">Buenos Aires</option>
+                <option value="CABA" selected>CABA</option>
+                <option value="Córdoba">Córdoba</option>
+                <option value="Santa Fe">Santa Fe</option>
+                <option value="Mendoza">Mendoza</option>
+                <option value="Otras">Otra Provincia</option>
+              </select>
+            </div>
+
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="regPass"><span><span class="ix" id="regPwIx">/05</span>
+                Contraseña</span><span class="req">*</span></label>
+            <div class="field-wrap">
+              <input type="password" id="regPass" class="field-input" placeholder="Mínimo 8 caracteres"
+                autocomplete="new-password" />
+              <button type="button" class="field-toggle" data-toggle="regPass" aria-label="Mostrar contraseña">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+            <div class="strength" id="regStrength"><span></span><span></span><span></span><span></span></div>
+            <div class="field-msg">La contraseña es muy débil</div>
+          </div>
+
+          <label class="field-check">
+            <input type="checkbox" id="regTerms" />
+            <span class="box"></span>
+            <span class="lbl">Acepto los <a href="terminos.html" target="_blank" rel="noopener">Términos y Condiciones</a>.</span>
+          </label>
+
+          <label class="field-check">
+            <input type="checkbox" id="regPrivacy" />
+            <span class="box"></span>
+            <span class="lbl">Leí la <a href="privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a>.</span>
+          </label>
+
+          <button type="submit" class="auth-submit" id="registerSubmitBtn" disabled>Crear cuenta <span class="arrow"></span></button>
+
+          <div class="auth-divider">o registrarte con</div>
+          <div class="auth-social">
+            <button type="button" class="auth-social-btn" data-social="google">
+              <svg viewBox="0 0 24 24">
+                <path fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05"
+                  d="M5.84 14.09A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.43.35-2.09V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93z" />
+                <path fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" />
+              </svg>
+              Google
+            </button>
+            <button type="button" class="auth-social-btn" data-social="apple">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+              </svg>
+              Apple
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="auth-foot">¿Ya tenés una cuenta?<a href="login.html">Ingresá</a></div>
+    </div>
+  </main>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script src="scripts/supabase.min.js"></script>
+  <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/legal-versions.js"></script>
+  <script src="scripts/01-auth.js"></script>
+  <script>
+    const $ = (sel, ctx = document) => ctx.querySelector(sel);
+    const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+
+    /* ============ THEME TOGGLE ============ */
+    (function initThemeToggle() {
+      const THEMES = ['dark', 'light', 'blueprint'];
+      $('#themeToggle')?.addEventListener('click', () => {
+        const html = document.documentElement;
+        html.classList.add('theme-anim');
+        const next = THEMES[(THEMES.indexOf(html.getAttribute('data-theme') || 'dark') + 1) % THEMES.length];
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('bricko-theme', next);
+        setTimeout(() => html.classList.remove('theme-anim'), 450);
+      });
+    })();
+
+    /* ============ TOASTS ============ */
+    const stack = $('#toastStack');
+    const ICONS = {
+      ok: '<path d="M20 6L9 17l-5-5"/>',
+      err: '<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/>',
+      info: '<circle cx="12" cy="12" r="9"/><path d="M12 8v.5M12 11v5"/>'
+    };
+    function toast(type, title, msg) {
+      const el = document.createElement('div');
+      el.className = 'toast ' + (type === 'ok' ? 'ok' : type === 'err' ? 'err' : '');
+      el.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor">' + (ICONS[type] || ICONS.info) + '</svg>'
+        + '<div><div class="t">' + title + '</div><div class="m">' + msg + '</div></div>';
+      stack.appendChild(el);
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+      setTimeout(() => { el.classList.remove('in'); setTimeout(() => el.remove(), 400); }, 4200);
+    }
+
+    /* ============ ROLE TABS ============ */
+    const roleState = { register: 'cliente' };
+    function setRole(role) {
+      roleState.register = role;
+      const tabs = $('#regRoleTabs');
+      tabs.setAttribute('data-role', role);
+      $$('.role-tab', tabs).forEach(t => t.classList.toggle('active', t.dataset.role === role));
+      const isPro = role === 'profesional';
+      const proFields = $('#regProFields');
+      if (proFields) proFields.classList.toggle('hidden', !isPro);
+      const pwIx = $('#regPwIx');
+      if (pwIx) pwIx.textContent = isPro ? '/14' : '/05';
+    }
+    $$('#regRoleTabs .role-tab').forEach(t => t.addEventListener('click', () => setRole(t.dataset.role)));
+
+    // Rol inicial por query string (?role=profesional), ej. desde los CTA de index.html
+    (function initRoleFromQuery() {
+      const role = new URLSearchParams(window.location.search).get('role');
+      if (role === 'profesional' || role === 'cliente') setRole(role);
+    })();
+
+    /* ============ MOSTRAR / OCULTAR CONTRASEÑA ============ */
+    $$('[data-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = $('#' + btn.dataset.toggle);
+        input.type = input.type === 'password' ? 'text' : 'password';
+      });
+    });
+
+    /* ============ STRENGTH METER ============ */
+    const regPass = $('#regPass'), strength = $('#regStrength');
+    regPass.addEventListener('input', () => {
+      const v = regPass.value; let s = 0;
+      if (v.length >= 8) s++;
+      if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+      if (/\d/.test(v)) s++;
+      if (/[^A-Za-z0-9]/.test(v)) s++;
+      strength.className = 'strength' + (v ? ' s' + s : '');
+    });
+
+    /* ============ VALIDACIÓN ============ */
+    const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+    const isPhone = v => v.replace(/[^\d]/g, '').length >= 8;
+    function fieldFail(input) {
+      if (!input) return;
+      const field = input.closest('.field');
+      if (field) field.classList.add('invalid');
+      input.classList.add('bad');
+      input.addEventListener('input', () => { if (field) field.classList.remove('invalid'); input.classList.remove('bad'); }, { once: true });
+    }
+    function clearForm(form) {
+      $$('.field', form).forEach(f => f.classList.remove('invalid'));
+      $$('.field-input', form).forEach(i => i.classList.remove('bad'));
+      $$('.file-upload-box', form).forEach(box => {
+        if (box.dataset.defaultTitle) {
+          const titleEl = box.querySelector('.file-upload-title');
+          if (titleEl) titleEl.textContent = box.dataset.defaultTitle;
+        }
+        box.classList.remove('has-file');
+      });
+    }
+
+    // Términos + Privacidad: las dos casillas son independientes y las
+    // dos tienen que estar tildadas para habilitar "Crear cuenta".
+    (function initRegisterConsentGate() {
+      const termsCb = $('#regTerms'), privacyCb = $('#regPrivacy'), submitBtn = $('#registerSubmitBtn');
+      if (!termsCb || !privacyCb || !submitBtn) return;
+      const update = () => { submitBtn.disabled = !(termsCb.checked && privacyCb.checked); };
+      termsCb.addEventListener('change', update);
+      privacyCb.addEventListener('change', update);
+      update();
+    })();
+
+    // REGISTER submit — usa Auth.register() de Supabase
+    $('#registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearForm(e.target);
+      let ok = true;
+      const fn = $('#regName'), ln = $('#regLast'), email = $('#regEmail'), phone = $('#regPhone'), pass = $('#regPass'), terms = $('#regTerms'), privacy = $('#regPrivacy');
+      if (fn.value.trim().length < 2) { fieldFail(fn); ok = false; }
+      if (ln.value.trim().length < 2) { fieldFail(ln); ok = false; }
+      if (!isEmail(email.value)) { fieldFail(email); ok = false; }
+      if (!isPhone(phone.value)) { fieldFail(phone); ok = false; }
+
+      let proData = {
+        username: '',
+        rubros: [],
+        dniNumber: '',
+        address: '',
+        city: '',
+        province: '',
+        avatarFile: null,
+        dniFrontFile: null,
+        dniBackFile: null
+      };
+
+      if (roleState.register === 'profesional') {
+        const username$ = $('#regUsername');
+        const dni$ = $('#regDni');
+        const address$ = $('#regAddress');
+        const city$ = $('#regCity');
+        const province$ = $('#regProvince');
+
+        const selectedRubros = $$('#regRubrosSelect input[name="regRubro"]:checked').map(cb => cb.value);
+
+        if (username$ && !username$.value.trim()) { fieldFail(username$); ok = false; }
+        if (dni$ && !dni$.value.trim()) { fieldFail(dni$); ok = false; }
+        if (address$ && !address$.value.trim()) { fieldFail(address$); ok = false; }
+        if (city$ && !city$.value.trim()) { fieldFail(city$); ok = false; }
+
+        if (!selectedRubros.length) {
+          toast('err', 'Rubro requerido', 'Seleccioná al menos un rubro de trabajo.');
+          ok = false;
+        }
+
+        const dniFrontFile = $('#regDniFront')?.files?.[0];
+        const dniBackFile = $('#regDniBack')?.files?.[0];
+
+        if (!dniFrontFile || !dniBackFile) {
+          toast('err', 'DNI requerido', 'Tenés que adjuntar foto del DNI (frente y dorso).');
+          ok = false;
+        }
+
+        proData = {
+          username: username$?.value.trim().replace(/^@/, '') || '',
+          rubros: selectedRubros,
+          dniNumber: dni$?.value.trim() || '',
+          address: address$?.value.trim() || '',
+          city: city$?.value.trim() || '',
+          province: province$?.value || 'CABA',
+          avatarFile: $('#regAvatar')?.files?.[0] || null,
+          dniFrontFile: dniFrontFile || null,
+          dniBackFile: dniBackFile || null
+        };
+      }
+
+      if (pass.value.length < 8) { fieldFail(pass); ok = false; }
+      if (!terms.checked || !privacy.checked) { toast('err', 'Falta un paso', 'Tenés que aceptar los Términos y leer la Política de Privacidad para crear la cuenta.'); ok = false; }
+      if (!ok) return;
+
+      const btn = e.target.querySelector('.auth-submit');
+      btn.classList.add('loading');
+      const aceptadoEn = new Date().toISOString();
+      try {
+        await Auth.register({
+          firstName: fn.value.trim(),
+          lastName: ln.value.trim(),
+          email: email.value.trim(),
+          phone: phone.value.trim(),
+          password: pass.value,
+          role: roleState.register,
+          username: proData.username,
+          rubros: proData.rubros,
+          oficio: proData.rubros[0] || null,
+          dniNumber: proData.dniNumber,
+          address: proData.address,
+          city: proData.city,
+          province: proData.province,
+          avatarFile: proData.avatarFile,
+          dniFrontFile: proData.dniFrontFile,
+          dniBackFile: proData.dniBackFile,
+          terminosVersion: window.BRICKO_LEGAL.terminos.version,
+          terminosAceptadoEn: aceptadoEn,
+          privacidadVersion: window.BRICKO_LEGAL.privacidad.version,
+          privacidadLeidaEn: aceptadoEn
+        });
+      } catch (err) {
+        btn.classList.remove('loading');
+        toast('err', 'Error', err.message || 'No se pudo crear la cuenta.');
+      }
+    });
+
+    // Social (demo)
+    $$('[data-social]').forEach(b => b.addEventListener('click', () => {
+      toast('info', 'Próximamente', 'El acceso con ' + (b.dataset.social === 'google' ? 'Google' : 'Apple') + ' se activa con el backend.');
+    }));
+  </script>
+</body>
+
+</html>

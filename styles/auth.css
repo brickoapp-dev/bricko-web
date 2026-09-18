@@ -482,9 +482,19 @@ svg {
   color: #fff;
 }
 
+.hidden {
+  display: none !important;
+}
+
 /* Campos */
 .field {
   margin-bottom: 16px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
 }
 
 .field-label {
@@ -648,6 +658,197 @@ svg {
   font-size: 13px;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.field-check .lbl a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--orange-line);
+  text-underline-offset: 3px;
+  position: relative;
+  z-index: 3;
+}
+
+/* Custom File Upload Box */
+.file-upload-box {
+  position: relative;
+  background: var(--bg-2);
+  border: 1.5px dashed var(--line-2);
+  border-radius: 8px;
+  padding: 13px 15px;
+  cursor: pointer;
+  transition: all .22s ease;
+  overflow: hidden;
+}
+
+.file-upload-box:hover {
+  border-color: var(--orange);
+  background: var(--orange-soft, rgba(242, 92, 24, 0.06));
+}
+
+.file-upload-box.has-file {
+  border-color: #3FB950;
+  border-style: solid;
+  background: rgba(63, 185, 80, 0.07);
+}
+
+.file-upload-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.file-upload-icon {
+  width: 22px;
+  height: 22px;
+  stroke: var(--orange);
+  flex-shrink: 0;
+  transition: stroke .2s ease;
+}
+
+.file-upload-box.has-file .file-upload-icon {
+  stroke: #3FB950;
+}
+
+.file-upload-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.file-upload-title {
+  font-family: var(--body);
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-upload-box.has-file .file-upload-title {
+  color: #3FB950;
+  font-weight: 700;
+}
+
+.file-upload-hint {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--muted-2);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.file-input-hidden {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.strength {
+  margin-top: 9px;
+  height: 3px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+.strength span {
+  background: var(--line-2);
+  border-radius: 2px;
+  transition: background .3s ease;
+}
+
+.strength.s1 span:nth-child(-n+1) {
+  background: var(--err);
+}
+
+.strength.s2 span:nth-child(-n+2) {
+  background: #E08A2C;
+}
+
+.strength.s3 span:nth-child(-n+3) {
+  background: #C7A93A;
+}
+
+/* Rubro Chips Select & Custom Checkboxes */
+.rubro-chips-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.rchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  transition: all .22s ease;
+}
+
+.rchip:hover {
+  border-color: var(--muted);
+  color: var(--ink);
+}
+
+.rchip input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+  position: relative;
+  outline: none;
+  flex-shrink: 0;
+  transition: all .2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rchip input[type="checkbox"]:hover {
+  border-color: var(--orange);
+}
+
+.rchip input[type="checkbox"]:checked {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.rchip input[type="checkbox"]:checked::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 8px;
+  border-right: 1.8px solid #fff;
+  border-bottom: 1.8px solid #fff;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.rchip:has(input:checked) {
+  border-color: var(--orange);
+  color: var(--ink);
+  background: var(--orange-soft, rgba(242, 92, 24, 0.08));
 }
 
 .auth-forgot {
@@ -917,6 +1118,10 @@ svg {
 
   .auth-body {
     padding: 24px 22px;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
   }
 }
 
