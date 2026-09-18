@@ -83,6 +83,9 @@ const Auth = {
     const selectedRubros = rubros && rubros.length ? rubros : (oficio ? [oficio] : []);
     const primaryRubro = selectedRubros[0] || oficio || 'albanileria';
 
+    // El registro siempre mantiene la sesión iniciada (no hay checkbox acá).
+    try { localStorage.setItem(window.BRICKO_REMEMBER_KEY, '1'); } catch(e){}
+
     const { data, error } = await sb.auth.signUp({
       email,
       password,
@@ -183,6 +186,12 @@ const Auth = {
 
   async login({email, password, remember}){
     const sb = window.supabase_client;
+    // Tiene que fijarse ANTES de signInWithPassword(): el SDK de Supabase
+    // escribe el token de sesión durante esa llamada, y el storage adapter
+    // de 00-supabase.js lee esta flag para decidir si lo persiste en
+    // localStorage o lo limita a sessionStorage (pestaña/sesión actual).
+    try { localStorage.setItem(window.BRICKO_REMEMBER_KEY, remember ? '1' : '0'); } catch(e){}
+
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
     if (error) throw new Error(error.message === 'Invalid login credentials'
@@ -249,6 +258,7 @@ const Auth = {
     try { sessionStorage.removeItem(this.STORAGE_KEY); } catch(e){}
     try { localStorage.removeItem(this.USER_KEY); } catch(e){}
     try { sessionStorage.removeItem(this.USER_KEY); } catch(e){}
+    try { localStorage.removeItem(window.BRICKO_REMEMBER_KEY); } catch(e){}
     // sb.auth.signOut() limpia la sesión en memoria del cliente, pero en
     // este proyecto el token persistido en localStorage (sb-<ref>-auth-token,
     // lo escribe/borra el SDK de Supabase, no esta app) puede sobrevivir
@@ -406,7 +416,12 @@ const Auth = {
         dniFrontUrl: verifData?.dni_front_url || null,
         dniBackUrl: verifData?.dni_back_url || null
       };
-      this._setSession(user);
+      // Reconstruye el storage local con la misma preferencia que se usó
+      // al loguear, para no "recordar" una sesión que el usuario pidió
+      // que viviera solo en esta pestaña (sessionStorage).
+      let remembered = true;
+      try { remembered = localStorage.getItem(window.BRICKO_REMEMBER_KEY) !== '0'; } catch(e){}
+      this._setSession(user, remembered);
     }
 
     this._render();
