@@ -28,15 +28,10 @@ function renderInvalido() {
     </div>`;
 }
 
-async function downloadContratoFinal(contrato) {
-  const meta = `Versión ${contrato.version} · Firmado ${new Date(contrato.firmado_at).toLocaleString('es-AR')} · Hash ${contrato.hash.slice(0, 16)}…`;
-  await window.descargarContratoPDF(contrato.payload, meta, null, `contrato-v${contrato.version}.pdf`);
-}
-
 function renderCarpeta(data) {
   const hitos = data.hitos || [];
   const participantes = data.participantes || [];
-  const contrato = data.contrato || null;
+  const contratoFirmado = data.contrato_firmado || false;
 
   const hitosHTML = hitos.length
     ? hitos.map(h => `
@@ -76,22 +71,15 @@ function renderCarpeta(data) {
       ${participantesHTML}
     </div>
 
-    ${contrato ? `
-      <div class="card">
-        <div class="card-label">Contrato</div>
-        <p class="card-sub">Firmado por las dos partes el ${new Date(contrato.firmado_at).toLocaleDateString('es-AR')} · versión ${contrato.version}.</p>
-        <button class="btn primary" id="btnVerContratoPublico">Ver / descargar contrato completo</button>
-      </div>
-    ` : ''}
+    <div class="card">
+      <div class="card-label">Contrato</div>
+      <p class="card-sub">${contratoFirmado
+        ? `Firmado por las dos partes${data.contrato_firmado_at ? ' el ' + new Date(data.contrato_firmado_at).toLocaleDateString('es-AR') : ''}. El contrato completo (con datos personales y montos) solo se ve iniciando sesión como el cliente o el profesional de esta obra.`
+        : 'Todavía no está firmado por las dos partes.'}</p>
+    </div>
 
-    <p class="footer-note">${contrato
-      ? 'Vista pública. El contrato completo (arriba) incluye datos personales y montos, disponible solo una vez firmado por las dos partes.'
-      : 'Vista pública de solo lectura. No incluye datos personales, montos ni documentación privada. El contrato completo se habilita acá una vez firmado por las dos partes.'}</p>
+    <p class="footer-note">Vista pública de solo lectura. No incluye datos personales, montos ni documentación privada.</p>
   `;
-
-  if (contrato) {
-    document.getElementById('btnVerContratoPublico').addEventListener('click', () => downloadContratoFinal(contrato));
-  }
 }
 
 async function init() {
