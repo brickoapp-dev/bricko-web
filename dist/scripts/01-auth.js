@@ -184,7 +184,7 @@ const Auth = {
     return user;
   },
 
-  async login({email, password, remember}){
+  async login({email, password, remember, role}){
     const sb = window.supabase_client;
     // Tiene que fijarse ANTES de signInWithPassword(): el SDK de Supabase
     // escribe el token de sesión durante esa llamada, y el storage adapter
@@ -202,6 +202,17 @@ const Auth = {
       .select('*')
       .eq('id', data.user.id)
       .single();
+
+    // signInWithPassword() ya validó la contraseña y dejó una sesión real
+    // armada -- si la pestaña elegida (cliente/profesional) no coincide con
+    // el rol real de la cuenta, hay que deshacerla antes de avisar, si no
+    // Auth.init() la encuentra en la próxima carga y loguea igual.
+    const actualRole = profile?.role || data.user.user_metadata?.role || 'cliente';
+    if (role && actualRole !== role) {
+      await this._clearAuthStorage();
+      const label = actualRole === 'profesional' ? 'Profesional' : 'Cliente';
+      throw new Error(`Esos datos pertenecen a una cuenta "${label}". Elegí esa pestaña para ingresar.`);
+    }
 
     let proData = null;
     let verifData = null;
@@ -251,7 +262,13 @@ const Auth = {
     return true;
   },
 
-  async logout(){
+  // sb.auth.signOut() limpia la sesión en memoria del cliente, pero en
+  // este proyecto el token persistido en localStorage (sb-<ref>-auth-token,
+  // lo escribe/borra el SDK de Supabase, no esta app) puede sobrevivir
+  // la llamada -- Auth.init() lo encuentra en la próxima carga y
+  // vuelve a loguear solo. Se lo borra a mano como red de seguridad, sin
+  // depender de que signOut() lo haya limpiado.
+  async _clearAuthStorage(){
     const sb = window.supabase_client;
     try { await sb.auth.signOut(); } catch(e){}
     try { localStorage.removeItem(this.STORAGE_KEY); } catch(e){}
@@ -259,17 +276,14 @@ const Auth = {
     try { localStorage.removeItem(this.USER_KEY); } catch(e){}
     try { sessionStorage.removeItem(this.USER_KEY); } catch(e){}
     try { localStorage.removeItem(window.BRICKO_REMEMBER_KEY); } catch(e){}
-    // sb.auth.signOut() limpia la sesión en memoria del cliente, pero en
-    // este proyecto el token persistido en localStorage (sb-<ref>-auth-token,
-    // lo escribe/borra el SDK de Supabase, no esta app) puede sobrevivir
-    // la llamada -- Auth.init() lo encuentra en la carga de index.html y
-    // vuelve a loguear solo, como si "cerrar sesión" no hubiera hecho nada.
-    // Se lo borra a mano como red de seguridad, sin depender de que
-    // signOut() lo haya limpiado.
     try {
       Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token')).forEach(k => localStorage.removeItem(k));
       Object.keys(sessionStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token')).forEach(k => sessionStorage.removeItem(k));
     } catch(e){}
+  },
+
+  async logout(){
+    await this._clearAuthStorage();
     window.location.replace('index.html');
   },
 
