@@ -303,6 +303,10 @@
                     <span class="pj-status warn" id="qrEstadoPill">—</span>
                   </div>
                   <div class="pj-share-box" id="qrLinkBox" style="display:none"><input type="text" id="qrLink" readonly /></div>
+                  <div id="qrImageBox" style="display:none;margin-top:12px;text-align:center">
+                    <div id="qrImageCanvas" style="display:inline-block;padding:12px;background:#fff;border-radius:4px"></div>
+                    <div style="margin-top:8px"><a href="#" id="btnDescargarQr" class="pj-small">Descargar QR (PNG)</a></div>
+                  </div>
 
                   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
                     <button class="pj-btn primary" id="btnGenerarCarpeta">Generar carpeta</button>
@@ -342,6 +346,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="scripts/contract-pdf.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="scripts/pro-preobra.js"></script>
 
 </body>

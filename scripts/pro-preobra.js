@@ -264,6 +264,27 @@ function tokenStatus(t){
   return 'vigente';
 }
 
+/* QR escaneable de verdad (no solo el link) -- qrcodejs (davidshimjs),
+   cargado por <script> en pro-preobra.html. Se re-renderiza entero en
+   cada cambio de estado en vez de reusar la instancia: más simple que
+   trackear el objeto QRCode entre renders y el costo es insignificante. */
+function renderQrImage(url){
+  const canvasBox = document.getElementById('qrImageCanvas');
+  canvasBox.innerHTML = '';
+  new QRCode(canvasBox, { text: url, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M });
+
+  const btnDescargar = document.getElementById('btnDescargarQr');
+  btnDescargar.onclick = (e) => {
+    e.preventDefault();
+    const canvas = canvasBox.querySelector('canvas');
+    if (!canvas) return;
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = 'qr-obra.png';
+    a.click();
+  };
+}
+
 function renderGate6(){
   const prep = STATE.prep;
 
@@ -301,20 +322,26 @@ function renderGate6(){
   const titulo = document.getElementById('qrEstadoTitulo');
   const detalle = document.getElementById('qrEstadoDetalle');
   const linkBox = document.getElementById('qrLinkBox');
+  const imageBox = document.getElementById('qrImageBox');
   const labelMap = { ninguno: 'Sin generar', vigente: 'Vigente', vencido: 'Vencido', revocado: 'Revocado' };
 
   if (!t){
     titulo.textContent = 'Sin QR generado';
     detalle.textContent = '';
     linkBox.style.display = 'none';
+    imageBox.style.display = 'none';
   } else {
     titulo.textContent = `Token generado ${new Date(t.creado_en).toLocaleString('es-AR')}`;
     detalle.textContent = t.vence_en ? `Vence ${new Date(t.vence_en).toLocaleDateString('es-AR')}` : 'Sin vencimiento';
     if (estado === 'vigente'){
+      const url = `${window.location.origin}/carpeta.html?t=${t.token}`;
       linkBox.style.display = '';
-      document.getElementById('qrLink').value = `${window.location.origin}/carpeta.html?t=${t.token}`;
+      document.getElementById('qrLink').value = url;
+      imageBox.style.display = '';
+      renderQrImage(url);
     } else {
       linkBox.style.display = 'none';
+      imageBox.style.display = 'none';
     }
   }
   pill.textContent = labelMap[estado];
