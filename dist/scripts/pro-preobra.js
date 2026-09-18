@@ -337,6 +337,19 @@ function setStatusPill(id, done, okLabel, pendingLabel){
   el.className = 'pj-status ' + (done ? 'ok' : 'warn');
 }
 
+// Un faltante de perfil_cliente no es navegable desde acá: es la
+// pantalla del cliente (client-perfil.html), y esta página es
+// pro-only -- ir ahí solo rebotaría al pro de vuelta a pro.html.
+const esCorregibleAqui = (f) => !!f.pantalla && f.origen !== 'perfil_cliente';
+
+// 'obra', 'plan_hitos', 'participantes' y 'oferta' apuntan todos a esta
+// misma pantalla (pro-preobra.html?...&gate=N) -- abrir eso en una pestaña
+// nueva solo duplica el wizard. Los mandamos al gate correspondiente en la
+// misma pestaña; solo perfil_profesional (properfil.html) es una pantalla
+// realmente distinta y amerita target="_blank".
+const esEstaPagina = (f) => !!f.pantalla && f.pantalla.startsWith('pro-preobra.html');
+const gateDesdePantalla = (pantalla) => Number((pantalla.match(/[?&]gate=(\d+)/) || [])[1]) || 1;
+
 function renderContrato(){
   const c = STATE.contrato;
   if (!c) return;
@@ -351,11 +364,6 @@ function renderContrato(){
     ? `Versión ${c.version.version} · enviado ${new Date(c.version.enviado_at).toLocaleString('es-AR')}`
       + (c.version.firmado_at ? ` · firmado ${new Date(c.version.firmado_at).toLocaleString('es-AR')}` : '')
     : 'Sin generar todavía';
-
-  // Un faltante de perfil_cliente no es navegable desde acá: es la
-  // pantalla del cliente (client-perfil.html), y esta página es
-  // pro-only -- ir ahí solo rebotaría al pro de vuelta a pro.html.
-  const esCorregibleAqui = (f) => !!f.pantalla && f.origen !== 'perfil_cliente';
 
   // motivo 'no_definido' ([12]-[21],[28]) es producto pendiente a propósito
   // (el PDF los referencia pero nadie definió el texto legal todavía, ver
@@ -373,7 +381,11 @@ function renderContrato(){
       ${c.faltantes.map(f => `
         <div class="pj-doc-row">
           <div><strong>[${f.id}] ${escapeHTML(f.label || 'Campo por definir')}</strong><small>${escapeHTML(f.nota || (f.motivo === 'vacio' ? (f.origen === 'perfil_cliente' ? 'Todavía no lo cargó el cliente en su perfil.' : 'Todavía no se cargó.') : 'Sin pantalla de origen todavía.'))}</small></div>
-          ${esCorregibleAqui(f) ? `<a class="pj-btn" href="${f.pantalla}" target="_blank" rel="noopener">Corregir</a>` : ''}
+          ${esCorregibleAqui(f)
+            ? (esEstaPagina(f)
+              ? `<button type="button" class="pj-btn" data-goto-gate="${gateDesdePantalla(f.pantalla)}">Corregir</button>`
+              : `<a class="pj-btn" href="${f.pantalla}" target="_blank" rel="noopener">Corregir</a>`)
+            : ''}
         </div>
       `).join('')}
     </div>` : '';
@@ -617,8 +629,10 @@ function initEvents(){
     }
 
     if (e.target.closest('#btnCorregirDatos')){
-      const destino = STATE.contrato.faltantes.find(f => f.pantalla && f.origen !== 'perfil_cliente');
-      if (destino) window.open(destino.pantalla, '_blank', 'noopener');
+      const destino = STATE.contrato.faltantes.find(esCorregibleAqui);
+      if (!destino) return;
+      if (esEstaPagina(destino)) { UI_GATE = gateDesdePantalla(destino.pantalla); render(); }
+      else window.open(destino.pantalla, '_blank', 'noopener');
       return;
     }
 
