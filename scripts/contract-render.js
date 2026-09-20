@@ -25,6 +25,16 @@ function campoMoney(data, clave, label) {
   return `<strong>${money(v)}</strong>`;
 }
 
+/* Envuelve el valor renderizado de un campo de texto simple en un span
+   editable (ver pro-preobra.js: click abre un input inline sobre esta
+   misma vista, sin salir al formulario de origen). `attrs` viene ya
+   armado (o null si el campo no es editable en este contexto/estado). */
+function campoEditable(data, clave, label, attrs) {
+  const inner = campo(data, clave, label);
+  if (!attrs) return inner;
+  return `<span class="cf-edit" ${attrs}>${inner}</span>`;
+}
+
 /* Nota común a las cláusulas resueltas con datos de la oferta (Objeto,
    Precio, Plazo) -- la REDACCIÓN LEGAL definitiva de estas cláusulas
    sigue sujeta al documento 01 de la serie (BRICKO_01_Contrato_Tipo_Referencias.pdf)
@@ -43,41 +53,70 @@ const CONTRACT_CSS = `
   .contrato-tabla th, .contrato-tabla td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; vertical-align: top; }
   .contrato-tabla th { background: #f2f2f2; }
   .contrato-meta { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666; margin-bottom: 18px; }
+  .contrato-doc .cf-edit { cursor: pointer; border-bottom: 1px dashed #1a66cc; }
+  .contrato-doc td.cf-edit { cursor: pointer; background: #f6faff; }
+  .contrato-doc .cf-edit-hint { font-size: 11px; color: #1a66cc; font-family: 'JetBrains Mono', monospace; margin: -8px 0 12px; }
   @media print { .contrato-doc { padding: 0; } }
 `;
 
-function renderContratoHTML(data, meta, templateId) {
+const MODALIDAD_LABEL_RENDER = { colaborador_independiente: 'Colaborador independiente', profesional: 'Profesional' };
+
+function renderContratoHTML(data, meta, templateId, editCtx) {
   data = data || {};
+  editCtx = editCtx || {};
   const plantilla = (window.BRICKO_CONTRACT_TEMPLATES || []).find(t => t.id === templateId);
   const aperturaObjeto = plantilla ? plantilla.aperturaObjeto : 'ejecutar';
   const hitoCount = (data.hito_titulo || []).length;
-  const hitoCelda = (arr, i, fmt) => {
+  const hitosEditable = !!editCtx.editable && !editCtx.hitosLocked;
+  const hitoIds = editCtx.hitoIds || [];
+
+  const hitoCelda = (arr, i, hitoId, col, fmt) => {
     const v = arr?.[i];
-    if (v === null || v === undefined || v === '') return '<mark class="cf-falta">falta</mark>';
-    return fmt ? fmt(v) : escapeHTML(String(v));
+    const vacio = v === null || v === undefined || v === '';
+    const display = vacio ? '<mark class="cf-falta">falta</mark>' : (fmt ? fmt(v) : escapeHTML(String(v)));
+    if (hitosEditable && hitoId) {
+      return `<td class="cf-edit" data-edit-hito="${hitoId}" data-edit-col="${col}" data-value="${escapeHTML(vacio ? '' : String(v))}">${display}</td>`;
+    }
+    return `<td>${display}</td>`;
   };
   const hitosRows = hitoCount
-    ? Array.from({ length: hitoCount }, (_, i) => `
+    ? Array.from({ length: hitoCount }, (_, i) => {
+      const hitoId = hitoIds[i];
+      return `
       <tr>
         <td>${i + 1}</td>
-        <td>${hitoCelda(data.hito_titulo, i)}</td>
-        <td>${hitoCelda(data.hito_resultado_verificable, i)}</td>
-        <td>${hitoCelda(data.hito_criterio_aceptacion, i)}</td>
-        <td>${hitoCelda(data.hito_monto, i, (v) => `$ ${money(v)}`)}</td>
-        <td>${hitoCelda(data.hito_fecha_objetivo, i)}</td>
-        <td>${hitoCelda(data.hito_responsable, i)}</td>
-        <td>${hitoCelda(data.plazo_observacion_dias, i, (v) => `${v} días`)}</td>
-      </tr>`).join('')
+        ${hitoCelda(data.hito_titulo, i, hitoId, 'titulo')}
+        ${hitoCelda(data.hito_resultado_verificable, i, hitoId, 'descripcion')}
+        ${hitoCelda(data.hito_criterio_aceptacion, i, hitoId, 'criterio_aceptacion')}
+        ${hitoCelda(data.hito_monto, i, hitoId, 'monto', (v) => `$ ${money(v)}`)}
+        ${hitoCelda(data.hito_fecha_objetivo, i, hitoId, 'fecha_estimada')}
+        ${hitoCelda(data.hito_responsable, i, hitoId, 'responsable_nombre')}
+        ${hitoCelda(data.plazo_observacion_dias, i, hitoId, 'plazo_observacion_dias', (v) => `${v} días`)}
+      </tr>`;
+    }).join('')
     : `<tr><td colspan="8"><mark class="cf-falta">falta: plan por hitos [22]-[27],[31]</mark></td></tr>`;
+  const hitosLockedHint = editCtx.editable && editCtx.hitosLocked
+    ? `<p class="cf-edit-hint">Plan por hitos confirmado -- para editarlo, reabrilo en la pestaña "Plan por hitos".</p>` : '';
 
   const participantes = data.participantes_listado || [];
+  const participanteIds = editCtx.participanteIds || [];
+  const participantesEditable = !!editCtx.editable;
+  const participanteCelda = (val, participanteId, col, display) => {
+    if (participantesEditable && participanteId) {
+      return `<td class="cf-edit" data-edit-participante="${participanteId}" data-edit-col="${col}" data-value="${escapeHTML(val || '')}">${display ?? escapeHTML(val || '')}</td>`;
+    }
+    return `<td>${display ?? escapeHTML(val || '')}</td>`;
+  };
   const participantesRows = participantes.length
-    ? participantes.map(p => `
+    ? participantes.map((p, i) => {
+      const pid = participanteIds[i];
+      return `
       <tr>
-        <td>${escapeHTML(p.nombre || '')}</td>
-        <td>${escapeHTML(p.especialidad || '')}</td>
-        <td>${escapeHTML(p.modalidad || '')}</td>
-      </tr>`).join('')
+        ${participanteCelda(p.nombre, pid, 'nombre')}
+        ${participanteCelda(p.especialidad, pid, 'especialidad')}
+        ${participanteCelda(p.modalidad, pid, 'modalidad', escapeHTML(MODALIDAD_LABEL_RENDER[p.modalidad] || p.modalidad || ''))}
+      </tr>`;
+    }).join('')
     : `<tr><td colspan="3"><mark class="cf-falta">falta: equipo de la obra [29]</mark></td></tr>`;
 
   const documentacion = (data.participantes_documentacion || []).join('; ');
@@ -98,10 +137,10 @@ function renderContratoHTML(data, meta, templateId) {
 
       <p>y ${campo(data, 'contratista_nombre_completo', '[6] Nombre/razón social del contratista')},
       DNI/CUIT ${campo(data, 'contratista_dni_cuit', '[7] DNI/CUIT del contratista')},
-      con domicilio contractual en ${campo(data, 'contratista_domicilio', '[8] Domicilio del contratista')},
+      con domicilio contractual en ${campoEditable(data, 'contratista_domicilio', '[8] Domicilio del contratista', editCtx.editable ? `data-edit-field="contratista_domicilio" data-value="${escapeHTML(data.contratista_domicilio || '')}"` : null)},
       correo ${campo(data, 'contratista_email', '[9] Correo del contratista')},
       condición fiscal ${campo(data, 'contratista_condicion_fiscal', '[10] Condición fiscal del contratista')}
-      y matrícula/registro ${campo(data, 'contratista_matricula', '[11] Matrícula del contratista')} cuando corresponda,
+      y matrícula/registro ${campoEditable(data, 'contratista_matricula', '[11] Matrícula del contratista', editCtx.editable ? `data-edit-field="contratista_matricula" data-entidad="${escapeHTML(editCtx.matricula?.entidad || '')}" data-numero="${escapeHTML(editCtx.matricula?.numero || '')}" data-vencimiento="${escapeHTML(editCtx.matricula?.vencimiento || '')}"` : null)} cuando corresponda,
       en adelante el "CONTRATISTA", se celebra el presente contrato de obra.</p>
 
       <h2>1. OBJETO</h2>
@@ -119,6 +158,7 @@ function renderContratoHTML(data, meta, templateId) {
       (fecha de inicio y de finalización exactas a coordinar entre las partes al habilitarse la obra). ${NOTA_REDACCION_LEGAL}</p>
 
       <h2>4. HITOS Y ENTREGABLES</h2>
+      ${hitosLockedHint}
       <table class="contrato-tabla">
         <thead><tr>
           <th>#</th><th>Título [22]</th><th>Resultado verificable [23]</th>
