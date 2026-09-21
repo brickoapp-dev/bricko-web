@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('bricko-theme');
+      if (t === 'dark' || t === 'light' || t === 'blueprint')
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <title>Brickø · Verificaciones pendientes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" media="print" onload="this.media='all'"
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  </noscript>
+  <link rel="stylesheet" href="styles/pro-dashboard.css" />
+  <style>
+    .admin-main { max-width: 980px; margin: 0 auto; padding: 40px var(--gutter) 80px; }
+    .admin-head { margin-bottom: 32px; }
+    .admin-head .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; color: var(--orange); text-transform: uppercase; display: inline-flex; align-items: center; gap: 10px; }
+    .admin-head .eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--orange); }
+    .admin-head h1 { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 5vw, 40px); letter-spacing: -.03em; text-transform: uppercase; color: var(--ink); margin: 10px 0 8px; }
+    .admin-head p { color: var(--muted); font-size: 14.5px; line-height: 1.6; max-width: 65ch; }
+
+    .empty { color: var(--muted); font-size: 14px; padding: 40px 0; text-align: center; }
+
+    .verif-card { background: var(--bg-1); border: 1px solid var(--line-strong); border-radius: 4px; padding: 26px; margin-bottom: 22px; }
+    .verif-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .verif-name { font-family: var(--display); font-weight: 800; font-size: 19px; color: var(--ink); text-transform: uppercase; letter-spacing: -.01em; }
+    .verif-meta { font-family: var(--mono); font-size: 11px; color: var(--muted-2); letter-spacing: .04em; }
+
+    .verif-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    @media (max-width: 560px) { .verif-grid { grid-template-columns: 1fr; } }
+    .verif-photo { border: 1px solid var(--line-strong); border-radius: 2px; background: var(--bg-2); aspect-ratio: 16/10; overflow: hidden; position: relative; }
+    .verif-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .verif-photo .ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted-2); font-size: 12px; }
+
+    .dni-barcode-status { margin-bottom: 16px; padding: 10px 12px; border-radius: 2px; border: 1px solid var(--line-strong); background: var(--bg-2); color: var(--muted-2); font-size: 12.5px; line-height: 1.5; }
+    .dni-barcode-status.ok { color: #3FB950; border-color: rgba(63,185,80,.35); background: rgba(63,185,80,.08); }
+    .dni-barcode-status.warn { color: #E54E10; border-color: rgba(229,78,16,.35); background: rgba(229,78,16,.08); }
+
+    .verif-actions { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .btn-approve, .btn-reject {
+      border: none; border-radius: 2px; padding: 10px 18px; font-family: var(--body); font-weight: 700;
+      font-size: 12px; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; transition: opacity .2s;
+    }
+    .btn-approve { background: #3FB950; color: #06210c; }
+    .btn-reject { background: transparent; color: #E54E10; border: 1px solid rgba(229,78,16,.5); }
+    .btn-approve:hover, .btn-reject:hover { opacity: .82; }
+    .btn-approve:disabled, .btn-reject:disabled { opacity: .5; cursor: default; }
+
+    .reject-box { display: none; flex: 1 1 260px; gap: 8px; flex-direction: column; }
+    .reject-box.open { display: flex; }
+    .reject-box textarea {
+      width: 100%; min-height: 60px; resize: vertical; background: var(--bg); border: 1px solid var(--line-strong);
+      border-radius: 2px; padding: 10px 12px; color: var(--ink); font-family: var(--body); font-size: 13px; outline: none;
+    }
+    .reject-box textarea:focus { border-color: var(--orange); }
+    .reject-box .reject-confirm-row { display: flex; gap: 8px; }
+  </style>
+</head>
+
+<body>
+  <div class="blueprint-grid"></div>
+  <div class="bg-spot"></div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand">
+        <svg class="cube" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+          <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C" />
+          <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A" />
+        </svg>
+        <span>BRICK<span class="o-slash">Ø</span></span>
+        <span class="pro-tag">ADMIN</span>
+      </a>
+      <div class="nav-right">
+        <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+          <svg class="icon-plan" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18" /></svg>
+        </button>
+        <button class="btn-logout" id="btnLogout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+            <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="admin-head">
+      <span class="eyebrow">Panel interno</span>
+      <h1>Verificaciones pendientes</h1>
+      <p>Revisá el frente y el dorso del DNI de cada profesional antes de aprobar. El cruce contra el código de barras es informativo (no siempre está disponible) y no reemplaza mirar la foto.</p>
+    </div>
+
+    <div id="list"></div>
+    <div class="empty" id="emptyState" hidden>No hay verificaciones pendientes.</div>
+  </main>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script src="scripts/supabase.min.js" defer></script>
+  <script src="scripts/00-supabase.js" defer></script>
+  <script src="scripts/01-auth.js" defer></script>
+  <script src="scripts/admin-verificaciones.js" defer></script>
+</body>
+
+</html>

@@ -87,6 +87,10 @@
 
     .btn-file { display: inline-block; margin-top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--orange); cursor: pointer; text-transform: uppercase; }
 
+    .dni-barcode-status { margin-top: 14px; padding: 10px 12px; border-radius: 2px; border: 1px solid var(--line-strong); background: var(--bg-2); color: var(--muted-2); font-size: 12.5px; line-height: 1.5; }
+    .dni-barcode-status.ok { color: #3FB950; border-color: rgba(63,185,80,.35); background: rgba(63,185,80,.08); }
+    .dni-barcode-status.warn { color: #E54E10; border-color: rgba(229,78,16,.35); background: rgba(229,78,16,.08); }
+
     .actions { display: flex; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 26px; }
     .btn-save {
       background: var(--orange); color: #000; border: none; border-radius: 2px; padding: 12px 24px;
@@ -309,6 +313,8 @@
             <label class="btn-file" for="dniBackInput">Elegir dorso</label>
           </div>
         </div>
+        <div class="dni-barcode-status" id="dniBarcodeStatus" hidden></div>
+        <div class="hint">El dorso trae un código de barras con tus datos: si tu navegador lo puede leer, lo cruzamos automáticamente contra el DNI que cargaste arriba. Esto no reemplaza la revisión manual, solo te avisa antes de guardar si algo no coincide.</div>
       </div>
     </div>
 
