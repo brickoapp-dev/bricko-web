@@ -11,8 +11,7 @@ const HITO_ESTADO_CLASS = { pending: '', in_progress: 'warn', review: 'warn', do
 const DOC_PUBLICO_LABEL = { completo: 'Vigente', registrado: 'Por vencer', revisar: 'Vencido / pendiente' };
 const DOC_PUBLICO_CLASS = { completo: 'ok', registrado: 'warn', revisar: 'err' };
 const MODALIDAD_LABEL = {
-  contratista: 'Contratista', colaborador_independiente: 'Colaborador independiente',
-  dependiente: 'Dependiente', subcontratista: 'Subcontratista', profesional: 'Profesional'
+  colaborador_independiente: 'Colaborador independiente', profesional: 'Profesional'
 };
 
 function escapeHTML(s) {

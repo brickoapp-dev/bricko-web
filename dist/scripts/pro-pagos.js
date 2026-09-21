@@ -6,8 +6,7 @@ const sb = window.supabase_client;
 const PAGO_LABEL = { pending:'Pendiente', approved:'Aprobado', paid:'Pagado' };
 const PAGO_CLASS = { pending:'', approved:'warn', paid:'ok' };
 const MODALIDAD_LABEL = {
-  contratista:'Contratista', colaborador_independiente:'Colaborador independiente',
-  dependiente:'Dependiente', subcontratista:'Subcontratista', profesional:'Profesional'
+  colaborador_independiente:'Colaborador independiente', profesional:'Profesional'
 };
 
 function getSession(){

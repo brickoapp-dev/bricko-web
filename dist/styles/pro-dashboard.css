@@ -1132,7 +1132,7 @@ main { padding-top: 64px; }
 .req-card.quoted:hover::before { width: 100%; }
 
 .rc-ribbon {
-  position: absolute; top: 14px; right: 16px;
+  display: inline-block; margin-bottom: 10px;
   font-family: var(--mono); font-size: 9px;
   letter-spacing: .14em; text-transform: uppercase;
   color: #3FB950; border: 1px solid rgba(63,185,80,.3);

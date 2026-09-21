@@ -1380,7 +1380,7 @@ body.modal-lock { overflow: hidden; }
 .qitem-card.is-rejected { opacity: .5; }
 
 .qitem-status {
-  position: absolute; top: 12px; right: 16px;
+  display: inline-block; margin-bottom: 10px;
   font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em;
   text-transform: uppercase; padding: 2px 8px; border-radius: 2px; font-weight: 600;
 }

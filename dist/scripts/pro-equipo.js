@@ -4,12 +4,10 @@
 const sb = window.supabase_client;
 
 const MODALIDAD_LABEL = {
-  contratista:'Contratista', colaborador_independiente:'Colaborador independiente',
-  dependiente:'Dependiente', subcontratista:'Subcontratista', profesional:'Profesional'
+  colaborador_independiente:'Colaborador independiente', profesional:'Profesional'
 };
 const MODALIDAD_ROLE_CLASS = {
-  contratista:'contratista', colaborador_independiente:'padic',
-  dependiente:'dep', subcontratista:'sub', profesional:'pro'
+  colaborador_independiente:'padic', profesional:'pro'
 };
 
 // "estado" (columna vigente/revisar) queda sin usar acá: el pill de estado
@@ -51,11 +49,9 @@ async function loadEquipo(){
   const { data, error } = await sb.from('pro_equipo').select('*').order('created_at', { ascending: false });
   if (error){ toast('err', 'Error de conexión', 'No pudimos cargar tu equipo.'); return; }
 
-  const counts = { colaborador_independiente: 0, dependiente: 0, subcontratista: 0, profesional: 0 };
+  const counts = { colaborador_independiente: 0, profesional: 0 };
   (data || []).forEach(p => { if (counts[p.modalidad] != null) counts[p.modalidad]++; });
   document.getElementById('mPadic').textContent = counts.colaborador_independiente + ' / 3';
-  document.getElementById('mDep').textContent = counts.dependiente;
-  document.getElementById('mSub').textContent = counts.subcontratista;
   document.getElementById('mPro').textContent = counts.profesional;
 
   const tbody = document.getElementById('equipoTableBody');

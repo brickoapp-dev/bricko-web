@@ -60,16 +60,6 @@ window.REQUISITOS_POR_MODALIDAD = {
     { tipo: 'asignacion_hito', label: 'Asignación al hito' },
     { tipo: 'factura_propia', label: 'Factura propia' }
   ],
-  dependiente: [
-    { tipo: 'registracion_laboral', label: 'Registración laboral (ARCA)' },
-    { tipo: 'cobertura_riesgos', label: 'Cobertura de riesgos correspondiente' }
-  ],
-  subcontratista: [
-    { tipo: 'contrato', label: 'Contrato' },
-    { tipo: 'cuit', label: 'CUIT' },
-    { tipo: 'facturacion', label: 'Facturación' },
-    { tipo: 'documentacion_tecnica', label: 'Documentación técnica aplicable' }
-  ],
   profesional: [
     { tipo: 'matricula', label: 'Matrícula' },
     { tipo: 'contrato_profesional', label: 'Contrato profesional' },

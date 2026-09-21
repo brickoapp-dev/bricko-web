@@ -7,12 +7,10 @@ const sb = window.supabase_client;
 const MILESTONE_STATUS_LABEL = { pending:'Pendiente', in_progress:'En curso', review:'A revisar', done:'Finalizado' };
 const MILESTONE_STATUS_CLASS = { pending:'', in_progress:'orange', review:'warn', done:'ok' };
 const MODALIDAD_LABEL = {
-  contratista:'Contratista', colaborador_independiente:'Colaborador independiente',
-  dependiente:'Dependiente', subcontratista:'Subcontratista', profesional:'Profesional'
+  colaborador_independiente:'Colaborador independiente', profesional:'Profesional'
 };
 const MODALIDAD_ROLE_CLASS = {
-  contratista:'contratista', colaborador_independiente:'padic',
-  dependiente:'dep', subcontratista:'sub', profesional:'pro'
+  colaborador_independiente:'padic', profesional:'pro'
 };
 const CONTRATO_ESTADO_LABEL = {
   null: 'Borrador', enviado: 'Enviado', aceptado_cliente: 'Aceptado por el cliente',
@@ -181,7 +179,9 @@ async function loadQrState(){
 
 /* ── Contrato: payload+hash en vivo, reconciliación y versión activa ── */
 async function loadContratoState(){
-  const { payload, hash } = await window.buildContractPayload(REQ_ID);
+  const contractData = await window.getContractData(REQ_ID);
+  const { _raw, ...payload } = contractData;
+  const hash = await window.sha256Hex(window.canonicalStringify(payload));
   const faltantes = await window.validateContractData(REQ_ID);
 
   await sb.rpc('contrato_invalidar_si_cambio', { p_request_id: REQ_ID, p_hash_actual: hash });
@@ -209,7 +209,7 @@ async function loadContratoState(){
     }
   }
 
-  STATE.contrato = { payload, hash, faltantes, version, aceptaciones, templateId };
+  STATE.contrato = { payload, hash, faltantes, version, aceptaciones, templateId, raw: _raw };
 }
 
 /* ── Render ──────────────────────────────────────────── */
@@ -655,6 +655,12 @@ function initEvents(){
       return;
     }
 
+    const editTarget = e.target.closest('[data-edit-field], [data-edit-hito], [data-edit-participante]');
+    if (editTarget){
+      startInlineEdit(editTarget);
+      return;
+    }
+
     if (e.target.closest('#btnCorregirDatos')){
       const destino = STATE.contrato.faltantes.find(esCorregibleAqui);
       if (!destino) return;
@@ -870,7 +876,7 @@ function initEvents(){
     if (member){
       nombreInput.value = member.nombre;
       espInput.value = member.especialidad || '';
-      if (['dependiente', 'subcontratista', 'colaborador_independiente', 'profesional'].includes(member.modalidad)) modInput.value = member.modalidad;
+      if (['colaborador_independiente', 'profesional'].includes(member.modalidad)) modInput.value = member.modalidad;
       obsInput.value = member.documentacion_nota || '';
       nombreInput.readOnly = true; espInput.readOnly = true; modInput.disabled = true;
     } else {
@@ -889,7 +895,7 @@ function initEvents(){
     const observaciones = document.getElementById('pObservaciones').value.trim();
     if (!hito_id){ toast('err', 'Falta el hito', 'Agregá al menos un hito antes de asignar participantes.'); return; }
     if (!nombre){ toast('err', 'Falta el nombre', ''); return; }
-    if (!modalidad){ toast('err', 'Falta la modalidad', 'Elegí una de las cuatro opciones.'); return; }
+    if (!modalidad){ toast('err', 'Falta la modalidad', 'Elegí una de las dos opciones.'); return; }
 
     const { error } = await sb.from('participantes').insert({
       hito_id, equipo_id, nombre, especialidad: especialidad || null, modalidad, observaciones: observaciones || null
@@ -913,10 +919,193 @@ function initEvents(){
 }
 
 /* ── Contrato: preview modal y descarga final ────────────────────────── */
+// Solo la vista en vivo del borrador (la única que llama openContratoPreview,
+// vía btnVerBorrador) admite edición inline -- una versión ya firmada nunca
+// pasa por acá (btnDescargarFinal va directo a downloadContratoFinal()).
+function buildContratoEditCtx(){
+  const c = STATE.contrato;
+  if (!c) return {};
+  const estado = c.version ? c.version.estado : null;
+  if (estado === 'firmado') return { editable: false };
+  const raw = c.raw || {};
+  const proVerif = raw.proVerif || {};
+  return {
+    editable: true,
+    hitosLocked: !!STATE.planHitos?.version,
+    hitoIds: (raw.hitos || []).map(h => h.id),
+    participanteIds: (raw.participantes || []).map(p => p.id),
+    matricula: {
+      entidad: proVerif.matricula_entidad || '',
+      numero: proVerif.matricula_numero || '',
+      vencimiento: proVerif.matricula_vencimiento || ''
+    }
+  };
+}
+
 function openContratoPreview(payload, titulo){
   document.getElementById('contratoPreviewTitle').textContent = titulo;
-  document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(payload, null, STATE.contrato?.templateId);
+  document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(payload, null, STATE.contrato?.templateId, buildContratoEditCtx());
   document.getElementById('contratoPreviewModal').classList.add('open');
+}
+
+// Refresca el modal de borrador en el lugar (sin cerrarlo) después de que
+// una edición inline haya recargado STATE -- así el trabajador sigue
+// leyendo/editando el contrato sin perder el scroll ni la sensación de
+// "en vivo" que pide el pedido original.
+function refreshContratoModalIfOpen(){
+  const modal = document.getElementById('contratoPreviewModal');
+  if (!modal || !modal.classList.contains('open')) return;
+  const titulo = document.getElementById('contratoPreviewTitle').textContent;
+  openContratoPreview(STATE.contrato.payload, titulo);
+}
+
+/* ── Edición inline sobre el borrador del contrato ───────────────────
+   Despacha según qué atributo data-edit-* trae la celda/span clickeado
+   (ver contract-render.js) y delega el guardado real en startTextEdit(),
+   que reemplaza el contenido por un input, guarda con Enter/blur y
+   recarga todo (loadAll) + re-renderiza el modal en el lugar para que
+   el trabajador siga leyendo el contrato ya actualizado. */
+function startInlineEdit(el){
+  if (el.dataset.editing) return;
+
+  if (el.dataset.editField === 'contratista_matricula') return startMatriculaEdit(el);
+
+  if (el.dataset.editField === 'contratista_domicilio'){
+    return startTextEdit(el, el.dataset.value || '', 'text', async (val) => {
+      const { error } = await sb.from('professional_verification')
+        .update({ usa_domicilio_alt: true, domicilio_contractual: val.trim() || null })
+        .eq('id', SESSION.userId);
+      return error;
+    });
+  }
+
+  const hitoId = el.dataset.editHito;
+  if (hitoId){
+    const col = el.dataset.editCol;
+    const type = (col === 'monto' || col === 'plazo_observacion_dias') ? 'number' : (col === 'fecha_estimada' ? 'date' : 'text');
+    return startTextEdit(el, el.dataset.value || '', type, async (val) => {
+      const patch = {};
+      if (col === 'monto') patch.monto = Number(val) || 0;
+      else if (col === 'plazo_observacion_dias'){ patch.plazo_observacion_dias = val === '' ? null : Number(val); patch.plazo_propio = true; }
+      else if (col === 'fecha_estimada') patch.fecha_estimada = val || null;
+      else patch[col] = val.trim() || null;
+      const { error } = await sb.from('hitos').update(patch).eq('id', hitoId);
+      return error;
+    });
+  }
+
+  const participanteId = el.dataset.editParticipante;
+  if (participanteId){
+    const col = el.dataset.editCol;
+    if (col === 'modalidad') return startModalidadEdit(el, participanteId);
+    return startTextEdit(el, el.dataset.value || '', 'text', async (val) => {
+      const { error } = await sb.from('participantes').update({ [col]: val.trim() || null }).eq('id', participanteId);
+      return error;
+    });
+  }
+}
+
+function startTextEdit(el, value, type, saveFn){
+  el.dataset.editing = '1';
+  const originalHTML = el.innerHTML;
+  const input = document.createElement('input');
+  input.type = type;
+  if (type === 'number') input.step = 'any';
+  input.value = value;
+  input.className = 'cf-edit-input';
+  input.style.cssText = 'width:100%;min-width:60px;font:inherit;padding:2px 4px;box-sizing:border-box';
+  el.innerHTML = '';
+  el.appendChild(input);
+  input.focus();
+  input.select();
+
+  let done = false;
+
+  const commit = async () => {
+    if (done) return;
+    const val = input.value;
+    input.disabled = true;
+    const error = await saveFn(val);
+    if (error){
+      toast('err', 'No se pudo guardar', error.message || 'Intentá de nuevo.');
+      input.disabled = false;
+      input.focus();
+      return;
+    }
+    done = true;
+    delete el.dataset.editing;
+    toast('ok', 'Guardado', '');
+    await loadAll();
+    refreshContratoModalIfOpen();
+  };
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter'){ e.preventDefault(); commit(); }
+    else if (e.key === 'Escape'){ e.preventDefault(); done = true; el.innerHTML = originalHTML; delete el.dataset.editing; }
+  });
+  input.addEventListener('blur', () => { if (!done) commit(); });
+}
+
+function startModalidadEdit(el, participanteId){
+  el.dataset.editing = '1';
+  const originalHTML = el.innerHTML;
+  const current = el.dataset.value || '';
+  const select = document.createElement('select');
+  select.className = 'cf-edit-input';
+  select.innerHTML = `
+    <option value="colaborador_independiente"${current === 'colaborador_independiente' ? ' selected' : ''}>Colaborador independiente</option>
+    <option value="profesional"${current === 'profesional' ? ' selected' : ''}>Profesional</option>`;
+  el.innerHTML = '';
+  el.appendChild(select);
+  select.focus();
+
+  select.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape'){ e.preventDefault(); el.innerHTML = originalHTML; delete el.dataset.editing; }
+  });
+  select.addEventListener('change', async () => {
+    select.disabled = true;
+    const { error } = await sb.from('participantes').update({ modalidad: select.value }).eq('id', participanteId);
+    if (error){ toast('err', 'No se pudo guardar', error.message); select.disabled = false; return; }
+    delete el.dataset.editing;
+    toast('ok', 'Modalidad actualizada', '');
+    await loadAll();
+    refreshContratoModalIfOpen();
+  });
+}
+
+function startMatriculaEdit(el){
+  el.dataset.editing = '1';
+  const originalHTML = el.innerHTML;
+  const entidad = el.dataset.entidad || '';
+  const numero = el.dataset.numero || '';
+  const vencimiento = el.dataset.vencimiento || '';
+  el.innerHTML = `
+    <span style="display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap">
+      <input class="cf-edit-input" data-m="entidad" placeholder="Entidad" value="${escapeHTML(entidad)}" style="width:110px" />
+      <input class="cf-edit-input" data-m="numero" placeholder="Número" value="${escapeHTML(numero)}" style="width:80px" />
+      <input class="cf-edit-input" data-m="vencimiento" type="date" value="${escapeHTML(vencimiento)}" style="width:130px" />
+      <button type="button" class="pj-btn" data-m-save>Guardar</button>
+      <button type="button" class="pj-btn" data-m-cancel>Cancelar</button>
+    </span>`;
+
+  el.querySelector('[data-m-cancel]').addEventListener('click', () => {
+    el.innerHTML = originalHTML;
+    delete el.dataset.editing;
+  });
+  el.querySelector('[data-m-save]').addEventListener('click', async () => {
+    const val = (name) => el.querySelector(`[data-m="${name}"]`).value.trim();
+    const { error } = await sb.from('professional_verification').update({
+      matricula_entidad: val('entidad') || null,
+      matricula_numero: val('numero') || null,
+      matricula_vencimiento: val('vencimiento') || null
+    }).eq('id', SESSION.userId);
+    if (error){ toast('err', 'No se pudo guardar', error.message); return; }
+    delete el.dataset.editing;
+    toast('ok', 'Matrícula actualizada', '');
+    await loadAll();
+    refreshContratoModalIfOpen();
+  });
+  el.querySelector('[data-m="entidad"]').focus();
 }
 
 async function downloadContratoFinal(version){
