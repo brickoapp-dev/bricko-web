@@ -30,7 +30,13 @@
   </noscript>
   <link rel="stylesheet" href="styles/pro-dashboard.css" />
   <style>
-    .perfil-main { max-width: 860px; margin: 0 auto; padding: 40px var(--gutter) 80px; }
+    /* El nav es position:fixed y mide 64px (+ notch), pero el padding
+       shorthand de .perfil-main pisaba el `main { padding-top: 64px }` de
+       pro-dashboard.css, así que el eyebrow "Mi cuenta" quedaba debajo de la
+       barra. Reservamos el alto del nav acá. Por debajo de 640px el nav pasa
+       a sticky y ocupa su propio lugar, así que ahí no hace falta. */
+    .perfil-main { max-width: 860px; margin: 0 auto; padding: calc(64px + env(safe-area-inset-top) + 36px) var(--gutter) 80px; }
+    @media (max-width: 640px) { .perfil-main { padding-top: 24px; } }
     .perfil-head { margin-bottom: 32px; }
     .perfil-head .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; color: var(--orange); text-transform: uppercase; display: inline-flex; align-items: center; gap: 10px; }
     .perfil-head .eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--orange); }
@@ -38,17 +44,26 @@
     .perfil-head p { color: var(--muted); font-size: 14.5px; line-height: 1.6; max-width: 60ch; }
 
     .card { background: var(--bg-1); border: 1px solid var(--line-strong); border-radius: 4px; padding: 26px; margin-bottom: 22px; }
-    .card-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; color: var(--muted-2); text-transform: uppercase; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+    .card-label { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
     .card-label .lock { color: var(--orange); }
 
-    .avatar-row { display: flex; align-items: center; gap: 22px; }
+    .avatar-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+    .avatar-row .avatar-actions { min-width: 0; }
+    .avatar-row .avatar-actions .hint { margin-top: 8px; }
     .avatar-preview { width: 92px; height: 92px; border-radius: 50%; object-fit: cover; background: var(--bg-3); border: 1px solid var(--line-strong); display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 30px; color: var(--muted); overflow: hidden; flex-shrink: 0; }
     .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
 
-    .field { margin-bottom: 18px; }
+    .field { margin-bottom: 20px; }
     .field:last-child { margin-bottom: 0; }
     .field > label { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; }
-    .field .hint { font-size: 11.5px; color: var(--muted-2); margin-top: 6px; }
+    /* Dos arreglos acá:
+       - El selector era `.field .hint`, así que las ayudas que viven fuera de
+         un .field (la de la foto de perfil, la del campo [6]) se quedaban sin
+         estilo y salían en 16px blanco, mucho más grandes que el resto.
+       - --muted-2 daba 2.6:1 de contraste sobre la tarjeta en tema claro, por
+         debajo del mínimo AA (4.5:1) para texto chico. Con --muted queda en
+         ~6:1 en los tres temas y sigue leyéndose como texto secundario. */
+    .hint { font-size: 11.5px; line-height: 1.5; color: var(--muted); margin-top: 6px; overflow-wrap: anywhere; }
     input[type="text"], input[type="number"], input[type="date"] {
       width: 100%; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 2px;
       padding: 12px 14px; color: var(--ink); font-family: var(--body); font-size: 14px; outline: none;
@@ -63,15 +78,31 @@
     }
     select:focus { border-color: var(--orange); background: var(--bg-1); box-shadow: 0 0 0 3px var(--orange-dim); }
     .field.invalid input[type="text"], .field.invalid input[type="date"], .field.invalid select { border-color: #E54E10; }
-    .field-error { font-size: 11.5px; color: #E54E10; margin-top: 6px; display: none; }
+    .field-error { font-size: 11.5px; line-height: 1.5; color: #E54E10; margin-top: 6px; display: none; }
     .field.invalid .field-error { display: block; }
-    .checkbox-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .checkbox-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    /* Era un <a> inline: el margin-top del .hint no lo separaba del texto de
+       arriba y las dos líneas quedaban pegadas. */
+    .link-legal { display: inline-block; color: var(--orange); text-decoration: underline; text-underline-offset: 2px; }
     .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--orange); cursor: pointer; flex-shrink: 0; }
     .checkbox-row label { font-family: var(--body); font-size: 13px; color: var(--ink-2); cursor: pointer; text-transform: none; letter-spacing: normal; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    /* Las celdas de una grilla ya se separan con el `gap`: si además
+       conservan su margin-bottom, el texto de ayuda que va debajo de la
+       grilla queda pegado. El margen lo lleva la grilla entera. */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .grid-2:last-child { margin-bottom: 0; }
+    .grid-2 > .field { margin-bottom: 0; }
     @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
 
+    /* Ayuda que describe a la grilla anterior, no a un campo suelto. */
+    .hint-grid { margin: -10px 0 20px; }
+
     .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    /* Subgrupo de campos (matrícula, foto de DNI): título propio y un poco
+       de aire para que no se lea como si fuera la etiqueta del primer campo. */
+    .subgroup { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 4px; }
+    .subgroup > .subgroup-title { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
 
     .dni-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 560px) { .dni-grid { grid-template-columns: 1fr; } }
@@ -85,13 +116,25 @@
     .drop .ph svg { width: 26px; height: 26px; stroke: var(--muted-2); margin-bottom: 8px; }
     .drop.filled .ph { display: none; }
 
-    .btn-file { display: inline-block; margin-top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--orange); cursor: pointer; text-transform: uppercase; }
+    /* Era texto suelto: al lado de un input quedaba a otra altura y sin
+       superficie clickeable clara. Ahora tiene la misma caja que un input. */
+    .btn-file {
+      display: inline-flex; align-items: center; justify-content: center; width: 100%;
+      min-height: 43px; padding: 12px 14px; margin-top: 10px;
+      border: 1px dashed var(--line-strong); border-radius: 2px; background: var(--bg-2);
+      font-family: var(--mono); font-size: 11px; letter-spacing: .08em; line-height: 1;
+      color: var(--orange); cursor: pointer; text-transform: uppercase; text-align: center;
+      transition: border-color .15s;
+    }
+    .btn-file:hover { border-color: var(--orange-line); }
+    .field > .btn-file { margin-top: 0; }
 
     .actions { display: flex; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 26px; }
     .btn-save {
+      display: inline-flex; align-items: center; justify-content: center;
       background: var(--orange); color: #000; border: none; border-radius: 2px; padding: 12px 24px;
       font-family: var(--body); font-weight: 700; font-size: 12px; letter-spacing: .05em; text-transform: uppercase;
-      cursor: pointer; transition: background .2s;
+      line-height: 1; cursor: pointer; transition: background .2s;
     }
     .btn-save:hover { background: #FF6B2C; }
     .btn-save:disabled { opacity: .55; cursor: default; }
@@ -152,8 +195,8 @@
 
       <div class="avatar-row" style="margin-bottom:24px">
         <div class="avatar-preview" id="avatarPreview">P</div>
-        <div>
-          <label class="btn-save" for="avatarInput" style="cursor:pointer">Subir foto de perfil</label>
+        <div class="avatar-actions">
+          <label class="btn-save" for="avatarInput">Subir foto de perfil</label>
           <input type="file" id="avatarInput" accept="image/*" />
           <div class="hint">JPG o PNG. Se muestra a los clientes.</div>
         </div>
@@ -169,7 +212,7 @@
           <input type="text" id="fLastName" placeholder="Ej: Pérez" />
         </div>
       </div>
-      <div class="hint" style="margin:-10px 0 18px">Alimenta el campo <strong>[6]</strong> del contrato (nombre / razón social).</div>
+      <div class="hint hint-grid">Alimenta el campo <strong>[6]</strong> del contrato (nombre / razón social).</div>
 
       <div class="field">
         <label for="fRazonSocial">Razón social (opcional)</label>
@@ -258,35 +301,35 @@
         <div class="field-error">Elegí una opción.</div>
       </div>
 
-      <div class="field">
-        <label>Matrícula / registro profesional (opcional)</label>
+      <div class="field subgroup">
+        <span class="subgroup-title">Matrícula / registro profesional (opcional)</span>
         <div class="grid-2">
-          <div class="field" style="margin-bottom:0">
+          <div class="field">
             <label for="fMatriculaEntidad">Entidad otorgante</label>
             <input type="text" id="fMatriculaEntidad" placeholder="Ej: Colegio de Gasistas" />
           </div>
-          <div class="field" style="margin-bottom:0">
+          <div class="field">
             <label for="fMatriculaNumero">Número</label>
             <input type="text" id="fMatriculaNumero" placeholder="Ej: 12345" />
           </div>
         </div>
-        <div class="grid-2" style="margin-top:16px">
-          <div class="field" style="margin-bottom:0">
+        <div class="grid-2">
+          <div class="field">
             <label for="fMatriculaVencimiento">Vencimiento</label>
             <input type="date" id="fMatriculaVencimiento" />
           </div>
-          <div class="field" style="margin-bottom:0">
-            <label>Adjunto</label>
+          <div class="field">
+            <label for="matriculaInput">Adjunto</label>
             <input type="file" id="matriculaInput" accept=".pdf,image/*" />
             <label class="btn-file" for="matriculaInput">Elegir archivo</label>
             <div class="hint" id="matriculaFileName"></div>
           </div>
         </div>
-        <div class="hint">Alimenta el campo [11] del contrato.</div>
+        <div class="hint hint-grid">Alimenta el campo [11] del contrato.</div>
       </div>
 
-      <div class="field">
-        <label>Foto de DNI</label>
+      <div class="field subgroup">
+        <span class="subgroup-title">Foto de DNI</span>
         <div class="dni-grid">
           <div>
             <div class="drop" id="dropFront">
@@ -317,12 +360,12 @@
       <div class="field">
         <label>Términos y Condiciones</label>
         <div class="hint" id="legalTerminosInfo">Cargando…</div>
-        <a class="hint" href="terminos.html" target="_blank" rel="noopener" style="color:var(--orange);text-decoration:underline">Volver a leer los Términos y Condiciones</a>
+        <a class="hint link-legal" href="terminos.html" target="_blank" rel="noopener">Volver a leer los Términos y Condiciones</a>
       </div>
       <div class="field">
         <label>Política de Privacidad</label>
         <div class="hint" id="legalPrivacidadInfo">Cargando…</div>
-        <a class="hint" href="privacidad.html" target="_blank" rel="noopener" style="color:var(--orange);text-decoration:underline">Volver a leer la Política de Privacidad</a>
+        <a class="hint link-legal" href="privacidad.html" target="_blank" rel="noopener">Volver a leer la Política de Privacidad</a>
       </div>
     </div>
 
