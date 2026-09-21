@@ -3406,7 +3406,7 @@
             <label class="field-label" for="resetEmail"><span><span class="ix">/01</span> Email</span><span
                 class="req">*</span></label>
             <input type="email" id="resetEmail" class="field-input" placeholder="vos@ejemplo.com"
-              autocomplete="email" />
+              autocomplete="email" maxlength="254" />
             <div class="field-msg">Ingresá un email válido</div>
           </div>
           <button type="submit" class="auth-submit">Enviar instrucciones <span class="arrow"></span></button>
@@ -3611,7 +3611,7 @@
         e.preventDefault();
         clearForm(e.target);
         const email = $('#resetEmail');
-        if (!isEmail(email.value)) { fieldFail(email); return; }
+        if (!isEmail(email.value) || email.value.length > 254) { fieldFail(email); return; }
         const btn = e.target.querySelector('.auth-submit');
         btn.classList.add('loading');
         setTimeout(() => {
