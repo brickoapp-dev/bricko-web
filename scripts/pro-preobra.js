@@ -942,10 +942,16 @@ function buildContratoEditCtx(){
   };
 }
 
-function openContratoPreview(payload, titulo){
+async function openContratoPreview(payload, titulo){
   document.getElementById('contratoPreviewTitle').textContent = titulo;
-  document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(payload, null, STATE.contrato?.templateId, buildContratoEditCtx());
+  const body = document.getElementById('contratoPreviewBody');
+  body.innerHTML = window.renderContratoHTML(payload, null, STATE.contrato?.templateId, buildContratoEditCtx());
   document.getElementById('contratoPreviewModal').classList.add('open');
+  // Deja que el navegador aplique el layout antes de medir/paginar en hojas
+  // .contrato-page (ver paginateContratoDoc() en contract-render.js) --
+  // mismo patrón de doble rAF que usa contract-pdf.js para lo mismo.
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  window.paginateContratoDoc(body);
 }
 
 // Refresca el modal de borrador en el lugar (sin cerrarlo) después de que
