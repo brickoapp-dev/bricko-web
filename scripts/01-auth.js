@@ -348,6 +348,21 @@ const Auth = {
     }
   },
 
+  // Lo mismo que renderAvatarChip pero devolviendo el HTML interno, para las
+  // listas que se arman como string y recién después se insertan en el DOM
+  // (tarjetas de presupuesto en mis-obras.js / client-solicitud.js): ahí no
+  // hay todavía ningún elemento al que apuntar por id.
+  avatarChipHTML(avatarUrl, initials){
+    const esc = (s) => String(s == null ? '' : s)
+      .replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    // Solo http(s): evita que un avatar_url manipulado meta un javascript:
+    // o un data: en el src.
+    if (avatarUrl && /^https?:\/\//i.test(avatarUrl)){
+      return `<img src="${esc(avatarUrl)}" alt="" loading="lazy">`;
+    }
+    return esc(initials);
+  },
+
   _render(){
     const session = this.getSession();
     const body = document.body;
