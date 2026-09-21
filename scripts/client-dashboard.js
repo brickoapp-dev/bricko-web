@@ -59,7 +59,7 @@ function loadUserUI(session){
   const initials = (session.firstName?.[0] || name[0] || 'U').toUpperCase();
   const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
   set('navUserName', session.firstName || name);
-  set('userAv', initials);
+  Auth.renderAvatarChip('userAv', session.avatarUrl, initials);
   set('userNm', session.firstName || name);
 }
 

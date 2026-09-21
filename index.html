@@ -2912,28 +2912,28 @@
       </div>
 
       <button class="burger" id="burger" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+
+      <!-- Menú de usuario (dropdown) -->
+      <div class="user-menu" id="userMenu" role="menu">
+        <div class="um-head">
+          <div class="um-name" id="menuName">Usuario</div>
+          <span class="um-role" id="menuRole">CLIENTE</span>
+        </div>
+        <button role="menuitem"><svg viewBox="0 0 24 24">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <path d="M9 22V12h6v10" />
+          </svg> Mi panel</button>
+        <button role="menuitem"><svg viewBox="0 0 24 24">
+            <path d="M20 21a8 8 0 1 0-16 0" />
+            <circle cx="12" cy="7" r="4" />
+          </svg> Mi perfil</button>
+        <button role="menuitem" class="um-out" id="logoutBtn"><svg viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <path d="M16 17l5-5-5-5M21 12H9" />
+          </svg> Cerrar sesión</button>
+      </div>
     </div>
   </header>
-
-  <!-- Menú de usuario (dropdown) -->
-  <div class="user-menu" id="userMenu" role="menu">
-    <div class="um-head">
-      <div class="um-name" id="menuName">Usuario</div>
-      <span class="um-role" id="menuRole">CLIENTE</span>
-    </div>
-    <button role="menuitem"><svg viewBox="0 0 24 24">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        <path d="M9 22V12h6v10" />
-      </svg> Mi panel</button>
-    <button role="menuitem"><svg viewBox="0 0 24 24">
-        <path d="M20 21a8 8 0 1 0-16 0" />
-        <circle cx="12" cy="7" r="4" />
-      </svg> Mi perfil</button>
-    <button role="menuitem" class="um-out" id="logoutBtn"><svg viewBox="0 0 24 24">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-        <path d="M16 17l5-5-5-5M21 12H9" />
-      </svg> Cerrar sesión</button>
-  </div>
 
   <!-- Menú mobile -->
   <div class="mobile-menu" id="mobileMenu">

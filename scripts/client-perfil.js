@@ -109,7 +109,7 @@ function loadUserUI(session){
   const name = ((session.firstName || '') + ' ' + (session.lastName || '')).trim() || session.email?.split('@')[0] || 'Usuario';
   const initials = (session.firstName?.[0] || name[0] || 'U').toUpperCase();
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('userAv', initials);
+  Auth.renderAvatarChip('userAv', session.avatarUrl, initials);
   set('userNm', session.firstName || name);
   const avBox = document.getElementById('avatarPreview');
   if (avBox) avBox.textContent = initials;

@@ -49,7 +49,7 @@ function loadUserUI(session){
   const name = ((session.firstName || '') + ' ' + (session.lastName || '')).trim() || session.email?.split('@')[0] || 'Profesional';
   const initials = (session.firstName?.[0] || name[0] || 'P').toUpperCase();
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('proAv', initials);
+  Auth.renderAvatarChip('proAv', session.avatarUrl, initials);
   set('proNm', session.firstName || name);
   const email = document.getElementById('fEmail');
   if (email) email.value = session.email || '';
@@ -131,6 +131,13 @@ function initFilePickers(){
   bindFile('dniFrontInput', 'dniFront', (url) => setDrop('dropFront', url));
   bindFile('dniBackInput', 'dniBack', (url) => setDrop('dropBack', url));
 
+  document.getElementById('dropFront')?.addEventListener('click', () => {
+    document.getElementById('dniFrontInput')?.click();
+  });
+  document.getElementById('dropBack')?.addEventListener('click', () => {
+    document.getElementById('dniBackInput')?.click();
+  });
+
   document.getElementById('matriculaInput')?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -163,7 +170,7 @@ function setDrop(dropId, url){
 async function loadProfile(uid){
   try {
     const { data: profile } = await sb.from('profiles')
-      .select('first_name, last_name, razon_social, terminos_version, terminos_aceptado_en, privacidad_version, privacidad_leida_en')
+      .select('first_name, last_name, razon_social, avatar_url, terminos_version, terminos_aceptado_en, privacidad_version, privacidad_leida_en')
       .eq('id', uid).single();
 
     if (profile){
@@ -172,10 +179,15 @@ async function loadProfile(uid){
       set('fLastName', profile.last_name);
       set('fRazonSocial', profile.razon_social);
       renderLegalInfo(profile);
+      if (profile.avatar_url){
+        const box = document.getElementById('avatarPreview');
+        if (box) box.innerHTML = `<img src="${profile.avatar_url}" alt="avatar">`;
+        Auth.renderAvatarChip('proAv', profile.avatar_url);
+      }
     }
 
     const { data: pro } = await sb.from('professionals')
-      .select('rubro, rubros, avatar_url, localidad, residencia')
+      .select('rubro, rubros, localidad, residencia')
       .eq('id', uid).single();
 
     if (pro){
@@ -186,10 +198,6 @@ async function loadProfile(uid){
       });
       if (pro.localidad)  document.getElementById('fLocalidad').value = pro.localidad;
       if (pro.residencia) document.getElementById('fResidencia').value = pro.residencia;
-      if (pro.avatar_url){
-        const box = document.getElementById('avatarPreview');
-        if (box) box.innerHTML = `<img src="${pro.avatar_url}" alt="avatar">`;
-      }
       const trade = document.getElementById('proTrade');
       if (trade) trade.textContent = RUBRO_LABELS[rubros[0]] || rubros[0] || 'Oficio';
     }
@@ -282,20 +290,13 @@ async function save(){
   try {
     const usaDomicilioAlt = document.getElementById('fUsaDomicilioAlt').checked;
 
-    // 1) profiles: nombre / apellido / razón social ([6])
+    // 1) profiles: nombre / apellido / razón social ([6]) / avatar
+    // (avatar_url vive en profiles para todos los roles, no en professionals:
+    // así lo lee la sesión y el resto de las páginas al mostrar la miniatura)
     const profileUpdate = {
       first_name: document.getElementById('fFirstName').value.trim() || null,
       last_name: document.getElementById('fLastName').value.trim() || null,
       razon_social: document.getElementById('fRazonSocial').value.trim() || null
-    };
-    const { error: e0 } = await sb.from('profiles').update(profileUpdate).eq('id', uid);
-    if (e0) throw e0;
-
-    // 2) professionals: directorio público
-    const proUpdate = {
-      rubros: getSelectedRubros(),
-      localidad: document.getElementById('fLocalidad').value.trim() || null,
-      residencia: document.getElementById('fResidencia').value.trim() || null
     };
 
     if (pending.avatar){
@@ -303,8 +304,27 @@ async function save(){
       const path = `${uid}/avatar.${ext}`;
       await uploadFile('avatars', path, pending.avatar);
       const { data } = sb.storage.from('avatars').getPublicUrl(path);
-      proUpdate.avatar_url = `${data.publicUrl}?v=${Date.now()}`;
+      profileUpdate.avatar_url = `${data.publicUrl}?v=${Date.now()}`;
     }
+
+    const { error: e0 } = await sb.from('profiles').update(profileUpdate).eq('id', uid);
+    if (e0) throw e0;
+
+    if (profileUpdate.avatar_url){
+      // Reflejar el avatar nuevo en la sesión local (mismo patrón que client-perfil.js),
+      // para que el chip del nav en el resto del sitio lo muestre sin tener que reloguear.
+      SESSION.avatarUrl = profileUpdate.avatar_url;
+      const store = localStorage.getItem('bricko-session') ? localStorage : sessionStorage;
+      store.setItem('bricko-session', JSON.stringify(SESSION));
+      Auth.renderAvatarChip('proAv', profileUpdate.avatar_url);
+    }
+
+    // 2) professionals: directorio público
+    const proUpdate = {
+      rubros: getSelectedRubros(),
+      localidad: document.getElementById('fLocalidad').value.trim() || null,
+      residencia: document.getElementById('fResidencia').value.trim() || null
+    };
 
     // 3) professional_verification: datos privados (DNI/CUIT, domicilio,
     // condición fiscal, matrícula) -- [7],[8],[10],[11]

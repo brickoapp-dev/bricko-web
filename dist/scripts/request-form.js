@@ -82,9 +82,8 @@ function loadUserUI(session){
   const name = (session.firstName || '') + (session.lastName ? ' ' + session.lastName : '');
   const display = name.trim() || session.email?.split('@')[0] || 'Usuario';
   const initials = (session.firstName?.[0] || display[0] || 'U').toUpperCase();
-  const avEl = document.getElementById('userAv');
   const nmEl = document.getElementById('userNm');
-  if (avEl) avEl.textContent = initials;
+  Auth.renderAvatarChip('userAv', session.avatarUrl, initials);
   if (nmEl) nmEl.textContent = display;
 }
 

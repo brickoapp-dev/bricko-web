@@ -83,6 +83,9 @@ const Auth = {
     const selectedRubros = rubros && rubros.length ? rubros : (oficio ? [oficio] : []);
     const primaryRubro = selectedRubros[0] || oficio || 'albanileria';
 
+    // El registro siempre mantiene la sesión iniciada (no hay checkbox acá).
+    try { localStorage.setItem(window.BRICKO_REMEMBER_KEY, '1'); } catch(e){}
+
     const { data, error } = await sb.auth.signUp({
       email,
       password,
@@ -181,8 +184,14 @@ const Auth = {
     return user;
   },
 
-  async login({email, password, remember}){
+  async login({email, password, remember, role}){
     const sb = window.supabase_client;
+    // Tiene que fijarse ANTES de signInWithPassword(): el SDK de Supabase
+    // escribe el token de sesión durante esa llamada, y el storage adapter
+    // de 00-supabase.js lee esta flag para decidir si lo persiste en
+    // localStorage o lo limita a sessionStorage (pestaña/sesión actual).
+    try { localStorage.setItem(window.BRICKO_REMEMBER_KEY, remember ? '1' : '0'); } catch(e){}
+
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
     if (error) throw new Error(error.message === 'Invalid login credentials'
@@ -193,6 +202,17 @@ const Auth = {
       .select('*')
       .eq('id', data.user.id)
       .single();
+
+    // signInWithPassword() ya validó la contraseña y dejó una sesión real
+    // armada -- si la pestaña elegida (cliente/profesional) no coincide con
+    // el rol real de la cuenta, hay que deshacerla antes de avisar, si no
+    // Auth.init() la encuentra en la próxima carga y loguea igual.
+    const actualRole = profile?.role || data.user.user_metadata?.role || 'cliente';
+    if (role && actualRole !== role) {
+      await this._clearAuthStorage();
+      const label = actualRole === 'profesional' ? 'Profesional' : 'Cliente';
+      throw new Error(`Esos datos pertenecen a una cuenta "${label}". Elegí esa pestaña para ingresar.`);
+    }
 
     let proData = null;
     let verifData = null;
@@ -242,24 +262,28 @@ const Auth = {
     return true;
   },
 
-  async logout(){
+  // sb.auth.signOut() limpia la sesión en memoria del cliente, pero en
+  // este proyecto el token persistido en localStorage (sb-<ref>-auth-token,
+  // lo escribe/borra el SDK de Supabase, no esta app) puede sobrevivir
+  // la llamada -- Auth.init() lo encuentra en la próxima carga y
+  // vuelve a loguear solo. Se lo borra a mano como red de seguridad, sin
+  // depender de que signOut() lo haya limpiado.
+  async _clearAuthStorage(){
     const sb = window.supabase_client;
     try { await sb.auth.signOut(); } catch(e){}
     try { localStorage.removeItem(this.STORAGE_KEY); } catch(e){}
     try { sessionStorage.removeItem(this.STORAGE_KEY); } catch(e){}
     try { localStorage.removeItem(this.USER_KEY); } catch(e){}
     try { sessionStorage.removeItem(this.USER_KEY); } catch(e){}
-    // sb.auth.signOut() limpia la sesión en memoria del cliente, pero en
-    // este proyecto el token persistido en localStorage (sb-<ref>-auth-token,
-    // lo escribe/borra el SDK de Supabase, no esta app) puede sobrevivir
-    // la llamada -- Auth.init() lo encuentra en la carga de index.html y
-    // vuelve a loguear solo, como si "cerrar sesión" no hubiera hecho nada.
-    // Se lo borra a mano como red de seguridad, sin depender de que
-    // signOut() lo haya limpiado.
+    try { localStorage.removeItem(window.BRICKO_REMEMBER_KEY); } catch(e){}
     try {
       Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token')).forEach(k => localStorage.removeItem(k));
       Object.keys(sessionStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token')).forEach(k => sessionStorage.removeItem(k));
     } catch(e){}
+  },
+
+  async logout(){
+    await this._clearAuthStorage();
     window.location.replace('index.html');
   },
 
@@ -305,6 +329,23 @@ const Auth = {
     } catch(e){ return null; }
   },
 
+  // Reemplaza el contenido de un chip de avatar (círculo con iniciales) por
+  // una miniatura de foto de perfil cuando hay avatarUrl, o restaura las
+  // iniciales si no hay foto. Se usa tanto para el chip de cliente (userAv)
+  // como para el de profesional (proAv) en cada página.
+  renderAvatarChip(elId, avatarUrl, initials){
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (avatarUrl) {
+      const img = document.createElement('img');
+      img.src = avatarUrl;
+      img.alt = '';
+      el.replaceChildren(img);
+    } else {
+      el.textContent = initials;
+    }
+  },
+
   _render(){
     const session = this.getSession();
     const body = document.body;
@@ -319,16 +360,9 @@ const Auth = {
       const addClass = (id, cls) => document.getElementById(id)?.classList.add(cls);
 
       addClass('userChip', 'show');
-      set('userAv', initials);
+      this.renderAvatarChip('userAv', session.avatarUrl, initials);
+      this.renderAvatarChip('proAv', session.avatarUrl, initials);
       set('userNm', session.firstName);
-
-      const avatarEl = document.getElementById('userAvatarImg');
-      if (avatarEl && session.avatarUrl) {
-        avatarEl.src = session.avatarUrl;
-        avatarEl.style.display = 'block';
-        const initialsEl = document.getElementById('userAv');
-        if (initialsEl) initialsEl.style.display = 'none';
-      }
 
       set('drawerAv', initials);
       set('drawerName', session.firstName + ' ' + session.lastName);
@@ -406,7 +440,22 @@ const Auth = {
         dniFrontUrl: verifData?.dni_front_url || null,
         dniBackUrl: verifData?.dni_back_url || null
       };
-      this._setSession(user);
+      // Reconstruye el storage local con la misma preferencia que se usó
+      // al loguear, para no "recordar" una sesión que el usuario pidió
+      // que viviera solo en esta pestaña (sessionStorage).
+      let remembered = true;
+      try { remembered = localStorage.getItem(window.BRICKO_REMEMBER_KEY) !== '0'; } catch(e){}
+      this._setSession(user, remembered);
+    } else if (!session && this.getSession()) {
+      // Sesión de la app huérfana: no hay token real de Supabase detrás
+      // (expiró, se invalidó del lado del servidor, o quedó de una prueba
+      // manual). Sin este chequeo, el redirect de más abajo confía
+      // ciegamente en este storage y manda a alguien no autenticado al
+      // dashboard como si hubiera iniciado sesión.
+      try { localStorage.removeItem(this.STORAGE_KEY); } catch(e){}
+      try { sessionStorage.removeItem(this.STORAGE_KEY); } catch(e){}
+      try { localStorage.removeItem(this.USER_KEY); } catch(e){}
+      try { sessionStorage.removeItem(this.USER_KEY); } catch(e){}
     }
 
     this._render();
