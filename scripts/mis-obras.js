@@ -608,6 +608,8 @@ function quoteItemHTML(q, hasAccepted){
   const proName = (proFirst + ' ' + proLast).trim() || 'Contratista Profesional';
   const proInitials = (proFirst?.[0] || 'C').toUpperCase();
   const proRubro = RUBRO_LABELS[q.professionals?.rubro] || q.professionals?.rubro || 'Especialista';
+  const proAvatar = Auth.avatarChipHTML(q.profiles?.avatar_url, proInitials);
+  const proHref = q.pro_id ? `pro-publico.html?id=${encodeURIComponent(q.pro_id)}` : null;
 
   const amountFmt = Number(q.amount || 0).toLocaleString('es-AR');
   const plazo = (q.features && q.features[0]) ? q.features[0] : null;
@@ -639,10 +641,13 @@ function quoteItemHTML(q, hasAccepted){
     <div class="${cardClass}">
       ${statusBadge}
       <div class="qitem-head">
-        <div class="qitem-pro-avatar">${escapeHTML(proInitials)}</div>
+        ${proHref
+          ? `<a class="qitem-pro-avatar" href="${escapeHTML(proHref)}" aria-label="Ver el perfil de ${escapeHTML(proName)}">${proAvatar}</a>`
+          : `<div class="qitem-pro-avatar">${proAvatar}</div>`}
         <div class="qitem-pro-meta">
           <strong>${escapeHTML(proName)}</strong>
           <span>${escapeHTML(proRubro)}</span>
+          ${proHref ? `<a class="qitem-pro-link" href="${escapeHTML(proHref)}">Ver perfil del profesional →</a>` : ''}
         </div>
         <div class="qitem-amount">$ ${escapeHTML(amountFmt)} <small>ARS</small></div>
       </div>
