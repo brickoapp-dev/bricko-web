@@ -224,6 +224,8 @@ function quoteCardHTML(q, hasAccepted) {
   const proLast = q.profiles?.last_name?.[0] ? q.profiles.last_name[0] + '.' : '';
   const proName = (proFirst + ' ' + proLast).trim() || 'Profesional';
   const proInitials = (proFirst?.[0] || 'P').toUpperCase();
+  const proAvatar = Auth.avatarChipHTML(q.profiles?.avatar_url, proInitials);
+  const proHref = q.pro_id ? `pro-publico.html?id=${encodeURIComponent(q.pro_id)}` : null;
   const rubro = RUBRO_LABELS[q.professionals?.rubro] || q.professionals?.rubro || '—';
   const fmt = Number(q.amount).toLocaleString('es-AR');
   const plazo = q.features?.[0] || null;
@@ -261,10 +263,13 @@ function quoteCardHTML(q, hasAccepted) {
     <div class="${cardClass}">
       ${ribbon}
       <div class="qc-header">
-        <div class="qc-av">${escapeHTML(proInitials)}</div>
+        ${proHref
+          ? `<a class="qc-av" href="${escapeHTML(proHref)}" aria-label="Ver el perfil de ${escapeHTML(proName)}">${proAvatar}</a>`
+          : `<div class="qc-av">${proAvatar}</div>`}
         <div class="qc-pro-info">
           <strong>${escapeHTML(proName)}</strong>
           <span>${escapeHTML(rubro)}</span>
+          ${proHref ? `<a class="qc-pro-link" href="${escapeHTML(proHref)}">Ver perfil del profesional →</a>` : ''}
         </div>
         <div class="qc-monto">$ ${escapeHTML(fmt)}</div>
       </div>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('bricko-theme');
+      if (t === 'dark' || t === 'light' || t === 'blueprint')
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <title>Brickø · Perfil del profesional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" media="print" onload="this.media='all'"
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  </noscript>
+  <link rel="stylesheet" href="styles/client-dashboard.css" />
+  <style>
+    /* 100px arriba: el .nav es fixed (64px de alto), igual que en
+       .solicitud-page. Con menos, el encabezado queda tapado por la barra. */
+    .pp-main { max-width: 980px; margin: 0 auto; padding: 100px var(--gutter) 80px; position: relative; z-index: 1; }
+
+    /* ── Encabezado: foto + identidad ─────────────────── */
+    .pp-hero { display: flex; gap: 26px; align-items: flex-start; margin-bottom: 30px; }
+    .pp-avatar {
+      width: 112px; height: 112px; border-radius: 50%; flex-shrink: 0;
+      background: var(--orange); color: #000; overflow: hidden;
+      display: grid; place-items: center;
+      font-family: var(--display); font-weight: 800; font-size: 38px;
+      border: 1px solid var(--line-strong);
+    }
+    .pp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .pp-id { flex: 1; min-width: 0; }
+    .pp-id .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; color: var(--orange); text-transform: uppercase; display: inline-flex; align-items: center; gap: 10px; }
+    .pp-id .eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--orange); }
+    .pp-id h1 { font-family: var(--display); font-weight: 800; font-size: clamp(26px, 4.6vw, 38px); letter-spacing: -.03em; text-transform: uppercase; color: var(--ink); margin: 10px 0 6px; }
+    .pp-razon { font-size: 13.5px; color: var(--muted); margin-bottom: 12px; }
+    .pp-badges { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .pp-badge {
+      font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 2px; border: 1px solid var(--line-strong); color: var(--muted);
+    }
+    .pp-badge.verified { color: #3FB950; background: rgba(63,185,80,.12); border-color: rgba(63,185,80,.3); }
+    .pp-badge.rubro { color: var(--ink-2); border-color: var(--orange-line); }
+    @media (max-width: 640px) { .pp-hero { flex-direction: column; gap: 18px; } }
+
+    /* ── Tarjetas y métricas ──────────────────────────── */
+    .card { background: var(--bg-1); border: 1px solid var(--line-strong); border-radius: 4px; padding: 26px; margin-bottom: 22px; }
+    .card-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; color: var(--muted-2); text-transform: uppercase; margin-bottom: 18px; }
+
+    .pp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line-strong); border: 1px solid var(--line-strong); border-radius: 4px; overflow: hidden; margin-bottom: 22px; }
+    .pp-stat { background: var(--bg-1); padding: 20px 18px; }
+    .pp-stat .v { font-family: var(--display); font-weight: 800; font-size: 26px; letter-spacing: -.02em; color: var(--ink); line-height: 1.1; }
+    .pp-stat .v small { font-family: var(--mono); font-size: 11px; font-weight: 400; color: var(--muted-2); letter-spacing: .04em; }
+    .pp-stat .k { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-2); margin-top: 8px; }
+    .pp-stat .v.empty { font-size: 13.5px; font-family: var(--body); font-weight: 600; color: var(--muted); padding-top: 8px; }
+    @media (max-width: 760px) { .pp-stats { grid-template-columns: repeat(2, 1fr); } }
+
+    .pp-bio { font-size: 14px; line-height: 1.65; color: var(--ink-2); white-space: pre-wrap; }
+
+    /* ── Trabajos anteriores ──────────────────────────── */
+    .pp-jobs { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .pp-job { background: var(--bg); border: 1px solid var(--line-strong); border-radius: 3px; padding: 16px 18px; }
+    .pp-job-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .pp-job-ticket { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--muted-2); }
+    .pp-job h3 { font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: -.01em; color: var(--ink); margin-bottom: 10px; line-height: 1.3; }
+    .pp-job-meta { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--muted); }
+    .pp-job-meta span strong { color: var(--ink-2); font-weight: 600; }
+    .pp-job-bar { height: 4px; background: var(--bg-3); border-radius: 2px; overflow: hidden; margin-top: 12px; }
+    .pp-job-bar i { display: block; height: 100%; background: var(--orange); }
+    .pp-job-bar-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; color: var(--muted-2); margin-top: 6px; text-transform: uppercase; }
+
+    .pp-empty { font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+    .pp-note { font-size: 11.5px; color: var(--muted-2); margin-top: 16px; line-height: 1.5; }
+  </style>
+</head>
+
+<body>
+  <div class="blueprint-grid"></div>
+  <div class="bg-spot"></div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="client.html" class="brand">
+        <svg class="cube" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+          <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C" />
+          <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A" />
+        </svg>
+        <span>BRICK<span class="o-slash">Ø</span></span>
+        <span class="pro-tag">CLIENTE</span>
+      </a>
+      <div class="nav-right">
+        <a href="mis-obras.html" class="btn-ghost" id="btnVolver" style="margin-right:16px">← Volver</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+          <svg class="icon-plan" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18" /></svg>
+        </button>
+        <div class="user-chip">
+          <div class="av" id="userAv">U</div>
+          <span id="userNm">Usuario</span>
+        </div>
+        <button class="btn-logout" id="btnLogout" aria-label="Cerrar sesión">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+            <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="pp-main">
+    <!-- Estado de carga / error: se oculta al llegar los datos reales -->
+    <div class="card" id="ppState">
+      <div class="pp-empty" id="ppStateText">Cargando el perfil del profesional…</div>
+    </div>
+
+    <div id="ppContent" hidden>
+      <div class="pp-hero">
+        <div class="pp-avatar" id="ppAvatar">P</div>
+        <div class="pp-id">
+          <span class="eyebrow">Profesional</span>
+          <h1 id="ppNombre">—</h1>
+          <div class="pp-razon" id="ppRazon" hidden></div>
+          <div class="pp-badges" id="ppBadges"></div>
+        </div>
+      </div>
+
+      <div class="pp-stats" id="ppStats"></div>
+
+      <div class="card" id="ppBioCard" hidden>
+        <div class="card-label">Sobre el profesional</div>
+        <div class="pp-bio" id="ppBio"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Trabajos anteriores</div>
+        <div class="pp-jobs" id="ppJobs"></div>
+        <div class="pp-empty" id="ppJobsEmpty" hidden>
+          Todavía no tiene obras adjudicadas en Brickø.
+        </div>
+        <div class="pp-note">
+          Se listan únicamente las obras que este profesional ganó dentro de Brickø.
+          No se muestran direcciones, montos ni datos de los clientes de esas obras.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="scripts/supabase.min.js" defer></script>
+  <script src="scripts/00-supabase.js" defer></script>
+  <script src="scripts/01-auth.js" defer></script>
+  <script src="scripts/pro-publico.js" defer></script>
+</body>
+
+</html>

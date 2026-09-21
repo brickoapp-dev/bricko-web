@@ -843,9 +843,20 @@ html.theme-anim * { transition: background-color .4s ease, border-color .4s ease
   background: var(--orange); color: #000;
   font-family: var(--display); font-weight: 700; font-size: 13px;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+  flex-shrink: 0; overflow: hidden;
 }
+/* Miniatura de la foto del profesional; si no cargó, abajo quedan las
+   iniciales sobre el círculo naranja. */
+.qc-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+a.qc-av { text-decoration: none; transition: box-shadow .2s; }
+a.qc-av:hover { box-shadow: 0 0 0 2px var(--orange-dim); }
 .qc-pro-info { flex: 1; }
+.qc-pro-link {
+  display: inline-block; margin-top: 5px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+  color: var(--orange); text-decoration: none;
+}
+.qc-pro-link:hover { text-decoration: underline; }
 .qc-pro-info strong { display: block; font-size: 13.5px; font-weight: 600; margin-bottom: 2px; }
 .qc-pro-info > span { display: block; font-size: 11.5px; color: var(--muted); }
 .qc-rating {
@@ -1421,11 +1432,20 @@ body.modal-lock { overflow: hidden; }
   background: var(--orange); color: #000;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--display); font-weight: 800; font-size: 13px;
-  flex-shrink: 0;
+  flex-shrink: 0; overflow: hidden;
 }
+.qitem-pro-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+a.qitem-pro-avatar { text-decoration: none; transition: box-shadow .2s; }
+a.qitem-pro-avatar:hover { box-shadow: 0 0 0 2px var(--orange-dim); }
 .qitem-pro-meta { flex: 1; }
 .qitem-pro-meta strong { display: block; font-size: 14px; color: var(--ink); }
 .qitem-pro-meta span { font-family: var(--mono); font-size: 10px; color: var(--muted-2); letter-spacing: .06em; }
+.qitem-pro-link {
+  display: inline-block; margin-top: 4px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+  color: var(--orange); text-decoration: none;
+}
+.qitem-pro-link:hover { text-decoration: underline; }
 
 .qitem-amount {
   font-family: var(--display); font-weight: 800; font-size: 20px;
