@@ -311,7 +311,7 @@ function loadUserUI(session) {
     || session.email?.split('@')[0] || 'Usuario';
   const initials = (session.firstName?.[0] || name[0] || 'U').toUpperCase();
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('userAv', initials);
+  Auth.renderAvatarChip('userAv', session.avatarUrl, initials);
   set('userNm', session.firstName || name);
 }
 
@@ -394,12 +394,10 @@ const MILESTONE_STATUS_CLASS = { pending: '', in_progress: 'orange', review: 'wa
 const PAGO_LABEL = { pending: 'Pendiente', approved: 'Aprobado', paid: 'Pagado' };
 const PAGO_CLASS = { pending: '', approved: 'warn', paid: 'ok' };
 const MODALIDAD_LABEL = {
-  contratista: 'Contratista', colaborador_independiente: 'Colaborador independiente',
-  dependiente: 'Dependiente', subcontratista: 'Subcontratista', profesional: 'Profesional'
+  colaborador_independiente: 'Colaborador independiente', profesional: 'Profesional'
 };
 const MODALIDAD_ROLE_CLASS = {
-  contratista: 'contratista', colaborador_independiente: 'padic',
-  dependiente: 'dep', subcontratista: 'sub', profesional: 'pro'
+  colaborador_independiente: 'padic', profesional: 'pro'
 };
 const DOC_TIPO_LABEL = { contrato: 'Contrato marco de obra', anexo: 'Anexo', evidencia: 'Evidencia de avance', factura: 'Factura' };
 

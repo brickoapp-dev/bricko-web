@@ -329,6 +329,23 @@ const Auth = {
     } catch(e){ return null; }
   },
 
+  // Reemplaza el contenido de un chip de avatar (círculo con iniciales) por
+  // una miniatura de foto de perfil cuando hay avatarUrl, o restaura las
+  // iniciales si no hay foto. Se usa tanto para el chip de cliente (userAv)
+  // como para el de profesional (proAv) en cada página.
+  renderAvatarChip(elId, avatarUrl, initials){
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (avatarUrl) {
+      const img = document.createElement('img');
+      img.src = avatarUrl;
+      img.alt = '';
+      el.replaceChildren(img);
+    } else {
+      el.textContent = initials;
+    }
+  },
+
   _render(){
     const session = this.getSession();
     const body = document.body;
@@ -343,16 +360,9 @@ const Auth = {
       const addClass = (id, cls) => document.getElementById(id)?.classList.add(cls);
 
       addClass('userChip', 'show');
-      set('userAv', initials);
+      this.renderAvatarChip('userAv', session.avatarUrl, initials);
+      this.renderAvatarChip('proAv', session.avatarUrl, initials);
       set('userNm', session.firstName);
-
-      const avatarEl = document.getElementById('userAvatarImg');
-      if (avatarEl && session.avatarUrl) {
-        avatarEl.src = session.avatarUrl;
-        avatarEl.style.display = 'block';
-        const initialsEl = document.getElementById('userAv');
-        if (initialsEl) initialsEl.style.display = 'none';
-      }
 
       set('drawerAv', initials);
       set('drawerName', session.firstName + ' ' + session.lastName);

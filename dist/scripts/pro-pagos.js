@@ -6,8 +6,7 @@ const sb = window.supabase_client;
 const PAGO_LABEL = { pending:'Pendiente', approved:'Aprobado', paid:'Pagado' };
 const PAGO_CLASS = { pending:'', approved:'warn', paid:'ok' };
 const MODALIDAD_LABEL = {
-  contratista:'Contratista', colaborador_independiente:'Colaborador independiente',
-  dependiente:'Dependiente', subcontratista:'Subcontratista', profesional:'Profesional'
+  colaborador_independiente:'Colaborador independiente', profesional:'Profesional'
 };
 
 function getSession(){
@@ -83,7 +82,7 @@ function loadProUI(session){
   const name = ((session.firstName || '') + ' ' + (session.lastName || '')).trim() || session.email?.split('@')[0] || 'Profesional';
   const initials = (session.firstName?.[0] || name[0] || 'P').toUpperCase();
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('proAv', initials);
+  Auth.renderAvatarChip('proAv', session.avatarUrl, initials);
   set('proNm', session.firstName || name);
 }
 

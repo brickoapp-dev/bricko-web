@@ -128,6 +128,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   background: var(--orange); color: #000;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--display); font-weight: 700; font-size: 12px;
+  overflow: hidden;
+}
+.user-chip .av img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
 }
 .user-chip span { font-size: 13px; font-weight: 600; }
 .btn-logout {
@@ -1132,7 +1136,7 @@ main { padding-top: 64px; }
 .req-card.quoted:hover::before { width: 100%; }
 
 .rc-ribbon {
-  position: absolute; top: 14px; right: 16px;
+  display: inline-block; margin-bottom: 10px;
   font-family: var(--mono); font-size: 9px;
   letter-spacing: .14em; text-transform: uppercase;
   color: #3FB950; border: 1px solid rgba(63,185,80,.3);

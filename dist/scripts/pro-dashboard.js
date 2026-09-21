@@ -218,6 +218,7 @@ function renderProfileUI(){
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
   set('proNm', PRO_PROFILE.fullName);
+  Auth.renderAvatarChip('proAv', PRO_PROFILE.avatarUrl, PRO_PROFILE.initials);
   const mainRubroLabel = RUBRO_LABELS[PRO_PROFILE.primaryRubro] || PRO_PROFILE.primaryRubro;
   set('proTrade', PRO_PROFILE.rubros.length > 1 ? `${mainRubroLabel} (+${PRO_PROFILE.rubros.length - 1})` : mainRubroLabel);
   set('statRating', PRO_PROFILE.rating ? Number(PRO_PROFILE.rating).toFixed(1) : '5.0');
