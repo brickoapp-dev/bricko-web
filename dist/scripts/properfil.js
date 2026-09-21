@@ -131,6 +131,13 @@ function initFilePickers(){
   bindFile('dniFrontInput', 'dniFront', (url) => setDrop('dropFront', url));
   bindFile('dniBackInput', 'dniBack', (url) => setDrop('dropBack', url));
 
+  document.getElementById('dropFront')?.addEventListener('click', () => {
+    document.getElementById('dniFrontInput')?.click();
+  });
+  document.getElementById('dropBack')?.addEventListener('click', () => {
+    document.getElementById('dniBackInput')?.click();
+  });
+
   document.getElementById('matriculaInput')?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
