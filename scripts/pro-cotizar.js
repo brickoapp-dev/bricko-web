@@ -30,9 +30,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   initThemeToggle();
   initCursorGlow();
 
-  const [req, existingQuote] = await Promise.all([
+  const [req, existingQuote, proData] = await Promise.all([
     loadRequest(reqId),
-    loadMyQuote(session.userId, reqId)
+    loadMyQuote(session.userId, reqId),
+    // No se confía en session.verified (queda desactualizado hasta el
+    // próximo login si el admin aprueba/rechaza mientras el pro sigue
+    // logueado) -- se relee fresco de la base en cada carga de esta pantalla.
+    sb.from('professionals').select('verified').eq('id', session.userId).single()
+      .then(({ data }) => data)
   ]);
 
   if (!req){
@@ -50,6 +55,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (existingQuote){
     showExistingQuote(existingQuote);
+  } else if (proData?.verified !== true){
+    showUnverifiedState();
   } else {
     initForm(req, session);
     initContratoUI(req, session);
@@ -431,6 +438,27 @@ function showExistingQuote(q){
     <span class="quoted-amount">$ ${fmt}</span>
     ${q.description ? `<p style="font-size:13.5px;color:var(--ink-2);text-align:left;line-height:1.65;margin-bottom:18px">${escapeHTML(q.description)}</p>` : ''}
     ${plazo ? `<span class="quoted-plazo">PLAZO: ${escapeHTML(plazo)}</span>` : ''}
+    <a href="pro.html" class="btn-back-feed">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Volver a la cartelera
+    </a>
+  `;
+}
+
+function showUnverifiedState(){
+  const formBody = document.getElementById('cotizarForm');
+  const unverified = document.getElementById('unverifiedState');
+  if (formBody) formBody.style.display = 'none';
+  if (!unverified) return;
+
+  unverified.style.display = '';
+  unverified.innerHTML = `
+    <div class="quoted-check warn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
+    </div>
+    <h3>Perfil sin verificar</h3>
+    <p>Podés ver el detalle de esta solicitud, pero necesitás tu DNI verificado para mandar presupuestos.</p>
+    <a href="properfil.html" class="btn-back-feed" style="margin-right:8px">Revisar mi perfil</a>
     <a href="pro.html" class="btn-back-feed">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
       Volver a la cartelera
