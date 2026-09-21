@@ -1226,12 +1226,11 @@
       border: 1px solid var(--line);
       border-radius: var(--r);
       overflow: hidden;
-      align-self: stretch;
     }
 
     .stat {
       background: var(--bg-1);
-      padding: 26px 24px;
+      padding: 40px 28px;
     }
 
     .stat .n {
@@ -3017,20 +3016,12 @@
           <!-- Stats -->
           <div class="stats-row reveal">
             <div class="stat">
-              <div class="n"><span data-count="4872" data-thousands>0</span><span>↗</span></div>
-              <div class="l">Profesionales activos</div>
+              <div class="n"><span data-stat="profesionales_verificados" data-count="0" data-thousands>0</span></div>
+              <div class="l">Profesionales verificados</div>
             </div>
             <div class="stat">
-              <div class="n"><span data-count="28" data-suffix="k">0</span><span>+</span></div>
-              <div class="l">Trabajos completados</div>
-            </div>
-            <div class="stat">
-              <div class="n"><span data-count="4.9" data-decimals="1">0</span><span>★</span></div>
-              <div class="l">Satisfacción promedio</div>
-            </div>
-            <div class="stat">
-              <div class="n"><span data-count="48">0</span><span>h</span></div>
-              <div class="l">Respuesta media</div>
+              <div class="n"><span data-stat="clientes_registrados" data-count="0" data-thousands>0</span></div>
+              <div class="l">Clientes registrados</div>
             </div>
           </div>
         </div>
@@ -3507,12 +3498,27 @@
       };
       const statsRow = $('.stats-row');
       if (statsRow) {
-        const sio = new IntersectionObserver((entries) => {
-          entries.forEach(en => {
-            if (en.isIntersecting) { $$('[data-count]', en.target).forEach(animateCount); sio.unobserve(en.target); }
-          });
-        }, { threshold: 0.4 });
-        sio.observe(statsRow);
+        (async () => {
+          try {
+            const { data, error } = await window.supabase_client.rpc('landing_stats');
+            if (error) throw error;
+            const row = Array.isArray(data) ? data[0] : data;
+            if (row) {
+              const pros = $('[data-stat="profesionales_verificados"]', statsRow);
+              const clientes = $('[data-stat="clientes_registrados"]', statsRow);
+              if (pros) pros.dataset.count = String(Number(row.profesionales_verificados) || 0);
+              if (clientes) clientes.dataset.count = String(Number(row.clientes_registrados) || 0);
+            }
+          } catch (e) {
+            console.warn('No se pudieron cargar las estadísticas reales de la landing', e);
+          }
+          const sio = new IntersectionObserver((entries) => {
+            entries.forEach(en => {
+              if (en.isIntersecting) { $$('[data-count]', en.target).forEach(animateCount); sio.unobserve(en.target); }
+            });
+          }, { threshold: 0.4 });
+          sio.observe(statsRow);
+        })();
       }
 
       /* ===================== TOASTS ===================== */
