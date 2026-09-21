@@ -407,6 +407,9 @@ function render(){
       : `OPORTUNIDADES DE TRABAJO`;
   }
 
+  const verifNotice = document.getElementById('verifNotice');
+  if (verifNotice) verifNotice.style.display = (PRO_PROFILE && !PRO_PROFILE.isVerified) ? '' : 'none';
+
   if (total) total.textContent = list.length + ' solicitud' + (list.length === 1 ? '' : 'es');
 
   if (!list.length){
@@ -454,7 +457,7 @@ function cardHTML(r, i){
       </div>
       <div class="rc-cta-row">
         <span class="rc-quotes">Cliente: ${escapeHTML(r.clientName)}</span>
-        <span class="rc-go">${quoted ? 'Ya cotizada' : 'Ver y cotizar'} <span class="arrow"></span></span>
+        <span class="rc-go">${quoted ? 'Ya cotizada' : (PRO_PROFILE && !PRO_PROFILE.isVerified ? 'Ver oportunidad' : 'Ver y cotizar')} <span class="arrow"></span></span>
       </div>
     </article>
   `;

@@ -245,6 +245,7 @@ const Auth = {
       avatarUrl: profile?.avatar_url || data.user.user_metadata?.avatar_url || null,
       oficio: proData?.rubro || data.user.user_metadata?.oficio || null,
       rubros: proData?.rubros || data.user.user_metadata?.rubros || (proData?.rubro ? [proData.rubro] : []),
+      verified: proData?.verified === true,
       dniNumber: verifData?.dni_number || '',
       dniFrontUrl: verifData?.dni_front_url || null,
       dniBackUrl: verifData?.dni_back_url || null
@@ -299,6 +300,7 @@ const Auth = {
       role: user.role,
       oficio: user.oficio,
       rubros: user.rubros || [],
+      verified: user.verified === true,
       address: user.address || '',
       city: user.city || '',
       province: user.province || '',
@@ -466,6 +468,7 @@ const Auth = {
         avatarUrl: profile?.avatar_url || null,
         oficio: proData?.rubro || session.user.user_metadata?.oficio || null,
         rubros: proData?.rubros || session.user.user_metadata?.rubros || [],
+        verified: proData?.verified === true,
         dniNumber: verifData?.dni_number || '',
         dniFrontUrl: verifData?.dni_front_url || null,
         dniBackUrl: verifData?.dni_back_url || null

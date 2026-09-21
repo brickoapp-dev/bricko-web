@@ -1118,6 +1118,14 @@ main { padding-top: 64px; }
   font-family: var(--mono); font-size: 10px;
   letter-spacing: .12em; text-transform: uppercase; color: var(--muted-2);
 }
+.verif-notice {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--orange-dim); border: 1px solid var(--orange-line);
+  border-radius: 4px; padding: 14px 18px; margin-bottom: 20px;
+  font-size: 13.5px; color: var(--ink-2); line-height: 1.5;
+}
+.verif-notice svg { width: 18px; height: 18px; stroke: var(--orange); flex-shrink: 0; }
+.verif-notice a { color: var(--orange); text-decoration: underline; }
 .requests-feed {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -1523,6 +1531,8 @@ body.modal-lock { overflow: hidden; }
   margin: 0 auto 20px;
 }
 .quoted-check svg { width: 22px; height: 22px; stroke: #3FB950; fill: none; stroke-width: 2.5; }
+.quoted-check.warn { background: var(--orange-dim); border-color: var(--orange-line); }
+.quoted-check.warn svg { stroke: var(--orange); }
 .quoted-state h3 {
   font-family: var(--display); font-weight: 800;
   font-size: 22px; letter-spacing: -.02em; text-transform: uppercase;

@@ -21,6 +21,11 @@ const RUBRO_LABELS = {
 const pending = { avatar: null, dniFront: null, dniBack: null, matricula: null };
 let SESSION = null;
 
+// Última lectura del código de barras del dorso del DNI (ver leerCodigoDniDorso).
+// null = no se leyó nada todavía en esta sesión de edición (no se toca lo que
+// ya hubiera guardado antes, salvo que se suba un dorso nuevo).
+let lastBarcodeReading = null;
+
 function getSession(){
   try {
     const s = localStorage.getItem('bricko-session') || sessionStorage.getItem('bricko-session');
@@ -130,6 +135,11 @@ function initFilePickers(){
   });
   bindFile('dniFrontInput', 'dniFront', (url) => setDrop('dropFront', url));
   bindFile('dniBackInput', 'dniBack', (url) => setDrop('dropBack', url));
+  document.getElementById('dniBackInput')?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (file) leerCodigoDniDorso(file);
+  });
+  document.getElementById('fDni')?.addEventListener('input', renderBarcodeStatus);
 
   document.getElementById('dropFront')?.addEventListener('click', () => {
     document.getElementById('dniFrontInput')?.click();
@@ -164,6 +174,69 @@ function setDrop(dropId, url){
   let img = drop.querySelector('img');
   if (!img){ img = document.createElement('img'); drop.appendChild(img); }
   img.src = url;
+}
+
+/* ── DNI dorso: lectura best-effort del código de barras PDF417 ──────
+   El DNI tarjeta argentino trae los datos del titular en un PDF417 en el
+   dorso. Si el navegador soporta BarcodeDetector (hoy Chrome/Edge; Safari
+   y Firefox no), lo leemos para avisar si el número tipeado no coincide
+   con el del documento fotografiado -- pesca errores de tipeo o la foto
+   equivocada antes de que llegue al revisor humano. Nunca bloquea el
+   guardado, no prueba que el documento sea auténtico, y si el navegador
+   no soporta la lectura simplemente no mostramos nada (no es un error). */
+async function leerCodigoDniDorso(file){
+  lastBarcodeReading = null;
+  const statusEl = document.getElementById('dniBarcodeStatus');
+  if (!statusEl) return;
+  statusEl.hidden = true;
+
+  if (!('BarcodeDetector' in window)) return;
+
+  try {
+    const formatos = await BarcodeDetector.getSupportedFormats();
+    if (!formatos.includes('pdf417')) return;
+
+    const bitmap = await createImageBitmap(file);
+    const detector = new BarcodeDetector({ formats: ['pdf417'] });
+    const codigos = await detector.detect(bitmap);
+    if (!codigos.length) return;
+
+    // Formato no 100% estandarizado entre versiones del DNI: en vez de
+    // asumir un orden de campos fijo, buscamos entre los tokens separados
+    // por '@' (u otros separadores vistos en la práctica) el que tenga
+    // pinta de DNI (7-8 dígitos) y guardamos el crudo para que el revisor
+    // pueda mirarlo si esta heurística no encuentra nada útil.
+    const raw = codigos[0].rawValue || '';
+    const tokens = raw.split(/[@;|]/).map(t => t.trim()).filter(Boolean);
+    const dniLeido = tokens.find(t => /^[0-9]{7,8}$/.test(t)) || null;
+
+    lastBarcodeReading = { tokens, dniLeido };
+  } catch(e){
+    // Foto borrosa, código no visible, navegador sin soporte real pese al
+    // feature-detect, etc. -- silencioso, es un plus, no un requisito.
+  } finally {
+    renderBarcodeStatus();
+  }
+}
+
+function renderBarcodeStatus(){
+  const statusEl = document.getElementById('dniBarcodeStatus');
+  if (!statusEl) return;
+  const dniLeido = lastBarcodeReading?.dniLeido;
+  if (!dniLeido){ statusEl.hidden = true; return; }
+
+  const dniTipeado = document.getElementById('fDni').value.replace(/\D/g, '');
+  statusEl.hidden = false;
+  if (!dniTipeado){
+    statusEl.className = 'dni-barcode-status';
+    statusEl.textContent = `Código de barras leído: DNI ${dniLeido}. Completá el campo DNI si coincide.`;
+  } else if (dniLeido === dniTipeado){
+    statusEl.className = 'dni-barcode-status ok';
+    statusEl.textContent = '✓ El código de barras del dorso coincide con el DNI que cargaste.';
+  } else {
+    statusEl.className = 'dni-barcode-status warn';
+    statusEl.textContent = `⚠ El código de barras dice ${dniLeido}, distinto al DNI que cargaste (${dniTipeado}). Revisá antes de guardar.`;
+  }
 }
 
 /* ── Cargar datos existentes ─────────────────────────── */
@@ -352,6 +425,14 @@ async function save(){
       const ext = (pending.dniBack.name.split('.').pop() || 'jpg').toLowerCase();
       uploads.push(uploadFile('dni', `${uid}/dni-back.${ext}`, pending.dniBack)
         .then(path => { verifUpsert.dni_back_url = path; }));
+      // Cruce contra el código de barras (ver leerCodigoDniDorso): solo se
+      // pisa cuando se sube un dorso nuevo, para no borrar una lectura
+      // previa guardada si esta vez el guardado es de otro campo.
+      const dniTipeado = document.getElementById('fDni').value.replace(/\D/g, '');
+      verifUpsert.barcode_raw = lastBarcodeReading ? { tokens: lastBarcodeReading.tokens } : null;
+      verifUpsert.barcode_dni_match = (lastBarcodeReading?.dniLeido && dniTipeado)
+        ? lastBarcodeReading.dniLeido === dniTipeado
+        : null;
     }
     if (pending.matricula){
       const ext = (pending.matricula.name.split('.').pop() || 'pdf').toLowerCase();
