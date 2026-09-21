@@ -94,7 +94,7 @@ function loadUserNav(session){
   const name = ((session.firstName || '') + ' ' + (session.lastName || '')).trim() || session.email?.split('@')[0] || 'Usuario';
   const initials = (session.firstName?.[0] || name[0] || 'U').toUpperCase();
   const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  setEl('userAv', initials);
+  Auth.renderAvatarChip('userAv', session.avatarUrl, initials);
   setEl('userNm', session.firstName || name);
 }
 
