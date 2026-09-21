@@ -23,29 +23,24 @@ async function descargarContratoPDF(payload, meta, templateId, filename) {
   document.body.appendChild(container);
 
   try {
-    // Deja que el navegador aplique el layout/CSS insertado antes de rasterizar.
+    // Deja que el navegador aplique el layout/CSS insertado antes de medir/rasterizar.
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-    const target = container.querySelector('.contrato-doc') || container;
-    const canvas = await window.html2canvas(target, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+    // Corta el documento en hojas .contrato-page (sin partir filas/párrafos
+    // a mitad de hoja) -- ver paginateContratoDoc() en contract-render.js.
+    window.paginateContratoDoc(container);
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const imgData = canvas.toDataURL('image/png');
 
-    let heightLeft = imgHeight;
-    let position = 0;
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-    while (heightLeft > 0) {
-      position -= pageHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    const pages = container.querySelectorAll('.contrato-page');
+    for (let i = 0; i < pages.length; i++) {
+      const canvas = await window.html2canvas(pages[i], { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
     }
 
     pdf.save(filename || 'contrato.pdf');
