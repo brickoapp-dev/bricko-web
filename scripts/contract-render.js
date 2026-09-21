@@ -43,8 +43,45 @@ function campoEditable(data, clave, label, attrs) {
    usaba el contrato antes de tener estos datos. */
 const NOTA_REDACCION_LEGAL = '<em style="font-size:12px;color:#7a3e00">(sujeto a redacción legal final)</em>';
 
+/* Marca de agua ("Ø" tenue, una vez por página) -- ver contract-pdf.js:
+   rasteriza .contrato-doc (760px de ancho por su max-width) en un único
+   canvas y lo pagina en A4 cortando cada `pageHeight` puntos, así que un
+   tile de fondo alto = 760 * √2 (proporción real de una hoja A4) hace que
+   caiga exactamente una marca de agua por hoja, tanto acá como en el PDF
+   descargado (misma función de render para ambos). */
+const CONTRATO_DOC_WIDTH = 760;
+const WATERMARK_TILE_HEIGHT = Math.round(CONTRATO_DOC_WIDTH * Math.SQRT2);
+const WATERMARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${CONTRATO_DOC_WIDTH}" height="${WATERMARK_TILE_HEIGHT}">
+  <text x="${CONTRATO_DOC_WIDTH / 2}" y="${WATERMARK_TILE_HEIGHT / 2}" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="430" fill="#1a1a1a" fill-opacity="0.045" text-anchor="middle" dominant-baseline="middle">Ø</text>
+</svg>`;
+const WATERMARK_DATA_URI = `data:image/svg+xml,${encodeURIComponent(WATERMARK_SVG)}`;
+
+/* Membrete: mismo ícono (cubo isométrico) y wordmark "BRICKØ" que el
+   header de index.html (.brand .cube / .iso-top / .iso-left / .iso-right),
+   con los colores fijos del tema claro en vez de var(--...) porque esto
+   se rasteriza (html2canvas) fuera del documento que define esas variables. */
+const CONTRATO_LETTERHEAD = `
+  <div class="contrato-letterhead">
+    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+      <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+      <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1A1A1A" stroke="#2A2A30" stroke-width="0.6" />
+      <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A30" stroke="#3A3A42" stroke-width="0.6" />
+    </svg>
+    <span class="contrato-brand">BRICK<span class="contrato-o">Ø</span></span>
+  </div>`;
+
 const CONTRACT_CSS = `
-  .contrato-doc { font-family: Georgia, 'Times New Roman', serif; color: #1a1a1a; background: #fff; padding: 40px 48px; max-width: 760px; margin: 0 auto; line-height: 1.65; font-size: 14.5px; }
+  .contrato-doc {
+    font-family: Georgia, 'Times New Roman', serif; color: #1a1a1a; padding: 40px 48px; max-width: ${CONTRATO_DOC_WIDTH}px; margin: 0 auto; line-height: 1.65; font-size: 14.5px;
+    background-color: #fff;
+    background-image: url("${WATERMARK_DATA_URI}");
+    background-repeat: repeat-y;
+    background-position: top center;
+    background-size: ${CONTRATO_DOC_WIDTH}px ${WATERMARK_TILE_HEIGHT}px;
+  }
+  .contrato-letterhead { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; }
+  .contrato-letterhead .contrato-brand { font-family: Arial, Helvetica, sans-serif; font-weight: 800; font-size: 19px; letter-spacing: .03em; text-transform: uppercase; color: #1a1a1a; }
+  .contrato-letterhead .contrato-o { color: #F25C18; }
   .contrato-doc h1 { font-size: 20px; text-align: center; margin-bottom: 24px; letter-spacing: .02em; }
   .contrato-doc h2 { font-size: 15px; margin: 26px 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
   .contrato-doc p { margin: 0 0 12px; text-align: justify; }
@@ -124,6 +161,7 @@ function renderContratoHTML(data, meta, templateId, editCtx) {
   return `
     <style>${CONTRACT_CSS}</style>
     <article class="contrato-doc">
+      ${CONTRATO_LETTERHEAD}
       ${meta ? `<div class="contrato-meta">${escapeHTML(meta)}</div>` : ''}
       <h1>CONTRATO TIPO DE OBRA — BRICKØ</h1>
 
