@@ -721,16 +721,25 @@ function toast(type, title, msg){
 function initCursorGlow(){
   if (!window.matchMedia('(pointer:fine)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // Antes --mx/--my se escribian sobre <body>: como son custom properties
+  // sin registrar, cada movimiento del mouse invalidaba el estilo de TODO
+  // el arbol y repintaba el gradiente a pantalla completa. Ahora se
+  // escriben sobre el propio .bg-spot, que en CSS pasa a moverse con
+  // transform (trabajo de compositor, sin recalculo de estilos ni repaint).
+  const spot = document.querySelector('.bg-spot');
+  if (!spot) return;
   let raf = null;
+  let lastX = 0, lastY = 0;
   window.addEventListener('pointermove', (e) => {
+    lastX = e.clientX; lastY = e.clientY;
     if (raf) return;
     raf = requestAnimationFrame(() => {
       document.body.classList.add('spot-on');
-      document.body.style.setProperty('--mx', e.clientX + 'px');
-      document.body.style.setProperty('--my', e.clientY + 'px');
+      spot.style.setProperty('--mx', lastX + 'px');
+      spot.style.setProperty('--my', lastY + 'px');
       raf = null;
     });
-  });
+  }, { passive: true });
   window.addEventListener('mouseleave', () => document.body.classList.remove('spot-on'));
 }
 

@@ -354,16 +354,23 @@ function toast(type, title, msg) {
 function initCursorGlow() {
   if (!window.matchMedia('(pointer:fine)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // Ver comentario en pro-dashboard.js: las custom properties se escriben
+  // sobre .bg-spot y no sobre <body>, para no invalidar el estilo de todo
+  // el arbol en cada movimiento del mouse.
+  const spot = document.querySelector('.bg-spot');
+  if (!spot) return;
   let raf = null;
+  let lastX = 0, lastY = 0;
   window.addEventListener('pointermove', (e) => {
+    lastX = e.clientX; lastY = e.clientY;
     if (raf) return;
     raf = requestAnimationFrame(() => {
       document.body.classList.add('spot-on');
-      document.body.style.setProperty('--mx', e.clientX + 'px');
-      document.body.style.setProperty('--my', e.clientY + 'px');
+      spot.style.setProperty('--mx', lastX + 'px');
+      spot.style.setProperty('--my', lastY + 'px');
       raf = null;
     });
-  });
+  }, { passive: true });
   window.addEventListener('mouseleave', () => document.body.classList.remove('spot-on'));
 }
 

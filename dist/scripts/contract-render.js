@@ -43,20 +43,62 @@ function campoEditable(data, clave, label, attrs) {
    usaba el contrato antes de tener estos datos. */
 const NOTA_REDACCION_LEGAL = '<em style="font-size:12px;color:#7a3e00">(sujeto a redacción legal final)</em>';
 
+/* Tamaño de hoja: A4 real a este ancho de render (760px) -- alto =
+   ancho * √2 (proporción exacta de una hoja A4, independiente de la
+   escala). paginateContratoDoc() usa esto para cortar por hoja sin
+   partir filas/párrafos (ver más abajo); la marca de agua usa la misma
+   caja para quedar centrada una vez por hoja. */
+const CONTRATO_DOC_WIDTH = 760;
+const PAGE_HEIGHT = Math.round(CONTRATO_DOC_WIDTH * Math.SQRT2);
+const PAGE_PAD_V = 40;
+const PAGE_PAD_H = 48;
+const WATERMARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${CONTRATO_DOC_WIDTH}" height="${PAGE_HEIGHT}">
+  <text x="${CONTRATO_DOC_WIDTH / 2}" y="${PAGE_HEIGHT / 2}" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="430" fill="#1a1a1a" fill-opacity="0.045" text-anchor="middle" dominant-baseline="middle">Ø</text>
+</svg>`;
+const WATERMARK_DATA_URI = `data:image/svg+xml,${encodeURIComponent(WATERMARK_SVG)}`;
+
+/* Membrete: mismo ícono (cubo isométrico) y wordmark "BRICKØ" que el
+   header de index.html (.brand .cube / .iso-top / .iso-left / .iso-right),
+   con los colores fijos del tema claro en vez de var(--...) porque esto
+   se rasteriza (html2canvas) fuera del documento que define esas variables. */
+const CONTRATO_LETTERHEAD = `
+  <div class="contrato-letterhead">
+    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+      <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+      <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1A1A1A" stroke="#2A2A30" stroke-width="0.6" />
+      <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A30" stroke="#3A3A42" stroke-width="0.6" />
+    </svg>
+    <span class="contrato-brand">BRICK<span class="contrato-o">Ø</span></span>
+  </div>`;
+
 const CONTRACT_CSS = `
-  .contrato-doc { font-family: Georgia, 'Times New Roman', serif; color: #1a1a1a; background: #fff; padding: 40px 48px; max-width: 760px; margin: 0 auto; line-height: 1.65; font-size: 14.5px; }
-  .contrato-doc h1 { font-size: 20px; text-align: center; margin-bottom: 24px; letter-spacing: .02em; }
-  .contrato-doc h2 { font-size: 15px; margin: 26px 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
-  .contrato-doc p { margin: 0 0 12px; text-align: justify; }
-  .contrato-doc mark.cf-falta { background: #ffe4b5; color: #7a3e00; padding: 1px 5px; border-radius: 2px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-style: normal; }
-  .contrato-tabla { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 13px; }
+  .contrato-doc, .contrato-page {
+    font-family: Georgia, 'Times New Roman', serif; color: #1a1a1a; box-sizing: border-box;
+    padding: ${PAGE_PAD_V}px ${PAGE_PAD_H}px; width: ${CONTRATO_DOC_WIDTH}px; line-height: 1.65; font-size: 14.5px;
+    background-color: #fff;
+    background-image: url("${WATERMARK_DATA_URI}");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .contrato-doc { margin: 0 auto; }
+  .contrato-pages { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .contrato-page { height: ${PAGE_HEIGHT}px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.15), 0 8px 24px rgba(0,0,0,.12); }
+  .contrato-letterhead { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; }
+  .contrato-letterhead .contrato-brand { font-family: Arial, Helvetica, sans-serif; font-weight: 800; font-size: 19px; letter-spacing: .03em; text-transform: uppercase; color: #1a1a1a; }
+  .contrato-letterhead .contrato-o { color: #F25C18; }
+  .contrato-doc h1, .contrato-page h1 { font-size: 20px; text-align: center; margin-bottom: 24px; letter-spacing: .02em; }
+  .contrato-doc h2, .contrato-page h2 { font-size: 15px; margin: 26px 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  .contrato-doc p, .contrato-page p { margin: 0 0 12px; text-align: justify; }
+  .contrato-doc mark.cf-falta, .contrato-page mark.cf-falta { background: #ffe4b5; color: #7a3e00; padding: 1px 5px; border-radius: 2px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-style: normal; }
+  .contrato-tabla { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 10px 0 16px; font-size: 13px; }
+  .contrato-tabla td { overflow-wrap: break-word; }
   .contrato-tabla th, .contrato-tabla td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; vertical-align: top; }
   .contrato-tabla th { background: #f2f2f2; }
   .contrato-meta { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666; margin-bottom: 18px; }
-  .contrato-doc .cf-edit { cursor: pointer; border-bottom: 1px dashed #1a66cc; }
-  .contrato-doc td.cf-edit { cursor: pointer; background: #f6faff; }
-  .contrato-doc .cf-edit-hint { font-size: 11px; color: #1a66cc; font-family: 'JetBrains Mono', monospace; margin: -8px 0 12px; }
-  @media print { .contrato-doc { padding: 0; } }
+  .contrato-doc .cf-edit, .contrato-page .cf-edit { cursor: pointer; border-bottom: 1px dashed #1a66cc; }
+  .contrato-doc td.cf-edit, .contrato-page td.cf-edit { cursor: pointer; background: #f6faff; }
+  .contrato-doc .cf-edit-hint, .contrato-page .cf-edit-hint { font-size: 11px; color: #1a66cc; font-family: 'JetBrains Mono', monospace; margin: -8px 0 12px; }
+  @media print { .contrato-page { box-shadow: none; } }
 `;
 
 const MODALIDAD_LABEL_RENDER = { colaborador_independiente: 'Colaborador independiente', profesional: 'Profesional' };
@@ -124,6 +166,7 @@ function renderContratoHTML(data, meta, templateId, editCtx) {
   return `
     <style>${CONTRACT_CSS}</style>
     <article class="contrato-doc">
+      ${CONTRATO_LETTERHEAD}
       ${meta ? `<div class="contrato-meta">${escapeHTML(meta)}</div>` : ''}
       <h1>CONTRATO TIPO DE OBRA — BRICKØ</h1>
 
@@ -160,6 +203,11 @@ function renderContratoHTML(data, meta, templateId, editCtx) {
       <h2>4. HITOS Y ENTREGABLES</h2>
       ${hitosLockedHint}
       <table class="contrato-tabla">
+        <colgroup>
+          <col style="width:4%"><col style="width:14%"><col style="width:19%">
+          <col style="width:17%"><col style="width:9%"><col style="width:10%">
+          <col style="width:14%"><col style="width:13%">
+        </colgroup>
         <thead><tr>
           <th>#</th><th>Título [22]</th><th>Resultado verificable [23]</th>
           <th>Criterio de aceptación [26]</th><th>Monto [24]</th><th>Fecha objetivo [25]</th>
@@ -177,6 +225,7 @@ function renderContratoHTML(data, meta, templateId, editCtx) {
 
       <h2>6. EQUIPO Y MODALIDAD DE PARTICIPACIÓN</h2>
       <table class="contrato-tabla">
+        <colgroup><col style="width:38%"><col style="width:34%"><col style="width:28%"></colgroup>
         <thead><tr><th>Nombre [29]</th><th>Función/tarea</th><th>Modalidad</th></tr></thead>
         <tbody>${participantesRows}</tbody>
       </table>
@@ -214,3 +263,149 @@ function renderContratoHTML(data, meta, templateId, editCtx) {
 }
 
 window.renderContratoHTML = renderContratoHTML;
+
+/* paginateContratoDoc(hostEl) -- corta el .contrato-doc (ya insertado
+   y con layout aplicado dentro de hostEl, vía innerHTML = renderContratoHTML())
+   en hojas .contrato-page de alto fijo (PAGE_HEIGHT), sin partir filas
+   de tabla ni párrafos a mitad de hoja. Reemplaza el corte por pixel
+   ciego que usaba contract-pdf.js. Debe llamarse después de esperar el
+   layout (mismo patrón de doble requestAnimationFrame que ya usa
+   contract-pdf.js), porque mide con getBoundingClientRect() -- no
+   funciona sobre el string de renderContratoHTML() todavía sin insertar. */
+function paginateContratoDoc(hostEl) {
+  const docEl = hostEl.querySelector('.contrato-doc');
+  if (!docEl) return;
+
+  // El margen de 12px absorbe el redondeo sub-píxel que se va acumulando
+  // al sumar muchas alturas medidas (Math.round de PAGE_HEIGHT, bordes de
+  // tabla, etc.) -- sin esto una hoja puede terminar un puñado de píxeles
+  // más alta de lo que entra en .contrato-page (overflow:hidden la recorta).
+  const usableHeight = PAGE_HEIGHT - PAGE_PAD_V * 2 - 12;
+  const pagesWrap = document.createElement('div');
+  pagesWrap.className = 'contrato-pages';
+
+  let currentPage = document.createElement('div');
+  currentPage.className = 'contrato-page';
+  pagesWrap.appendChild(currentPage);
+  let used = 0;
+
+  const newPage = () => {
+    currentPage = document.createElement('div');
+    currentPage.className = 'contrato-page';
+    pagesWrap.appendChild(currentPage);
+    used = 0;
+  };
+
+  // getBoundingClientRect().height NO incluye el margin del elemento --
+  // un <h2>/<p> con margin-bottom ocuparía más lugar en el flujo real del
+  // que reporta su propia altura. footprintHeight() lo resuelve sumando
+  // el margin-bottom calculado (no sirve para <table>, que se mide aparte
+  // en placeTable() porque su "unidad atómica" real es cada <tr>).
+  const footprintHeight = (el) => {
+    const mb = parseFloat(getComputedStyle(el).marginBottom) || 0;
+    return el.getBoundingClientRect().height + mb;
+  };
+
+  const estimateFirstChunk = (el) => {
+    if (el.tagName === 'TABLE') {
+      const thead = el.querySelector('thead');
+      const firstRow = el.querySelector('tbody tr');
+      const marginTop = parseFloat(getComputedStyle(el).marginTop) || 0;
+      return marginTop + (thead ? thead.getBoundingClientRect().height : 0) + (firstRow ? firstRow.getBoundingClientRect().height : 0);
+    }
+    return footprintHeight(el);
+  };
+
+  const placeTable = (table) => {
+    const colgroupOriginal = table.querySelector('colgroup');
+    const theadOriginal = table.querySelector('thead');
+    const theadH = theadOriginal ? theadOriginal.getBoundingClientRect().height : 0;
+    const marginTop = parseFloat(getComputedStyle(table).marginTop) || 0;
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+    // El espacio ANTES de la tabla (colapsado con el margin-bottom del
+    // hermano anterior) ya lo sumó el hermano anterior en el loop de abajo
+    // (mide hasta el top real de esta tabla). marginTop solo hace falta
+    // acá cuando la tabla arranca sola en una hoja nueva (used === 0):
+    // ahí no hay hermano anterior en esta hoja que ya lo haya contado, y
+    // el padding de la hoja bloquea el colapso de margin con el padre.
+    const startTableOnCurrentPage = () => {
+      const tbody = document.createElement('tbody');
+      const t = document.createElement('table');
+      t.className = table.className;
+      if (colgroupOriginal) t.appendChild(colgroupOriginal.cloneNode(true));
+      if (theadOriginal) t.appendChild(theadOriginal.cloneNode(true));
+      t.appendChild(tbody);
+      currentPage.appendChild(t);
+      if (used === 0) used += marginTop;
+      used += theadH;
+      return tbody;
+    };
+
+    // No dejar el encabezado solo al pie de la hoja si ni la primera fila entra con él.
+    if (used > 0 && used + theadH + (rows[0]?.getBoundingClientRect().height || 0) > usableHeight) {
+      newPage();
+    }
+    let tbody = startTableOnCurrentPage();
+
+    rows.forEach((row) => {
+      const h = row.getBoundingClientRect().height;
+      if (tbody.children.length > 0 && used + h > usableHeight) {
+        newPage();
+        tbody = startTableOnCurrentPage();
+      }
+      tbody.appendChild(row.cloneNode(true));
+      used += h;
+    });
+    // El margin-bottom de la tabla (y su posible colapso con lo que sigue)
+    // lo cuenta el próximo hermano en el loop de abajo -- acá no hace
+    // falta sumar nada más.
+  };
+
+  const children = Array.from(docEl.children);
+  // getBoundingClientRect().height NO incluye el margin de un elemento, y
+  // sumar el margin-bottom "a mano" tampoco alcanza porque los márgenes
+  // verticales entre hermanos COLAPSAN (el hueco real es el máximo entre
+  // ambos, no la suma) -- por ej. un <p> (margin-bottom:12) seguido de un
+  // <h2> (margin-top:26) deja un hueco real de 26px, no 12. La distancia
+  // real entre el `top` de un hermano y el del siguiente ya refleja ese
+  // colapso tal cual el navegador lo resolvió, sin tener que reproducir
+  // las reglas de colapso a mano.
+  const tops = children.map(c => c.getBoundingClientRect().top);
+
+  children.forEach((child, i) => {
+    if (child.tagName === 'TABLE') {
+      placeTable(child);
+      return;
+    }
+
+    const h = i + 1 < children.length ? tops[i + 1] - tops[i] : footprintHeight(child);
+
+    // Título huérfano: si el h2 y el arranque de lo que sigue no entran
+    // juntos en lo que queda de la hoja, el salto va ANTES del h2.
+    if (child.tagName === 'H2' && i + 1 < children.length) {
+      const nextChunk = estimateFirstChunk(children[i + 1]);
+      if (used > 0 && used + h + nextChunk > usableHeight && h + nextChunk <= usableHeight) {
+        newPage();
+      }
+    }
+
+    if (used > 0 && used + h > usableHeight) {
+      newPage();
+    }
+    // Si el elemento termina siendo el primero de una hoja (nueva o la
+    // inicial), su propio margin-top pasa a ser espacio real: el padding
+    // de .contrato-page bloquea el colapso con lo anterior que sí ocurría
+    // en el documento original (mismo motivo que el `if (used === 0)` de
+    // placeTable() más arriba).
+    if (used === 0) {
+      used += parseFloat(getComputedStyle(child).marginTop) || 0;
+    }
+    currentPage.appendChild(child.cloneNode(true));
+    used += h;
+  });
+
+  docEl.replaceWith(pagesWrap);
+}
+
+window.paginateContratoDoc = paginateContratoDoc;

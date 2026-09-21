@@ -54,11 +54,44 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadAll(){
-  const { data: request, error: reqErr } = await sb
-    .from('requests')
-    .select('id, ticket_id, titulo, direccion, status')
-    .eq('id', REQ_ID)
-    .single();
+  // Esta pantalla encadenaba 8 consultas con await, una detrás de la otra,
+  // y no dibujaba nada hasta que terminaba la última. De las 8, seis solo
+  // dependen de REQ_ID / la sesión, así que salen todas juntas; únicamente
+  // participantes (necesita los hitos) y sus documentos (necesitan los
+  // participantes) quedan encadenados.
+  const [
+    { data: request, error: reqErr },
+    { data: prep, error: prepErr },
+    { data: quote },
+    { data: hitos },
+    { data: equipo },
+    { data: documentos }
+  ] = await Promise.all([
+    sb.from('requests')
+      .select('id, ticket_id, titulo, direccion, status')
+      .eq('id', REQ_ID)
+      .single(),
+    sb.from('obra_preparacion')
+      .select('*')
+      .eq('request_id', REQ_ID)
+      .maybeSingle(),
+    sb.from('quotes')
+      .select('amount')
+      .eq('request_id', REQ_ID)
+      .eq('pro_id', SESSION.userId)
+      .eq('status', 'accepted')
+      .maybeSingle(),
+    sb.from('hitos')
+      .select('*')
+      .eq('request_id', REQ_ID)
+      .order('numero', { ascending: true }),
+    sb.from('pro_equipo')
+      .select('*')
+      .order('nombre', { ascending: true }),
+    sb.from('obra_documentos')
+      .select('id')
+      .eq('request_id', REQ_ID)
+  ]);
 
   if (reqErr || !request){
     toast('err', 'No encontrada', 'Volviendo a la cartelera…');
@@ -66,31 +99,11 @@ async function loadAll(){
     return;
   }
 
-  const { data: prep, error: prepErr } = await sb
-    .from('obra_preparacion')
-    .select('*')
-    .eq('request_id', REQ_ID)
-    .maybeSingle();
-
   if (prepErr || !prep){
     toast('err', 'Todavía no adjudicada', 'Esta obra no tiene una propuesta tuya aceptada.');
     setTimeout(() => window.location.replace('pro-ofertas.html'), 1800);
     return;
   }
-
-  const { data: quote } = await sb
-    .from('quotes')
-    .select('amount')
-    .eq('request_id', REQ_ID)
-    .eq('pro_id', SESSION.userId)
-    .eq('status', 'accepted')
-    .maybeSingle();
-
-  const { data: hitos } = await sb
-    .from('hitos')
-    .select('*')
-    .eq('request_id', REQ_ID)
-    .order('numero', { ascending: true });
 
   let participantes = [];
   if (hitos && hitos.length){
@@ -111,16 +124,6 @@ async function loadAll(){
     participanteDocs = docs || [];
     await attachParticipanteDocSignedUrls(participanteDocs);
   }
-
-  const { data: equipo } = await sb
-    .from('pro_equipo')
-    .select('*')
-    .order('nombre', { ascending: true });
-
-  const { data: documentos } = await sb
-    .from('obra_documentos')
-    .select('id')
-    .eq('request_id', REQ_ID);
 
   const firstLoad = STATE.prep == null;
 
@@ -264,12 +267,44 @@ function tokenStatus(t){
   return 'vigente';
 }
 
-/* QR escaneable de verdad (no solo el link) -- qrcodejs (davidshimjs),
-   cargado por <script> en pro-preobra.html. Se re-renderiza entero en
-   cada cambio de estado en vez de reusar la instancia: más simple que
-   trackear el objeto QRCode entre renders y el costo es insignificante. */
-function renderQrImage(url){
+/* QR escaneable de verdad (no solo el link) -- qrcodejs (davidshimjs).
+   Antes venía en un <script> bloqueante de cdnjs en pro-preobra.html, que
+   se descargaba en cada carga de la pantalla aunque el panel del QR ni
+   siquiera estuviera abierto; ahora se baja la primera vez que hay un QR
+   que dibujar. Se re-renderiza entero en cada cambio de estado en vez de
+   reusar la instancia: más simple que trackear el objeto QRCode entre
+   renders y el costo es insignificante. */
+const QR_LIB_URL = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+let qrLibPromise = null;
+
+function ensureQrLib(){
+  if (window.QRCode) return Promise.resolve();
+  if (!qrLibPromise){
+    qrLibPromise = new Promise((resolve, reject) => {
+      const el = document.createElement('script');
+      el.src = QR_LIB_URL;
+      el.async = true;
+      el.addEventListener('load', resolve, { once: true });
+      el.addEventListener('error', () => reject(new Error('No se pudo cargar qrcodejs')), { once: true });
+      document.head.appendChild(el);
+    }).catch((e) => { qrLibPromise = null; throw e; });
+  }
+  return qrLibPromise;
+}
+
+async function renderQrImage(url){
   const canvasBox = document.getElementById('qrImageCanvas');
+  if (!canvasBox) return;
+  canvasBox.innerHTML = '';
+  try {
+    await ensureQrLib();
+  } catch(e){
+    console.warn('No se pudo cargar la librería de QR:', e);
+    return;
+  }
+  // Un render posterior pudo haber limpiado/reemplazado la caja mientras
+  // se bajaba la librería; no hay que pisar lo que quedó dibujado.
+  if (!document.body.contains(canvasBox)) return;
   canvasBox.innerHTML = '';
   new QRCode(canvasBox, { text: url, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M });
 
@@ -528,13 +563,23 @@ function docEstadoLocal(doc){
 }
 
 async function attachParticipanteDocSignedUrls(docs){
-  await Promise.all(docs.map(async (d) => {
-    if (!d.storage_path){ d.url = null; return; }
-    try {
-      const { data } = await sb.storage.from('participante-docs').createSignedUrl(d.storage_path, 3600);
-      d.url = data?.signedUrl || null;
-    } catch(e){ d.url = null; }
-  }));
+  // Un request por documento se convertía en decenas de llamadas a Storage
+  // en obras con varios participantes. createSignedUrls() firma todos los
+  // paths del bucket de una sola vez.
+  const paths = [...new Set(docs.map(d => d.storage_path).filter(Boolean))];
+  docs.forEach(d => { d.url = null; });
+  if (!paths.length) return;
+  try {
+    const { data, error } = await sb.storage
+      .from('participante-docs')
+      .createSignedUrls(paths, 3600);
+    if (error) throw error;
+    const byPath = new Map();
+    (data || []).forEach(x => { if (x?.signedUrl && x.path) byPath.set(x.path, x.signedUrl); });
+    docs.forEach(d => { d.url = d.storage_path ? (byPath.get(d.storage_path) || null) : null; });
+  } catch(e){
+    console.warn('Aviso firmando documentos de participantes:', e);
+  }
 }
 
 function renderParticipants(){
@@ -942,10 +987,16 @@ function buildContratoEditCtx(){
   };
 }
 
-function openContratoPreview(payload, titulo){
+async function openContratoPreview(payload, titulo){
   document.getElementById('contratoPreviewTitle').textContent = titulo;
-  document.getElementById('contratoPreviewBody').innerHTML = window.renderContratoHTML(payload, null, STATE.contrato?.templateId, buildContratoEditCtx());
+  const body = document.getElementById('contratoPreviewBody');
+  body.innerHTML = window.renderContratoHTML(payload, null, STATE.contrato?.templateId, buildContratoEditCtx());
   document.getElementById('contratoPreviewModal').classList.add('open');
+  // Deja que el navegador aplique el layout antes de medir/paginar en hojas
+  // .contrato-page (ver paginateContratoDoc() en contract-render.js) --
+  // mismo patrón de doble rAF que usa contract-pdf.js para lo mismo.
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  window.paginateContratoDoc(body);
 }
 
 // Refresca el modal de borrador en el lugar (sin cerrarlo) después de que

@@ -15,6 +15,7 @@
   --orange-dim: rgba(242,92,24,.12);
   --orange-line: rgba(242,92,24,.32);
   --nav-bg: rgba(10,10,10,.85);
+  --nav-bg-solid: #0B0B0B;
   --grid: rgba(255,255,255,.028);
   --grid-strong: rgba(255,255,255,.055);
   --display: 'Archivo', sans-serif;
@@ -38,6 +39,7 @@
   --orange-dim: rgba(242,92,24,.11);
   --orange-line: rgba(220,74,12,.36);
   --nav-bg: rgba(237,236,233,.78);
+  --nav-bg-solid: #EEEDEA;
   --grid: rgba(10,10,10,.05);
   --grid-strong: rgba(10,10,10,.11);
 }
@@ -56,6 +58,7 @@
   --orange-dim: rgba(242,92,24,.16);
   --orange-line: rgba(242,92,24,.45);
   --nav-bg: rgba(12,35,64,.85);
+  --nav-bg-solid: #0D2442;
   --grid: rgba(234,243,255,.05);
   --grid-strong: rgba(234,243,255,.11);
 }
@@ -78,6 +81,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* GRID BG */
 .blueprint-grid {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  /* Capa propia de composicion: si no, cada repintado del contenido que
+     pasa por encima arrastra el repintado de esta grilla a pantalla
+     completa (4 gradientes superpuestos). */
+  transform: translateZ(0);
   background-image:
     linear-gradient(to right, var(--grid-strong) 1px, transparent 1px),
     linear-gradient(to bottom, var(--grid-strong) 1px, transparent 1px),
@@ -91,8 +98,12 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* NAV */
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-  background: var(--nav-bg);
-  backdrop-filter: blur(16px);
+  /* backdrop-filter sobre una barra fija obliga al navegador a volver a
+     desenfocar todo lo que pasa por debajo en CADA frame de scroll: es la
+     causa principal del scroll "pegajoso" en la WebView de Android. Por
+     defecto va un fondo solido (costo cero) y el vidrio esmerilado queda
+     solo en desktop con puntero fino, donde no se nota. */
+  background: var(--nav-bg-solid, var(--nav-bg));
   border-bottom: 1px solid var(--line);
   padding: env(safe-area-inset-top) var(--gutter) 0;
   height: calc(64px + env(safe-area-inset-top));
@@ -600,12 +611,18 @@ html.theme-anim * { transition: background-color .4s ease, border-color .4s ease
   background: var(--orange-dim);
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 24px;
+  position: relative;
+}
+/* Mismo motivo que .live-dot: box-shadow animado = repintado por frame. */
+.success-seal::after {
+  content: ""; position: absolute; inset: 0;
+  border-radius: 50%; border: 1px solid rgba(242,92,24,.4);
   animation: pulseRing 2s ease-out infinite;
 }
 @keyframes pulseRing {
-  0% { box-shadow: 0 0 0 0 rgba(242,92,24,.4); }
-  70% { box-shadow: 0 0 0 20px rgba(242,92,24,0); }
-  100% { box-shadow: 0 0 0 0 rgba(242,92,24,0); }
+  0%   { transform: scale(1);    opacity: .9; }
+  70%  { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
 }
 .success-seal svg { width: 36px; height: 36px; }
 .success-ticket {
@@ -1015,17 +1032,25 @@ main { padding-top: 64px; }
   font-family: var(--mono); font-size: 9.5px;
   letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
 }
+/* El pulso animaba box-shadow, que no es una propiedad de compositor:
+   repintaba el punto (y su area alrededor) en CADA frame, para siempre, en
+   un elemento siempre visible del nav. Se pasa a un anillo en ::after
+   animado con transform + opacity, que corre en el compositor. */
 .live-dot .dot, .live-badge .dot {
   width: 7px; height: 7px; border-radius: 50%;
-  box-shadow: 0 0 0 0 currentColor;
-  animation: proLivePulse 2s infinite;
+  position: relative;
+}
+.live-dot .dot::after, .live-badge .dot::after {
+  content: ""; position: absolute; inset: 0;
+  border-radius: 50%; background: currentColor;
+  animation: proLivePulse 2s ease-out infinite;
 }
 .live-dot .dot { background: #3FB950; color: #3FB950; }
 .live-badge .dot { background: var(--orange); color: var(--orange); }
 @keyframes proLivePulse {
-  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 60%, transparent); }
-  70%  { box-shadow: 0 0 0 8px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
+  0%   { transform: scale(1);   opacity: .6; }
+  70%  { transform: scale(3.3); opacity: 0; }
+  100% { transform: scale(3.3); opacity: 0; }
 }
 
 /* ── User chip: inner info ──────────────────────────────── */
@@ -1039,8 +1064,10 @@ main { padding-top: 64px; }
 /* ── Toolbar de filtros ─────────────────────────────────── */
 .toolbar {
   position: sticky; top: 64px; z-index: 40;
-  background: var(--nav-bg); backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  /* Segunda barra desenfocada apilada debajo del nav: en pro.html el scroll
+     pagaba DOS backdrop-filter a pantalla completa por frame. Mismo criterio
+     que .nav -- solido por defecto, vidrio solo en desktop. */
+  background: var(--nav-bg-solid, var(--nav-bg));
   border-bottom: 1px solid var(--line);
 }
 .toolbar-inner {
@@ -1296,10 +1323,18 @@ main { padding-top: 64px; }
 .tag.urg-baja  { color: #3FB950; border-color: rgba(63,185,80,.3);  background: rgba(63,185,80,.07); }
 
 /* ── Cursor glow ────────────────────────────────────────── */
+/* El gradiente era "at var(--mx) var(--my)" sobre una capa a pantalla
+   completa: cada movimiento del mouse redibujaba el gradiente entero en el
+   hilo principal. Ahora el circulo es un elemento de tamano fijo con un
+   gradiente estatico y se lo mueve con transform, que el compositor
+   resuelve sin repintar nada. */
 .bg-spot {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(242,92,24,.16), transparent 70%);
+  position: fixed; top: 0; left: 0; z-index: 0; pointer-events: none;
+  width: 840px; height: 840px; margin: -420px 0 0 -420px;
+  background: radial-gradient(circle closest-side, rgba(242,92,24,.16), transparent 70%);
   opacity: 0; transition: opacity .6s ease;
+  transform: translate3d(var(--mx, 50vw), var(--my, 0px), 0);
+  will-change: transform, opacity;
 }
 body.spot-on .bg-spot { opacity: 1; }
 body.modal-lock { overflow: hidden; }
@@ -2141,3 +2176,21 @@ body.modal-lock { overflow: hidden; }
 }
 
 
+
+
+/* -- Vidrio esmerilado solo donde sale barato --------------- */
+/* En pantallas chicas / tactiles (celular, WebView de Capacitor) el
+   backdrop-filter de las barras fijas es el mayor costo por frame al
+   hacer scroll, y se reemplaza por un fondo solido. */
+@media (min-width: 900px) and (pointer: fine) {
+  .nav {
+    background: var(--nav-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .toolbar {
+    background: var(--nav-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+}

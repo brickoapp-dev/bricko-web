@@ -14,9 +14,20 @@
   <title>Brickø — Nueva Refacción</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet" />
+  <!-- La hoja de Google Fonts bloqueaba el primer render de CADA pantalla:
+       hasta que ese request a un tercero no volvía, el navegador no pintaba
+       nada. Con media="print" + onload se descarga sin bloquear y se aplica
+       al llegar (las familias ya usan display=swap, así que el texto se ve
+       de entrada con la tipografía del sistema). Se quitó el peso 300 de
+       Manrope: no lo usa ninguna regla del proyecto. -->
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" media="print" onload="this.media='all'"
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  </noscript>
   <link rel="stylesheet" href="styles/request-form.css" />
 </head>
 
@@ -383,10 +394,10 @@
 
   <div class="toast-stack" id="toastStack"></div>
 
-  <script src="scripts/supabase.min.js"></script>
-  <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/supabase.min.js" defer></script>
+  <script src="scripts/00-supabase.js" defer></script>
   <script src="scripts/01-auth.js" defer></script>
-  <script src="scripts/request-form.js"></script>
+  <script src="scripts/request-form.js" defer></script>
 </body>
 
 </html>

@@ -27,7 +27,15 @@ function initDashboard() {
 async function loadClientMetrics(uid){
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   try {
-    const { data: reqs, error: e1 } = await sb.from('requests').select('id, status').eq('user_id', uid);
+    // Las dos consultas no dependen una de la otra: encadenarlas con await
+    // duplicaba la espera de los KPIs en cada entrada al panel.
+    const [{ data: reqs, error: e1 }, { data: quotes, error: e2 }] = await Promise.all([
+      sb.from('requests').select('id, status').eq('user_id', uid),
+      sb.from('quotes')
+        .select('id, status, requests!quotes_request_id_fkey!inner(user_id)')
+        .eq('requests.user_id', uid)
+        .eq('status', 'pending')
+    ]);
     if (e1) throw e1;
     const preparacion = (reqs || []).filter(r => r.status === 'preparing').length;
     const activas = (reqs || []).filter(r => r.status === 'active').length;
@@ -36,10 +44,6 @@ async function loadClientMetrics(uid){
     set('kpiActivas', activas);
     set('kpiFinalizadas', finalizadas);
 
-    const { data: quotes, error: e2 } = await sb.from('quotes')
-      .select('id, status, requests!quotes_request_id_fkey!inner(user_id)')
-      .eq('requests.user_id', uid)
-      .eq('status', 'pending');
     if (e2) throw e2;
     set('kpiOfertas', (quotes || []).length);
   } catch(e){
@@ -102,15 +106,24 @@ function initThemeToggle(){
 function initCursorGlow(){
   if (!window.matchMedia('(pointer:fine)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // Antes --mx/--my se escribian sobre <body>: como son custom properties
+  // sin registrar, cada movimiento del mouse invalidaba el estilo de TODO
+  // el arbol y repintaba el gradiente a pantalla completa. Ahora se
+  // escriben sobre el propio .bg-spot, que en CSS pasa a moverse con
+  // transform (trabajo de compositor, sin recalculo de estilos ni repaint).
+  const spot = document.querySelector('.bg-spot');
+  if (!spot) return;
   let raf = null;
+  let lastX = 0, lastY = 0;
   window.addEventListener('pointermove', (e) => {
+    lastX = e.clientX; lastY = e.clientY;
     if (raf) return;
     raf = requestAnimationFrame(() => {
       document.body.classList.add('spot-on');
-      document.body.style.setProperty('--mx', e.clientX + 'px');
-      document.body.style.setProperty('--my', e.clientY + 'px');
+      spot.style.setProperty('--mx', lastX + 'px');
+      spot.style.setProperty('--my', lastY + 'px');
       raf = null;
     });
-  });
+  }, { passive: true });
   window.addEventListener('mouseleave', () => document.body.classList.remove('spot-on'));
 }

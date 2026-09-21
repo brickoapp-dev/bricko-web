@@ -147,12 +147,20 @@ async function fetchClientObras(userId){
   try {
     const reqIds = requests.map(r => r.id);
 
-    const { data: quotes, error: quotesErr } = await sb
-      .from('quotes')
-      .select('id, request_id, pro_id, amount, description, features, status, template_id, created_at, professionals!quotes_pro_id_fkey(rubro)')
-      .in('request_id', reqIds)
-      .order('created_at', { ascending: false });
+    // quotes y get_quote_professionals dependen las dos solo de reqIds, no
+    // una de la otra: en serie sumaban un round-trip extra al enriquecido.
+    const [
+      { data: quotes, error: quotesErr },
+      { data: proProfiles, error: profErr }
+    ] = await Promise.all([
+      sb.from('quotes')
+        .select('id, request_id, pro_id, amount, description, features, status, template_id, created_at, professionals!quotes_pro_id_fkey(rubro)')
+        .in('request_id', reqIds)
+        .order('created_at', { ascending: false }),
+      sb.rpc('get_quote_professionals', { p_request_ids: reqIds })
+    ]);
     if (quotesErr) console.warn('Aviso cargando presupuestos:', quotesErr);
+    if (profErr) console.warn('Aviso cargando perfiles de profesionales:', profErr);
 
     // Contrato de CADA oferta (no solo la aceptada) -- el cliente puede
     // revisar/descargar el contrato de cualquier profesional que cotizó,
@@ -178,9 +186,6 @@ async function fetchClientObras(userId){
     // en solicitudes del usuario actual — ver migración
     // 20260817120000_fix_client_quote_visibility.sql
     if (quotes && quotes.length){
-      const { data: proProfiles, error: profErr } = await sb
-        .rpc('get_quote_professionals', { p_request_ids: reqIds });
-      if (profErr) console.warn('Aviso cargando perfiles de profesionales:', profErr);
       const profileById = {};
       (proProfiles || []).forEach(p => { profileById[p.pro_id] = p; });
       quotes.forEach(q => { q.profiles = profileById[q.pro_id] || null; });
@@ -193,8 +198,10 @@ async function fetchClientObras(userId){
     });
     OBRAS_DATA.forEach(o => { o.quotes = quotesByReq[o.id] || []; });
 
-    await attachSignedImageUrls(OBRAS_DATA);
-    await attachAvance(OBRAS_DATA);
+    await Promise.all([
+      attachSignedImageUrls(OBRAS_DATA),
+      attachAvance(OBRAS_DATA)
+    ]);
   } catch(err){
     console.warn('Aviso: no se pudo completar el enriquecimiento de obras (presupuestos/imágenes/avance):', err);
   }
@@ -270,22 +277,40 @@ function normalizeObra(r, quotesList){
 
 /* ── Resolver URLs firmadas para las fotos/planos (bucket privado) ──── */
 async function attachSignedImageUrls(obras){
-  for (const o of obras){
-    const paths = o.fotosPaths || [];
-    if (!paths.length) continue;
-    const resolved = await Promise.all(paths.map(async (path) => {
-      try {
-        const { data } = await sb.storage.from('solicitudes').createSignedUrl(path, 3600);
-        if (!data?.signedUrl) return null;
-        return {
-          url: data.signedUrl,
-          isPdf: /\.pdf$/i.test(path),
-          name: path.split('/').pop() || 'Archivo'
-        };
-      } catch(e){ return null; }
-    }));
-    o.files = resolved.filter(Boolean);
+  // Antes esto era un for serial sobre las obras y, dentro de cada una, una
+  // llamada createSignedUrl() por archivo: una obra con 5 fotos costaba 5
+  // requests, y 10 obras se firmaban una detrás de otra. createSignedUrls()
+  // (plural) firma todos los paths del bucket en un único request.
+  const allPaths = [];
+  obras.forEach(o => {
+    o.files = [];
+    (o.fotosPaths || []).forEach(path => { if (path) allPaths.push(path); });
+  });
+  if (!allPaths.length) return;
+
+  const urlByPath = new Map();
+  try {
+    const { data, error } = await sb.storage
+      .from('solicitudes')
+      .createSignedUrls([...new Set(allPaths)], 3600);
+    if (error) throw error;
+    (data || []).forEach(d => { if (d?.signedUrl && d.path) urlByPath.set(d.path, d.signedUrl); });
+  } catch(e){
+    console.warn('Aviso firmando archivos de las solicitudes:', e);
+    return;
   }
+
+  obras.forEach(o => {
+    o.files = (o.fotosPaths || []).map(path => {
+      const url = urlByPath.get(path);
+      if (!url) return null;
+      return {
+        url,
+        isPdf: /\.pdf$/i.test(path),
+        name: path.split('/').pop() || 'Archivo'
+      };
+    }).filter(Boolean);
+  });
 }
 
 /* ── Actualizar contadores del toolbar ───────────────── */
@@ -766,16 +791,25 @@ function initThemeToggle(){
 function initCursorGlow(){
   if (!window.matchMedia('(pointer:fine)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // Antes --mx/--my se escribian sobre <body>: como son custom properties
+  // sin registrar, cada movimiento del mouse invalidaba el estilo de TODO
+  // el arbol y repintaba el gradiente a pantalla completa. Ahora se
+  // escriben sobre el propio .bg-spot, que en CSS pasa a moverse con
+  // transform (trabajo de compositor, sin recalculo de estilos ni repaint).
+  const spot = document.querySelector('.bg-spot');
+  if (!spot) return;
   let raf = null;
+  let lastX = 0, lastY = 0;
   window.addEventListener('pointermove', (e) => {
+    lastX = e.clientX; lastY = e.clientY;
     if (raf) return;
     raf = requestAnimationFrame(() => {
       document.body.classList.add('spot-on');
-      document.body.style.setProperty('--mx', e.clientX + 'px');
-      document.body.style.setProperty('--my', e.clientY + 'px');
+      spot.style.setProperty('--mx', lastX + 'px');
+      spot.style.setProperty('--my', lastY + 'px');
       raf = null;
     });
-  });
+  }, { passive: true });
   window.addEventListener('mouseleave', () => document.body.classList.remove('spot-on'));
 }
 
