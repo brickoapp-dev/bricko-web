@@ -217,15 +217,17 @@ const Auth = {
     let proData = null;
     let verifData = null;
     if ((profile?.role || data.user.user_metadata?.role) === 'profesional') {
-      const { data: pro } = await sb.from('professionals')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
+      const [{ data: pro }, { data: verif }] = await Promise.all([
+        sb.from('professionals')
+          .select('*')
+          .eq('id', data.user.id)
+          .single(),
+        sb.from('professional_verification')
+          .select('dni_number, dni_front_url, dni_back_url')
+          .eq('id', data.user.id)
+          .maybeSingle()
+      ]);
       proData = pro;
-      const { data: verif } = await sb.from('professional_verification')
-        .select('dni_number, dni_front_url, dni_back_url')
-        .eq('id', data.user.id)
-        .maybeSingle();
       verifData = verif;
     }
 
@@ -402,6 +404,14 @@ const Auth = {
       return;
     }
 
+    // Pinta el nav con la sesión que ya está en storage ANTES de tocar la
+    // red. getSession() puede disparar un refresh del access token contra
+    // Supabase, y hasta que ese round-trip resolvía la barra superior
+    // quedaba vacía en cada cambio de pantalla (nombre, avatar e iniciales
+    // aparecían "tarde"). El _render() de más abajo corrige el caso raro de
+    // sesión huérfana.
+    if (this.getSession()) this._render();
+
     const { data: { session } } = await sb.auth.getSession();
 
     if (session && !this.getSession()){
@@ -413,12 +423,17 @@ const Auth = {
       let proData = null;
       let verifData = null;
       if ((profile?.role || session.user.user_metadata?.role) === 'profesional') {
-        const { data: pro } = await sb.from('professionals').select('*').eq('id', session.user.id).single();
+        // professionals y professional_verification son independientes entre
+        // sí: encadenarlas con dos await sumaba un round-trip completo a la
+        // primera carga de cada pantalla.
+        const [{ data: pro }, { data: verif }] = await Promise.all([
+          sb.from('professionals').select('*').eq('id', session.user.id).single(),
+          sb.from('professional_verification')
+            .select('dni_number, dni_front_url, dni_back_url')
+            .eq('id', session.user.id)
+            .maybeSingle()
+        ]);
         proData = pro;
-        const { data: verif } = await sb.from('professional_verification')
-          .select('dni_number, dni_front_url, dni_back_url')
-          .eq('id', session.user.id)
-          .maybeSingle();
         verifData = verif;
       }
 

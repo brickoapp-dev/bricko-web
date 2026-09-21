@@ -37,9 +37,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadAll(){
-  const { data: request } = await sb.from('requests').select('id, ticket_id, titulo, direccion').eq('id', REQ_ID).single();
-  const { data: prep } = await sb.from('obra_preparacion').select('gate_habilitada').eq('request_id', REQ_ID).single();
-  const { data: hitos, error } = await sb.from('hitos').select('*').eq('request_id', REQ_ID).order('numero', { ascending: true });
+  // Las tres consultas van todas por REQ_ID y no dependen entre sí: en
+  // serie eran 3 round-trips antes de dibujar la obra.
+  const [
+    { data: request },
+    { data: prep },
+    { data: hitos, error }
+  ] = await Promise.all([
+    sb.from('requests').select('id, ticket_id, titulo, direccion').eq('id', REQ_ID).single(),
+    sb.from('obra_preparacion').select('gate_habilitada').eq('request_id', REQ_ID).single(),
+    sb.from('hitos').select('*').eq('request_id', REQ_ID).order('numero', { ascending: true })
+  ]);
 
   if (error || !request){
     toast('err', 'No encontrada', 'Volviendo a la cartelera…');

@@ -33,7 +33,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!session || !session.userId){ window.location.replace('index.html'); return; }
   if (session.role !== 'profesional'){ window.location.replace('client.html'); return; }
 
-  await loadProFullProfile(session);
+  // La cabecera (nombre, oficio, rating) se arma con lo que ya está en el
+  // storage de la sesión: no hace falta esperar a la red para pintarla.
+  primeProfileFromSession(session);
+
   initFilters();
   initLogout();
   initThemeToggle();
@@ -41,21 +44,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   initKpiButtons();
   initMisObrasFilterClear();
 
-  await loadMyQuotes(session.userId);
-  await Promise.all([loadRequests(), loadPreps()]);
+  // Las cuatro cargas de arranque son independientes entre sí. Antes se
+  // encadenaban (perfil -> quotes -> requests/preps) y la pantalla quedaba
+  // en blanco durante 4 round-trips en serie; ahora salen todas juntas y
+  // se pinta una sola vez, cuando la más lenta termina.
+  await Promise.all([
+    loadProFullProfile(session),
+    loadMyQuotes(session.userId),
+    loadRequests(),
+    loadPreps()
+  ]);
+
+  render();
   updateStats();
   renderMisObras();
 });
 
 /* ── Mis obras: preparación / ejecución (hitos) ─────────── */
 async function loadPreps(){
-  const { data: preps, error } = await sb
-    .from('obra_preparacion')
-    .select('request_id, gate_habilitada, requests(ticket_id, titulo, status)')
-    .order('created_at', { ascending: false });
+  // Ahora esta carga corre dentro del Promise.all que habilita el render,
+  // asi que una excepcion de red acá dejaría la pantalla sin dibujar: se
+  // la contiene y se degrada al estado de error, como el resto.
+  try {
+    const { data: preps, error } = await sb
+      .from('obra_preparacion')
+      .select('request_id, gate_habilitada, requests(ticket_id, titulo, status)')
+      .order('created_at', { ascending: false });
 
-  PREPS_ERROR = !!error;
-  PREPS = error ? [] : (preps || []);
+    PREPS_ERROR = !!error;
+    PREPS = error ? [] : (preps || []);
+  } catch(err){
+    console.warn('Excepción cargando obras en preparación:', err);
+    PREPS_ERROR = true;
+    PREPS = [];
+  }
 }
 
 function renderMisObras(){
@@ -149,29 +171,57 @@ function handleKpiClick(kpi){
 }
 
 /* ── Cargar Perfil Profesional Completo ─────────────────── */
+function primeProfileFromSession(session){
+  const firstName = session.firstName || '';
+  const lastName = session.lastName || '';
+  const rubros = session.rubros?.length ? session.rubros : (session.oficio ? [session.oficio] : []);
+  PRO_PROFILE = {
+    userId: session.userId,
+    firstName,
+    lastName,
+    fullName: (firstName + ' ' + lastName).trim() || session.email?.split('@')[0] || 'Profesional',
+    username: session.username || '',
+    initials: ((firstName[0] || '') + (lastName[0] || '')).toUpperCase() || 'BR',
+    city: session.city || '',
+    province: session.province || '',
+    address: session.address || '',
+    avatarUrl: session.avatarUrl || null,
+    rubros: rubros.length ? rubros : ['albanileria'],
+    primaryRubro: rubros[0] || 'albanileria',
+    dniNumber: session.dniNumber || '—',
+    isVerified: true,
+    rating: 5.0,
+    jobsCompleted: 0,
+    dniFrontUrl: session.dniFrontUrl || null,
+    dniBackUrl: session.dniBackUrl || null
+  };
+  renderProfileUI();
+}
+
 async function loadProFullProfile(session){
   const userId = session.userId;
   let profileData = null;
   let proData = null;
-
-  try {
-    const { data: prof } = await sb.from('profiles').select('*').eq('id', userId).single();
-    profileData = prof;
-  } catch(e){ console.warn('Error leyendo profiles:', e); }
-
-  try {
-    const { data: pro } = await sb.from('professionals').select('*').eq('id', userId).single();
-    proData = pro;
-  } catch(e){ console.warn('Error leyendo professionals:', e); }
-
   let verifData = null;
-  try {
-    const { data: verif } = await sb.from('professional_verification')
+
+  // Las tres tablas son independientes: en serie eran 3 round-trips antes
+  // de poder pintar la cabecera; juntas es uno solo. allSettled para que el
+  // fallo de una (p. ej. RLS sobre verification) no tire las otras dos.
+  const [profRes, proRes, verifRes] = await Promise.allSettled([
+    sb.from('profiles').select('*').eq('id', userId).single(),
+    sb.from('professionals').select('*').eq('id', userId).single(),
+    sb.from('professional_verification')
       .select('dni_number, dni_front_url, dni_back_url')
       .eq('id', userId)
-      .maybeSingle();
-    verifData = verif;
-  } catch(e){ console.warn('Error leyendo professional_verification:', e); }
+      .maybeSingle()
+  ]);
+
+  if (profRes.status === 'fulfilled') profileData = profRes.value.data;
+  else console.warn('Error leyendo profiles:', profRes.reason);
+  if (proRes.status === 'fulfilled') proData = proRes.value.data;
+  else console.warn('Error leyendo professionals:', proRes.reason);
+  if (verifRes.status === 'fulfilled') verifData = verifRes.value.data;
+  else console.warn('Error leyendo professional_verification:', verifRes.reason);
 
   const firstName = profileData?.first_name || session.firstName || '';
   const lastName = profileData?.last_name || session.lastName || '';
@@ -243,7 +293,7 @@ async function loadRequests(){
       .select('id, ticket_id, user_id, tipo, rubros, titulo, descripcion, urgencia, direccion, status, etapa, tipo_construccion, superficie, created_at')
       .in('status', ['pending','quoted'])
       .order('created_at', { ascending: false });
-    if (error){ console.error('Error cargando solicitudes:', error); ALL_REQUESTS = []; REQUESTS_ERROR = true; render(); return; }
+    if (error){ console.error('Error cargando solicitudes:', error); ALL_REQUESTS = []; REQUESTS_ERROR = true; return; }
 
     // profiles_select_own no deja leer el perfil del cliente vía un embed
     // normal (PostgREST lo devuelve null, no error) -- get_request_owners()
@@ -260,7 +310,9 @@ async function loadRequests(){
     ALL_REQUESTS = (data || []).map(row => normalize(row, owners.get(row.id)));
     REQUESTS_ERROR = false;
   } catch(err){ console.error('Excepción cargando solicitudes:', err); ALL_REQUESTS = []; REQUESTS_ERROR = true; }
-  render();
+  // El render() lo dispara el arranque una sola vez, cuando ya están
+  // resueltos el perfil (filtro por zona) y MY_QUOTES (cintas "ENVIADO").
+  // Renderizar acá dentro hacía un segundo repintado completo del feed.
 }
 
 function normalize(row, owner){
@@ -379,8 +431,12 @@ function cardHTML(r, i){
   const urgClass = 'urg-' + (r.urgencia || 'media');
   const obraClass = r.tipo === 'obra-nueva' ? ' t-obra' : '';
   const quoted = MY_QUOTES.has(r.id);
+  // El escalonado se corta a las 12 primeras tarjetas: con un feed largo,
+  // "i * 0.045s" dejaba la ultima entrando casi 3 segundos despues de que
+  // los datos ya estaban, y animaba decenas de elementos a la vez.
+  const delay = Math.min(i, 11) * 0.045;
   return `
-    <article class="req-card${quoted ? ' quoted' : ''}" data-req="${r.id}" tabindex="0" style="animation-delay:${i*0.045}s">
+    <article class="req-card${quoted ? ' quoted' : ''}" data-req="${r.id}" tabindex="0" style="animation-delay:${delay}s">
       ${quoted ? '<span class="rc-ribbon">✓ ENVIADO</span>' : ''}
       <div class="rc-head">
         <div class="rc-tags">
@@ -488,16 +544,25 @@ function toast(type, title, msg){
 function initCursorGlow(){
   if (!window.matchMedia('(pointer:fine)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // Antes --mx/--my se escribian sobre <body>: como son custom properties
+  // sin registrar, cada movimiento del mouse invalidaba el estilo de TODO
+  // el arbol y repintaba el gradiente a pantalla completa. Ahora se
+  // escriben sobre el propio .bg-spot, que en CSS pasa a moverse con
+  // transform (trabajo de compositor, sin recalculo de estilos ni repaint).
+  const spot = document.querySelector('.bg-spot');
+  if (!spot) return;
   let raf = null;
+  let lastX = 0, lastY = 0;
   window.addEventListener('pointermove', (e) => {
+    lastX = e.clientX; lastY = e.clientY;
     if (raf) return;
     raf = requestAnimationFrame(() => {
       document.body.classList.add('spot-on');
-      document.body.style.setProperty('--mx', e.clientX + 'px');
-      document.body.style.setProperty('--my', e.clientY + 'px');
+      spot.style.setProperty('--mx', lastX + 'px');
+      spot.style.setProperty('--my', lastY + 'px');
       raf = null;
     });
-  });
+  }, { passive: true });
   window.addEventListener('mouseleave', () => document.body.classList.remove('spot-on'));
 }
 

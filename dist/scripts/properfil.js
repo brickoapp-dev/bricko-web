@@ -169,9 +169,28 @@ function setDrop(dropId, url){
 /* ── Cargar datos existentes ─────────────────────────── */
 async function loadProfile(uid){
   try {
-    const { data: profile } = await sb.from('profiles')
-      .select('first_name, last_name, razon_social, avatar_url, terminos_version, terminos_aceptado_en, privacidad_version, privacidad_leida_en')
-      .eq('id', uid).single();
+    // Las tres tablas del perfil son independientes: encadenadas con await
+    // el formulario tardaba 3 round-trips en terminar de completarse (y los
+    // campos se iban llenando "de a tandas" a la vista del usuario).
+    // avatar_url se lee de profiles (no de professionals): es donde vive
+    // para todos los roles desde el fix de la miniatura de perfil.
+    const [
+      { data: profile },
+      { data: pro },
+      { data: verif }
+    ] = await Promise.all([
+      sb.from('profiles')
+        .select('first_name, last_name, razon_social, avatar_url, terminos_version, terminos_aceptado_en, privacidad_version, privacidad_leida_en')
+        .eq('id', uid).single(),
+      sb.from('professionals')
+        .select('rubro, rubros, localidad, residencia')
+        .eq('id', uid).single(),
+      sb.from('professional_verification')
+        .select(`dni_front_url, dni_back_url, direccion, dni_number, cuit, condicion_fiscal,
+          usa_domicilio_alt, domicilio_contractual,
+          matricula_entidad, matricula_numero, matricula_vencimiento, matricula_adjunto`)
+        .eq('id', uid).maybeSingle()
+    ]);
 
     if (profile){
       const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
@@ -186,10 +205,6 @@ async function loadProfile(uid){
       }
     }
 
-    const { data: pro } = await sb.from('professionals')
-      .select('rubro, rubros, localidad, residencia')
-      .eq('id', uid).single();
-
     if (pro){
       // rubros: usa el array nuevo; si está vacío, cae al rubro único viejo
       const rubros = (pro.rubros && pro.rubros.length) ? pro.rubros : (pro.rubro ? [pro.rubro] : []);
@@ -201,12 +216,6 @@ async function loadProfile(uid){
       const trade = document.getElementById('proTrade');
       if (trade) trade.textContent = RUBRO_LABELS[rubros[0]] || rubros[0] || 'Oficio';
     }
-
-    const { data: verif } = await sb.from('professional_verification')
-      .select(`dni_front_url, dni_back_url, direccion, dni_number, cuit, condicion_fiscal,
-        usa_domicilio_alt, domicilio_contractual,
-        matricula_entidad, matricula_numero, matricula_vencimiento, matricula_adjunto`)
-      .eq('id', uid).maybeSingle();
 
     if (verif){
       const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
@@ -299,26 +308,6 @@ async function save(){
       razon_social: document.getElementById('fRazonSocial').value.trim() || null
     };
 
-    if (pending.avatar){
-      const ext = (pending.avatar.name.split('.').pop() || 'jpg').toLowerCase();
-      const path = `${uid}/avatar.${ext}`;
-      await uploadFile('avatars', path, pending.avatar);
-      const { data } = sb.storage.from('avatars').getPublicUrl(path);
-      profileUpdate.avatar_url = `${data.publicUrl}?v=${Date.now()}`;
-    }
-
-    const { error: e0 } = await sb.from('profiles').update(profileUpdate).eq('id', uid);
-    if (e0) throw e0;
-
-    if (profileUpdate.avatar_url){
-      // Reflejar el avatar nuevo en la sesión local (mismo patrón que client-perfil.js),
-      // para que el chip del nav en el resto del sitio lo muestre sin tener que reloguear.
-      SESSION.avatarUrl = profileUpdate.avatar_url;
-      const store = localStorage.getItem('bricko-session') ? localStorage : sessionStorage;
-      store.setItem('bricko-session', JSON.stringify(SESSION));
-      Auth.renderAvatarChip('proAv', profileUpdate.avatar_url);
-    }
-
     // 2) professionals: directorio público
     const proUpdate = {
       rubros: getSelectedRubros(),
@@ -341,25 +330,61 @@ async function save(){
       matricula_vencimiento: document.getElementById('fMatriculaVencimiento').value || null
     };
 
+    // Las subidas son lo más lento del guardado (hasta 4 archivos) y antes
+    // iban una detrás de la otra, encadenadas además con los 3 writes: en
+    // total hasta 7 idas y vueltas en serie con el botón en "Guardando…".
+    // Los archivos no dependen entre sí, así que suben todos juntos.
+    const uploads = [];
+    if (pending.avatar){
+      const ext = (pending.avatar.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${uid}/avatar.${ext}`;
+      uploads.push(uploadFile('avatars', path, pending.avatar).then(() => {
+        const { data } = sb.storage.from('avatars').getPublicUrl(path);
+        profileUpdate.avatar_url = `${data.publicUrl}?v=${Date.now()}`;
+      }));
+    }
     if (pending.dniFront){
       const ext = (pending.dniFront.name.split('.').pop() || 'jpg').toLowerCase();
-      verifUpsert.dni_front_url = await uploadFile('dni', `${uid}/dni-front.${ext}`, pending.dniFront);
+      uploads.push(uploadFile('dni', `${uid}/dni-front.${ext}`, pending.dniFront)
+        .then(path => { verifUpsert.dni_front_url = path; }));
     }
     if (pending.dniBack){
       const ext = (pending.dniBack.name.split('.').pop() || 'jpg').toLowerCase();
-      verifUpsert.dni_back_url = await uploadFile('dni', `${uid}/dni-back.${ext}`, pending.dniBack);
+      uploads.push(uploadFile('dni', `${uid}/dni-back.${ext}`, pending.dniBack)
+        .then(path => { verifUpsert.dni_back_url = path; }));
     }
     if (pending.matricula){
       const ext = (pending.matricula.name.split('.').pop() || 'pdf').toLowerCase();
-      verifUpsert.matricula_adjunto = await uploadFile('matricula', `${uid}/matricula.${ext}`, pending.matricula);
+      uploads.push(uploadFile('matricula', `${uid}/matricula.${ext}`, pending.matricula)
+        .then(path => { verifUpsert.matricula_adjunto = path; }));
     }
 
-    // 4) Persistir en la base
-    const { error: e1 } = await sb.from('professionals').update(proUpdate).eq('id', uid);
-    if (e1) throw e1;
+    // Si alguna subida falla, uploadFile() rechaza y el catch de abajo avisa
+    // sin haber escrito nada -- igual que antes, cuando el await de la
+    // subida cortaba el guardado.
+    if (uploads.length) await Promise.all(uploads);
 
-    const { error: e2 } = await sb.from('professional_verification').upsert(verifUpsert, { onConflict: 'id' });
+    // 4) Persistir en la base. Las tres tablas son independientes; se
+    // escriben juntas en vez de en cadena. Como antes, si alguna falla el
+    // catch muestra el error (el guardado nunca fue atómico: con el await
+    // encadenado también podía quedar profiles escrito y el resto no).
+    const [{ error: e0 }, { error: e1 }, { error: e2 }] = await Promise.all([
+      sb.from('profiles').update(profileUpdate).eq('id', uid),
+      sb.from('professionals').update(proUpdate).eq('id', uid),
+      sb.from('professional_verification').upsert(verifUpsert, { onConflict: 'id' })
+    ]);
+    if (e0) throw e0;
+    if (e1) throw e1;
     if (e2) throw e2;
+
+    if (profileUpdate.avatar_url){
+      // Reflejar el avatar nuevo en la sesión local (mismo patrón que client-perfil.js),
+      // para que el chip del nav en el resto del sitio lo muestre sin tener que reloguear.
+      SESSION.avatarUrl = profileUpdate.avatar_url;
+      const store = localStorage.getItem('bricko-session') ? localStorage : sessionStorage;
+      store.setItem('bricko-session', JSON.stringify(SESSION));
+      Auth.renderAvatarChip('proAv', profileUpdate.avatar_url);
+    }
 
     toast('ok', 'Perfil actualizado', 'Tus cambios se guardaron correctamente.');
     pending.avatar = pending.dniFront = pending.dniBack = pending.matricula = null;
