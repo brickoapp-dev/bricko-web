@@ -24,9 +24,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadProUI(session);
   initLogout();
   initThemeToggle();
+  initMercadoPago();
 
   await loadAll();
 });
+
+/* ── Mercado Pago: vincular cuenta de cobro ─────────── */
+async function initMercadoPago(){
+  const estadoEl = document.getElementById('mpEstado');
+  const btn = document.getElementById('btnConectarMP');
+  if (!estadoEl || !btn) return;
+
+  // Vuelta desde Mercado Pago (?mp=ok | error | cancelado)
+  const vuelta = new URLSearchParams(window.location.search).get('mp');
+  if (vuelta === 'ok') toast('ok', 'Mercado Pago vinculado', 'Ya podés recibir pagos por Brickø.');
+  else if (vuelta === 'error') toast('err', 'No se pudo vincular', 'Probá de nuevo en unos minutos.');
+  else if (vuelta === 'cancelado') toast('info', 'Vinculación cancelada', 'No se conectó ninguna cuenta.');
+  if (vuelta) history.replaceState(null, '', window.location.pathname);
+
+  // ¿Ya tiene la cuenta vinculada?
+  const { data: vinculada, error } = await sb.rpc('tengo_cuenta_cobro', { p_proveedor: 'mercadopago' });
+  if (error){
+    estadoEl.textContent = 'No pudimos verificar tu cuenta de cobro.';
+    return;
+  }
+
+  if (vinculada){
+    estadoEl.textContent = '✓ Cuenta vinculada. Los pagos de tus clientes se acreditan directo en tu Mercado Pago.';
+    btn.textContent = 'Volver a vincular';
+  } else {
+    estadoEl.textContent = 'Vinculá tu cuenta para recibir pagos. Brickø descuenta su comisión automáticamente en cada cobro.';
+    btn.textContent = 'Conectar Mercado Pago';
+  }
+  btn.style.display = '';
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    const { data, error } = await sb.functions.invoke('mp-oauth-callback', { method: 'POST', body: {} });
+    if (error || !data?.url){
+      toast('err', 'Error', 'No pudimos iniciar la vinculación con Mercado Pago.');
+      btn.disabled = false;
+      return;
+    }
+    window.location.href = data.url; // a la pantalla de autorización de MP
+  });
+}
 
 async function loadAll(){
   const { data: hitos, error } = await sb

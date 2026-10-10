@@ -214,9 +214,13 @@ function renderQuotes(quotes, req, session) {
   list.querySelectorAll('[data-accept]').forEach(btn => {
     btn.addEventListener('click', () => acceptQuote(btn.dataset.accept, req.id));
   });
-  list.querySelectorAll('[data-reject]').forEach(btn => {
+   list.querySelectorAll('[data-reject]').forEach(btn => {
     btn.addEventListener('click', () => rejectQuote(btn.dataset.reject, req.id));
   });
+
+  // Si hay un presupuesto aceptado, mostrar su estado de pago
+  const aceptada = quotes.find(q => q.status === 'accepted');
+  if (aceptada) renderPago(aceptada);
 }
 
 function quoteCardHTML(q, hasAccepted) {
@@ -252,6 +256,9 @@ function quoteCardHTML(q, hasAccepted) {
       <div class="qc-actions">
         <span style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted-2);text-transform:uppercase;padding:10px 18px">Rechazado</span>
       </div>`;
+    } else if (isAccepted) {
+    // Espacio para el pago (lo completa renderPago)
+    actions = `<div class="qc-actions" id="pagoBox"><span style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted-2);text-transform:uppercase;padding:10px 18px">Cargando pago…</span></div>`;
   } else if (!isAccepted && hasAccepted) {
     actions = `
       <div class="qc-actions">
@@ -280,6 +287,70 @@ function quoteCardHTML(q, hasAccepted) {
       ${actions}
     </div>
   `;
+}
+
+/* ── Pago con Mercado Pago ─────────────────────────────── */
+const COMISION_PCT = 10; // % de Brickø (tiene que coincidir con mp-create-payment)
+
+async function renderPago(q) {
+  const box = document.getElementById('pagoBox');
+  if (!box) return;
+
+  // Vuelta desde Mercado Pago (?pago=ok | error | pendiente)
+  const vuelta = new URLSearchParams(window.location.search).get('pago');
+  if (vuelta) {
+    if (vuelta === 'ok') toast('ok', 'Pago recibido', 'Lo estamos confirmando con Mercado Pago, puede tardar unos segundos.');
+    else if (vuelta === 'pendiente') toast('info', 'Pago pendiente', 'Mercado Pago todavía lo está procesando.');
+    else toast('err', 'El pago no se completó', 'Podés intentarlo de nuevo.');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('pago');
+    history.replaceState(null, '', url);
+  }
+
+  const fmt = n => Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 });
+
+  // ¿Ya está pagado?
+  const { data: pagos } = await sb.from('pagos')
+    .select('estado, monto_total')
+    .eq('quote_id', q.id)
+    .order('created_at', { ascending: false });
+
+  const aprobado = (pagos || []).find(p => p.estado === 'aprobado');
+  if (aprobado) {
+    box.innerHTML = `<span style="font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:#3FB950;text-transform:uppercase;padding:10px 18px">✓ Pagado · $ ${fmt(aprobado.monto_total)}</span>`;
+    return;
+  }
+  // Recién volvió de MP y el aviso todavía no llegó: reintentar en unos segundos
+  if (vuelta === 'ok') setTimeout(() => renderPago(q), 4000);
+
+  // Desglose: presupuesto + comisión Brickø
+  const monto = Number(q.amount);
+  const comision = Math.round(monto * COMISION_PCT) / 100;
+  const total = monto + comision;
+
+  box.innerHTML = `
+    <div style="flex:1;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.8">
+      Presupuesto: $ ${fmt(monto)}<br>
+      Servicio Brickø (${COMISION_PCT}%): $ ${fmt(comision)}<br>
+      <strong style="color:var(--ink)">Total: $ ${fmt(total)}</strong>
+    </div>
+    <button class="qc-btn-primary" id="btnPagarMP">Pagar con Mercado Pago</button>`;
+
+  document.getElementById('btnPagarMP').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = 'Redirigiendo…';
+    const { data, error } = await sb.functions.invoke('mp-create-payment', { body: { quote_id: q.id } });
+    if (error || !data?.url) {
+      let msg = 'No pudimos iniciar el pago.';
+      try { msg = (await error.context.json()).error || msg; } catch (_) {}
+      toast('err', 'Error', msg);
+      btn.disabled = false;
+      btn.textContent = 'Pagar con Mercado Pago';
+      return;
+    }
+    window.location.href = data.url; // a Checkout Pro de Mercado Pago
+  });
 }
 
 /* ── Aceptar / rechazar ────────────────────────────────── */
