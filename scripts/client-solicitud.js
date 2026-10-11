@@ -214,9 +214,12 @@ function renderQuotes(quotes, req, session) {
   list.querySelectorAll('[data-accept]').forEach(btn => {
     btn.addEventListener('click', () => acceptQuote(btn.dataset.accept, req.id));
   });
-  list.querySelectorAll('[data-reject]').forEach(btn => {
+   list.querySelectorAll('[data-reject]').forEach(btn => {
     btn.addEventListener('click', () => rejectQuote(btn.dataset.reject, req.id));
   });
+
+    // Aviso si el cliente vuelve de pagar un hito en Mercado Pago
+  avisarVueltaPago();
 }
 
 function quoteCardHTML(q, hasAccepted) {
@@ -252,6 +255,9 @@ function quoteCardHTML(q, hasAccepted) {
       <div class="qc-actions">
         <span style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted-2);text-transform:uppercase;padding:10px 18px">Rechazado</span>
       </div>`;
+    } else if (isAccepted) {
+    // El pago se hace por hitos (ver pestaña Hitos)
+    actions = `<div class="qc-actions"><span style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted-2);text-transform:uppercase;padding:10px 18px">Se paga por hitos · ver pestaña Hitos</span></div>`;
   } else if (!isAccepted && hasAccepted) {
     actions = `
       <div class="qc-actions">
@@ -280,6 +286,47 @@ function quoteCardHTML(q, hasAccepted) {
       ${actions}
     </div>
   `;
+}
+
+/* ── Pago de hitos con Mercado Pago ────────────────────── */
+const COMISION_PCT = 12.1; // % de Brickø: 10% neto + IVA (tiene que coincidir con mp-create-payment)
+
+function desglosePago(monto) {
+  const m = Number(monto);
+  const comision = Math.round(m * COMISION_PCT) / 100;
+  return { monto: m, comision, total: Math.round((m + comision) * 100) / 100 };
+}
+
+// Mensaje al volver de Mercado Pago (?pago=ok | error | pendiente)
+function avisarVueltaPago() {
+  const vuelta = new URLSearchParams(window.location.search).get('pago');
+  if (!vuelta) return;
+  if (vuelta === 'ok') {
+    toast('ok', 'Pago recibido', 'Lo estamos confirmando con Mercado Pago, puede tardar unos segundos.');
+    setTimeout(() => loadObraSection(), 4000); // el aviso de MP puede tardar en llegar
+  } else if (vuelta === 'pendiente') {
+    toast('info', 'Pago pendiente', 'Mercado Pago todavía lo está procesando.');
+  } else {
+    toast('err', 'El pago no se completó', 'Podés intentarlo de nuevo.');
+  }
+  const url = new URL(window.location.href);
+  url.searchParams.delete('pago');
+  history.replaceState(null, '', url);
+}
+
+async function pagarHito(hitoId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Redirigiendo…';
+  const { data, error } = await sb.functions.invoke('mp-create-payment', { body: { hito_id: hitoId } });
+  if (error || !data?.url) {
+    let msg = 'No pudimos iniciar el pago.';
+    try { msg = (await error.context.json()).error || msg; } catch (_) {}
+    toast('err', 'Error', msg);
+    btn.disabled = false;
+    btn.textContent = 'Pagar hito con Mercado Pago';
+    return;
+  }
+  window.location.href = data.url; // a Checkout Pro de Mercado Pago
 }
 
 /* ── Aceptar / rechazar ────────────────────────────────── */
@@ -469,12 +516,9 @@ function initObraSection() {
       await loadObraSection();
       return;
     }
-    const markPaid = e.target.closest('[data-mark-paid]');
-    if (markPaid) {
-      const { error } = await sb.rpc('mark_milestone_paid', { p_hito_id: markPaid.dataset.markPaid });
-      if (error) { toast('err', 'No se pudo marcar como pagado', error.message); return; }
-      toast('ok', 'Hito marcado como pagado', '');
-      await loadObraSection();
+    const payHito = e.target.closest('[data-pay-hito]');
+    if (payHito) {
+      await pagarHito(payHito.dataset.payHito, payHito);
       return;
     }
   });
@@ -612,7 +656,12 @@ function renderObraHitos() {
         <div class="pj-progress-track"><div class="pj-progress-fill" style="width:${h.avance_pct}%"></div></div>
         <div class="pj-actions" style="justify-content:flex-start;margin-top:15px">
           ${h.status === 'review' ? `<button class="pj-btn primary" data-approve-hito="${h.id}">Aprobar avance</button>` : ''}
-          ${h.status === 'done' && h.pago_estado === 'approved' ? `<button class="pj-btn primary" data-mark-paid="${h.id}">Marcar como pagado</button>` : ''}
+                 ${h.status === 'done' && h.pago_estado === 'approved' ? (() => {
+            const d = desglosePago(h.monto);
+            return `<div class="pj-small" style="margin-right:12px;line-height:1.7">Hito: $ ${money(d.monto)} · Servicio Brickø (10% + IVA): $ ${money(d.comision)}<br><strong>Total: $ ${money(d.total)}</strong></div>
+              <button class="pj-btn primary" data-pay-hito="${h.id}">Pagar hito con Mercado Pago</button>`;
+          })() : ''}
+          ${h.pago_estado === 'paid' ? `<span class="pj-status ok">✓ Pagado</span>` : ''}
         </div>
       </div>
     </article>
