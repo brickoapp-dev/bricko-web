@@ -1,1 +1,10 @@
 .claude/worktrees/
+
+# Dependencias: se instalan con "npm install"
+node_modules/
+
+# Build para Capacitor: se genera con "npm run build"
+dist/
+
+# Configuración del IDE
+.idea/
