@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('bricko-theme');
+      if (t === 'dark' || t === 'light' || t === 'blueprint')
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <meta name="description" content="Brickø — Completá tu perfil para empezar a usar la app." />
+  <meta name="theme-color" content="#0A0A0A" />
+  <meta name="format-detection" content="telephone=no" />
+
+  <title>Brickø — Completá tu perfil</title>
+
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 L22 7 L12 12 L2 7 Z' fill='%23F25C18'/%3E%3Cpath d='M2 7 L2 17 L12 22 L12 12 Z' fill='%231C1C1C'/%3E%3Cpath d='M22 7 L22 17 L12 22 L12 12 Z' fill='%232A2A2A'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles/auth.css" />
+</head>
+
+<body>
+
+  <div class="bg-grid"></div>
+
+  <!-- ====== NAV ====== -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand" aria-label="Brickø, volver al inicio">
+        <svg class="cube" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2 L22 7 L12 12 L2 7 Z" fill="#F25C18" />
+          <path d="M2 7 L2 17 L12 22 L12 12 Z" fill="#1C1C1C" />
+          <path d="M22 7 L22 17 L12 22 L12 12 Z" fill="#2A2A2A" />
+        </svg>
+        <span style="display: flex; align-items: center;">BRICK<span class="o">Ø</span></span>
+      </a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path
+            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+        </svg>
+        <svg class="icon-plan" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ====== COMPLETAR PERFIL ====== -->
+  <!-- Se llega acá después del primer ingreso con Google: la cuenta ya
+       existe en Supabase pero sin rol, teléfono ni términos aceptados. -->
+  <main class="auth-page">
+    <div class="auth-modal" id="authCompletar">
+      <header class="auth-head">
+        <span class="id">AUTH / PERFIL — 003</span>
+      </header>
+      <div class="auth-body">
+        <h2 class="auth-title">Completá tu<br>perfil <em>Brickø.</em></h2>
+        <p class="auth-sub" id="cpSub">Un paso más y empezás. Contanos cómo vas a usar la app.</p>
+
+        <form id="completarForm" novalidate>
+          <div class="role-tabs" data-role="cliente" id="cpRoleTabs">
+            <span class="role-thumb"></span>
+            <button class="role-tab active" type="button" data-role="cliente">
+              <svg viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12h-6v-7h-6v7H3z" /></svg> Soy cliente
+            </button>
+            <button class="role-tab" type="button" data-role="profesional">
+              <svg viewBox="0 0 24 24"><path d="M2 10l3-5h14l3 5M2 10v9h20v-9M2 10h20M8 14h2M14 14h2" /></svg> Soy profesional
+            </button>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label" for="cpName"><span><span class="ix">/01</span> Nombre</span><span class="req">*</span></label>
+              <input type="text" id="cpName" class="field-input" placeholder="Juan" autocomplete="given-name" />
+              <div class="field-msg">Requerido</div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="cpLast"><span><span class="ix">/02</span> Apellido</span><span class="req">*</span></label>
+              <input type="text" id="cpLast" class="field-input" placeholder="Pérez" autocomplete="family-name" />
+              <div class="field-msg">Requerido</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="cpPhone"><span><span class="ix">/03</span> Teléfono</span><span class="req">*</span></label>
+            <input type="tel" id="cpPhone" class="field-input" placeholder="+54 11 1234 5678" autocomplete="tel" />
+            <div class="field-msg">Ingresá un teléfono válido</div>
+          </div>
+
+          <!-- Solo profesionales: el resto de los datos (DNI, dirección, más
+               rubros) se completa después desde "Mi perfil". -->
+          <div class="pro-fields-wrapper hidden" id="cpProFields">
+            <div class="field">
+              <label class="field-label"><span><span class="ix">/04</span> Oficio principal</span><span class="req">*</span></label>
+              <div class="rubro-chips-select" id="cpOficioSelect">
+                <label class="rchip"><input type="checkbox" name="cpOficio" value="plomeria"> <span>Plomería</span></label>
+                <label class="rchip"><input type="checkbox" name="cpOficio" value="gas"> <span>Gas</span></label>
+                <label class="rchip"><input type="checkbox" name="cpOficio" value="electricidad"> <span>Electricidad</span></label>
+                <label class="rchip"><input type="checkbox" name="cpOficio" value="albanileria"> <span>Albañilería</span></label>
+                <label class="rchip"><input type="checkbox" name="cpOficio" value="pintura"> <span>Pintura</span></label>
+                <label class="rchip"><input type="checkbox" name="cpOficio" value="carpinteria"> <span>Carpintería</span></label>
+                <label class="rchip"><input type="checkbox" name="cpOficio" value="herreria"> <span>Herrería</span></label>
+                <label class="rchip"><input type="checkbox" name="cpOficio" value="jardineria"> <span>Jardinería</span></label>
+              </div>
+              <div class="field-msg">Elegí tu oficio</div>
+            </div>
+            <p class="auth-sub" style="margin-top:-4px">Después vas a poder sumar más rubros y verificar tu DNI desde tu perfil.</p>
+          </div>
+
+          <label class="field-check">
+            <input type="checkbox" id="cpTerms" />
+            <span class="box"></span>
+            <span class="lbl">Acepto los <a href="terminos.html" target="_blank" rel="noopener">Términos y Condiciones</a>.</span>
+          </label>
+
+          <label class="field-check">
+            <input type="checkbox" id="cpPrivacy" />
+            <span class="box"></span>
+            <span class="lbl">Leí la <a href="privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a>.</span>
+          </label>
+
+          <button type="submit" class="auth-submit" id="cpSubmit" disabled>Empezar <span class="arrow"></span></button>
+        </form>
+      </div>
+      <div class="auth-foot">¿No sos vos?<a href="#" id="cpSalir">Salir</a></div>
+    </div>
+  </main>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script src="scripts/supabase.min.js"></script>
+  <script src="scripts/00-supabase.js"></script>
+  <script src="scripts/legal-versions.js"></script>
+  <script src="scripts/01-auth.js"></script>
+  <script src="scripts/completar-perfil.js"></script>
+</body>
+
+</html>
