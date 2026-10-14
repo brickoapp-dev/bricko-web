@@ -13,6 +13,30 @@ const Auth = {
     window.location.href = target;
   },
 
+  // Páginas que alguien con el perfil sin completar (recién entrado con
+  // Google) puede ver sin que lo mandemos a completar-perfil.html: la
+  // propia pantalla y los legales que se abren desde ahí.
+  _PAGINAS_SIN_PERFIL: ['completar-perfil.html', 'terminos.html', 'privacidad.html'],
+
+  _paginaActual(){
+    return (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  },
+
+  // Login con Google (Supabase OAuth). Sale del sitio hacia Google y vuelve
+  // a login.html con la sesión en la URL; Auth.init() la levanta y decide
+  // si va al dashboard o a completar-perfil.html (cuenta nueva sin rol).
+  async loginConGoogle(){
+    const sb = window.supabase_client;
+    // Con Google no hay checkbox "mantener sesión": se recuerda siempre.
+    try { localStorage.setItem(window.BRICKO_REMEMBER_KEY, '1'); } catch(e){}
+    const redirectTo = new URL('login.html', window.location.href).href;
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo, queryParams: { prompt: 'select_account' } }
+    });
+    if (error) throw new Error(error.message);
+  },
+
   // Helper para convertir archivo a DataURL si no hay bucket disponible
   fileToDataURL(file) {
     return new Promise((resolve, reject) => {
@@ -208,7 +232,7 @@ const Auth = {
     // el rol real de la cuenta, hay que deshacerla antes de avisar, si no
     // Auth.init() la encuentra en la próxima carga y loguea igual.
     const actualRole = profile?.role || data.user.user_metadata?.role || 'cliente';
-    if (role && actualRole !== role) {
+    if (role && actualRole !== role && profile?.perfil_completo !== false) {
       await this._clearAuthStorage();
       const label = actualRole === 'profesional' ? 'Profesional' : 'Cliente';
       throw new Error(`Esos datos pertenecen a una cuenta "${label}". Elegí esa pestaña para ingresar.`);
@@ -248,11 +272,13 @@ const Auth = {
       verified: proData?.verified === true,
       dniNumber: verifData?.dni_number || '',
       dniFrontUrl: verifData?.dni_front_url || null,
-      dniBackUrl: verifData?.dni_back_url || null
+      dniBackUrl: verifData?.dni_back_url || null,
+      perfilCompleto: profile?.perfil_completo !== false
     };
     this._setSession(user, remember);
 
-    this._redirectToDashboard(user.role);
+    if (!user.perfilCompleto) window.location.href = 'completar-perfil.html';
+    else this._redirectToDashboard(user.role);
     return user;
   },
 
@@ -308,6 +334,7 @@ const Auth = {
       dniNumber: user.dniNumber || '',
       dniFrontUrl: user.dniFrontUrl || null,
       dniBackUrl: user.dniBackUrl || null,
+      perfilCompleto: user.perfilCompleto !== false,
       loggedAt: new Date().toISOString()
     };
     const simpleUser = {
@@ -471,7 +498,8 @@ const Auth = {
         verified: proData?.verified === true,
         dniNumber: verifData?.dni_number || '',
         dniFrontUrl: verifData?.dni_front_url || null,
-        dniBackUrl: verifData?.dni_back_url || null
+        dniBackUrl: verifData?.dni_back_url || null,
+        perfilCompleto: profile?.perfil_completo !== false
       };
       // Reconstruye el storage local con la misma preferencia que se usó
       // al loguear, para no "recordar" una sesión que el usuario pidió
@@ -494,6 +522,13 @@ const Auth = {
     this._render();
 
     const currentSession = this.getSession();
+    // Cuenta creada con Google que todavía no eligió rol / teléfono / oficio
+    // ni aceptó términos: no puede usar la app hasta completar el perfil.
+    if (currentSession && currentSession.perfilCompleto === false
+        && !this._PAGINAS_SIN_PERFIL.includes(this._paginaActual())){
+      window.location.replace('completar-perfil.html');
+      return;
+    }
     if (currentSession && this._isIndexPage()){
       this._redirectToDashboard(currentSession.role);
       return;

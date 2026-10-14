@@ -247,10 +247,31 @@
       }
     });
 
-    // Social (demo)
-    $$('[data-social]').forEach(b => b.addEventListener('click', () => {
-      toast('info', 'Próximamente', 'El acceso con ' + (b.dataset.social === 'google' ? 'Google' : 'Apple') + ' se activa con el backend.');
+    // Social: Google es real (Supabase OAuth); Apple sigue pendiente.
+    $$('[data-social]').forEach(b => b.addEventListener('click', async () => {
+      if (b.dataset.social !== 'google') {
+        toast('info', 'Próximamente', 'El acceso con Apple todavía no está disponible.');
+        return;
+      }
+      b.disabled = true;
+      try {
+        await Auth.loginConGoogle(); // redirige a Google
+      } catch (err) {
+        b.disabled = false;
+        toast('err', 'No se pudo conectar con Google', err.message || 'Probá de nuevo en unos segundos.');
+      }
     }));
+
+    // Vuelta de Google con error (ej. el usuario canceló o el proveedor falló)
+    (function avisarErrorOAuth() {
+      const params = new URLSearchParams(window.location.search + '&' + window.location.hash.replace(/^#/, ''));
+      if (!params.get('error')) return;
+      const cancelado = params.get('error') === 'access_denied';
+      toast(cancelado ? 'info' : 'err',
+        cancelado ? 'Ingreso cancelado' : 'No se pudo ingresar con Google',
+        cancelado ? 'No se completó el acceso con Google.' : (params.get('error_description') || 'Probá de nuevo.'));
+      history.replaceState(null, '', window.location.pathname);
+    })();
   </script>
 </body>
 
